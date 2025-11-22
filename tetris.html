@@ -22,6 +22,7 @@
     display: flex;
     justify-content: center;
     align-items: center;
+    position: relative;
   }
 
   #main {
@@ -38,6 +39,8 @@
     height: 98%;
     max-width: 1000px;
     justify-content: center; 
+    position: relative;
+    z-index: 1;
   }
 
   #header-group {
@@ -74,7 +77,6 @@
     width: 100%;
   }
 
-  /* Canvas principal */
   canvas#tetris {
     border: 3px solid #333;
     background: #fff;
@@ -92,7 +94,7 @@
     background: rgba(255,255,255,0.6);
     padding: 15px;
     border-radius: 10px;
-    min-width: 180px; /* Un peu plus large pour les noms de grades */
+    min-width: 180px;
     border: 2px solid #333;
     box-sizing: border-box;
     height: 100%;
@@ -135,11 +137,10 @@
     color: #000;
   }
   
-  /* Style spécifique pour le grade BTS CIEL */
   #rank-name {
     font-size: 14px;
     font-weight: 900;
-    color: #d32f2f; /* Rouge dynamique */
+    color: #d32f2f;
     margin-top: 2px;
     min-height: 20px;
   }
@@ -172,6 +173,7 @@
   }
   button:hover { background: #eee; }
   button:active { background: #ccc; }
+  button:focus { outline: none; }
 
   #controls-info {
     font-size: 11px;
@@ -232,6 +234,58 @@
     background: #ffeba7;
   }
 
+  /* --- PROVISEUR + BULLE BD (en dehors du cadre) --- */
+  #proviseur-box {
+    position: absolute;
+    left: calc(50% + 520px);  /* à droite du cadre (1000px/2 + marge) */
+    bottom: 10px;
+    display: none;
+    pointer-events: none;
+    z-index: 2;
+  }
+
+  #proviseur-img {
+    height: auto;       /* personnage agrandi */
+    max-height: 50vh;
+  }
+
+  #speech-bubble {
+    position: absolute;
+    left: 100%;
+    bottom: 65%;
+    margin-left: 12px;
+    max-width: 320px;    /* augmente ça pour élargir la bulle */
+    background: #fff;
+    border-radius: 18px;
+    border: 3px solid #333;
+    padding: 10px 14px;
+    font-size: 14px;
+    font-weight: 700;
+    color: #111;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+  }
+
+  #speech-bubble::after {
+    content: "";
+    position: absolute;
+    right: 100%;
+    bottom: 20%;
+    border-width: 10px;
+    border-style: solid;
+    border-color: transparent #333 transparent transparent;
+  }
+
+  #speech-bubble::before {
+    content: "";
+    position: absolute;
+    right: 100%;
+    bottom: 20%;
+    margin-right: -2px;
+    border-width: 9px;
+    border-style: solid;
+    border-color: transparent #fff transparent transparent;
+  }
+
   @media (max-width: 800px) {
     #main { 
         width: 100%; height: 100%; padding: 5px; border-radius: 0; justify-content: space-between;
@@ -249,6 +303,33 @@
 
     #mobile-controls { display: flex; padding: 0 15px 15px 15px; box-sizing: border-box;}
     #message-center { font-size: 14px; margin-bottom: 5px; }
+
+    #proviseur-box {
+      left: auto;
+      right: 5px;
+      bottom: 5px;
+    }
+    #proviseur-img {
+      height: 240px;
+      max-height: 40vh;
+    }
+    #speech-bubble {
+      max-width: 220px;
+      font-size: 12px;
+      left: auto;
+      right: 100%;
+      margin-left: 0;
+      margin-right: 8px;
+    }
+    #speech-bubble::after,
+    #speech-bubble::before {
+      left: 100%;
+      right: auto;
+      border-color: transparent transparent transparent #333;
+    }
+    #speech-bubble::before {
+      border-color: transparent transparent transparent #fff;
+    }
   }
   
   @media (min-width: 801px) {
@@ -326,6 +407,12 @@
   <div id="message-center">APPUYEZ SUR ESPACE POUR DÉMARRER</div>
 </div>
 
+<!-- PROVISEUR + BULLE BD, en dehors du cadre blanc -->
+<div id="proviseur-box">
+  <img id="proviseur-img" src="proviseur.png" alt="Proviseur du lycée">
+  <div id="speech-bubble"></div>
+</div>
+
 <script>
   /* --- INITIALISATION --- */
   const canvas = document.getElementById("tetris");
@@ -333,25 +420,73 @@
   const nextCanvas = document.getElementById("next");
   const nextCtx = nextCanvas.getContext("2d");
    
-  // HD
   ctx.imageSmoothingEnabled = true;
   ctx.imageSmoothingQuality = 'high';
   nextCtx.imageSmoothingEnabled = true;
   nextCtx.imageSmoothingQuality = 'high';
 
-  // Éléments UI
   const scoreElem = document.getElementById("score");
   const levelElem = document.getElementById("level");
-  const rankElem = document.getElementById("rank-name"); // Élément pour le nom du grade
+  const rankElem = document.getElementById("rank-name");
 
   const mobScoreElem = document.getElementById("mob-score");
   const mobLevelElem = document.getElementById("mob-level");
-  const mobRankElem = document.getElementById("mob-rank"); // Élément mobile pour le grade
+  const mobRankElem = document.getElementById("mob-rank");
 
   const messageCenter = document.getElementById("message-center");
   const startBtn = document.getElementById("start-btn");
   const muteBtn = document.getElementById("mute-btn");
   const highscoreList = document.getElementById("highscore-list");
+
+  /* --- PROVISEUR --- */
+  const proviseurBox = document.getElementById("proviseur-box");
+  const speechBubble = document.getElementById("speech-bubble");
+  let proviseurTimeout = null;
+
+  const proviseurDialogues = {
+    start: [
+      "« Bienvenue en BTS CIEL… essayez de faire mieux que vos bulletins. »",
+      "« On s’échauffe : comme à la rentrée, mais avec moins de paperasse. »",
+      "« Tetris CIEL : si vous ragez déjà, attendez l’E4. »"
+    ],
+    line: [
+      "« Voilà, une ligne propre. Si seulement vos copies étaient aussi alignées. »",
+      "« Pas mal. Continuez comme ça et je signe la mention. »",
+      "« Une ligne en moins, un neurone en plus : bon calcul. »",
+      "« C’est ce que j’appelle de la gestion de stock efficace. »"
+    ],
+    level: [
+      "« Changement de niveau : comme le passage en 2e année, mais sans rattrapage. »",
+      "« Vous venez de monter d’un cran. Gardez ce rythme au conseil de classe. »",
+      "« Nouveau niveau. On va voir si vous tenez la cadence. »"
+    ],
+    gameover: [
+      "« GAME OVER… mais au lycée, on n’a pas de bouton Recommencer. »",
+      "« Conseil du proviseur : révisez la stratégie avant la prochaine partie. »",
+      "« Ça, c’est ce qu’on appelle une commission d’appel ratée. »"
+    ],
+    generic: [
+      "« Les CIEL, pensez à sauvegarder… vos neurones. »",
+      "« Un Tetris bien rangé, c’est comme une bonne salle machine : ça respire. »",
+      "« Pause ? Après avoir battu le highscore, pas avant. »",
+      "« Vous jouez, mais n’oubliez pas que les notes, elles, sont bien réelles. »"
+    ]
+  };
+
+  function getProviseurText(reason) {
+    const pool = proviseurDialogues[reason] || proviseurDialogues.generic;
+    return pool[Math.floor(Math.random() * pool.length)];
+  }
+
+  function showProviseur(reason) {
+    const text = getProviseurText(reason);
+    speechBubble.textContent = text;
+    proviseurBox.style.display = "block";
+    if (proviseurTimeout) clearTimeout(proviseurTimeout);
+    proviseurTimeout = setTimeout(() => {
+      proviseurBox.style.display = "none";
+    }, 4500);
+  }
 
   // Constantes Jeu
   const COLS = 10;
@@ -360,35 +495,31 @@
   const NEXT_TILE = 40; 
   const BASE_DROP = 800;
 
-  // Variables État
   let gameState = "waiting"; 
   let dropInterval = BASE_DROP;
   let dropCounter = 0;
   let lastTime = 0;
   let nextPieceMatrix = null; 
 
-  // Audio
   let muted = false;
   let audioCtx = null;
 
-  /* --- LISTE DES GRADES BTS CIEL --- */
   const cielRanks = [
-      "Nouvelle Recrue",        // Niv 1
-      "Apprenti Câbleur",       // Niv 2
-      "Scripteur Bash",         // Niv 3
-      "Décodeur Binaire",       // Niv 4
-      "Admin Réseau",           // Niv 5
-      "Développeur C++",        // Niv 6
-      "Survivant de l'E4",      // Niv 7
-      "Expert Cybersécu",       // Niv 8
-      "Chef de Projet E6",      // Niv 9
-      "Major de Promo",         // Niv 10
-      "Diplômé CIEL",           // Niv 11
-      "Légende de Simone Veil"  // Niv 12+
+      "Nouvelle Recrue",
+      "Apprenti Câbleur",
+      "Scripteur Bash",
+      "Décodeur Binaire",
+      "Admin Réseau",
+      "Développeur C++",
+      "Survivant de l'E4",
+      "Expert Cybersécu",
+      "Chef de Projet E6",
+      "Major de Promo",
+      "Diplômé CIEL",
+      "Légende de Simone Veil"
   ];
 
   function getRankName(level) {
-      // Si le niveau dépasse la liste, on garde le dernier grade
       if (level > cielRanks.length) return cielRanks[cielRanks.length - 1];
       return cielRanks[level - 1];
   }
@@ -425,7 +556,6 @@
   function sLine()   { playTone(600, 'sine', 0.2, 0.1); setTimeout(()=>playTone(1200, 'sine', 0.4, 0.1), 100); }
   function sGameOver(){ playTone(150, 'sawtooth', 1.0, 0.2); setTimeout(()=>playTone(100, 'sawtooth', 1.0, 0.2), 300); }
 
-  /* --- VISUELS --- */
   const FACE_COUNT = 10;
   const tileImages = [null];
   for (let i = 1; i <= FACE_COUNT; i++) {
@@ -439,7 +569,6 @@
   ];
 
   /* --- LOGIQUE --- */
-
   function createMatrix(w, h) {
     const m = [];
     for (let y = 0; y < h; y++) m.push(new Array(w).fill(0));
@@ -479,19 +608,18 @@
     }
   }
 
-  function drawMatrix(matrix, offset, context = ctx, tileSize = TILE, outline = false) {
+  // Dessine la matrice de blocs (sans contour spécial pour la pièce active)
+  function drawMatrix(matrix, offset, context = ctx, tileSize = TILE) {
     matrix.forEach((row, y) => {
       row.forEach((value, x) => {
         if (value !== 0) {
           const px = (x + offset.x) * tileSize;
           const py = (y + offset.y) * tileSize;
-           
+
           if (value === 99) {
-             context.fillStyle = "#555";
-             context.fillRect(px, py, tileSize, tileSize);
-             context.strokeStyle = "#222";
-             context.strokeRect(px, py, tileSize, tileSize);
-             return;
+            context.fillStyle = "#555";
+            context.fillRect(px, py, tileSize, tileSize);
+            return;
           }
 
           const imgIndex = (value % FACE_COUNT) || 1; 
@@ -499,14 +627,11 @@
 
           if (img && img.complete && img.naturalWidth !== 0) {
             context.drawImage(img, px, py, tileSize, tileSize);
-            if (outline) {
-                context.strokeStyle = "rgba(0,0,0,0.5)";
-                context.lineWidth = 2;
-                context.strokeRect(px, py, tileSize, tileSize);
-            }
           } else {
             context.fillStyle = colors[value % colors.length] || 'grey';
             context.fillRect(px, py, tileSize, tileSize);
+
+            // léger relief (pour les blocs posés ou l'ombre)
             context.lineWidth = 3; 
             context.strokeStyle = 'rgba(255,255,255,0.4)';
             context.strokeRect(px+2, py+2, tileSize-4, tileSize-4);
@@ -526,7 +651,7 @@
     const offsetX = (4 - nextPieceMatrix[0].length) / 2;
     const offsetY = (4 - nextPieceMatrix.length) / 2;
     
-    drawMatrix(nextPieceMatrix, {x: offsetX, y: offsetY}, nextCtx, NEXT_TILE, false);
+    drawMatrix(nextPieceMatrix, {x: offsetX, y: offsetY}, nextCtx, NEXT_TILE);
   }
 
   function merge(arena, player) {
@@ -573,8 +698,13 @@
       if (player.score > player.level * 1000) {
         player.level++;
         dropInterval = Math.max(100, 800 - (player.level * 50));
+        showProviseur("level");
+      } else if (Math.random() < 0.4) {
+        showProviseur("line");
       }
       updateScore();
+    } else if (Math.random() < 0.05) {
+      showProviseur("generic");
     }
   }
 
@@ -582,11 +712,9 @@
     scoreElem.textContent = player.score;
     levelElem.textContent = player.level;
     
-    // Mise à jour du grade
     const currentRank = getRankName(player.level);
     rankElem.textContent = currentRank;
 
-    // Mise à jour Mobile
     mobScoreElem.textContent = "Score: " + player.score;
     mobLevelElem.textContent = "Niv: " + player.level;
     mobRankElem.textContent = currentRank;
@@ -658,28 +786,79 @@
     else matrix.reverse();
   }
 
+  // --- Contour qui suit la forme de la pièce ---
+  function drawPieceOutline(matrix, pos) {
+    ctx.lineWidth = 4;
+    ctx.strokeStyle = "#000";
+    ctx.beginPath();
+
+    const h = matrix.length;
+    const w = matrix[0].length;
+
+    for (let y = 0; y < h; y++) {
+      for (let x = 0; x < w; x++) {
+        if (matrix[y][x] === 0) continue;
+
+        const worldX = pos.x + x;
+        const worldY = pos.y + y;
+
+        const px = worldX * TILE;
+        const py = worldY * TILE;
+
+        // voisin gauche vide → dessiner bord gauche
+        if (x === 0 || matrix[y][x - 1] === 0) {
+          ctx.moveTo(px, py);
+          ctx.lineTo(px, py + TILE);
+        }
+        // voisin droit vide → bord droit
+        if (x === w - 1 || matrix[y][x + 1] === 0) {
+          ctx.moveTo(px + TILE, py);
+          ctx.lineTo(px + TILE, py + TILE);
+        }
+        // voisin haut vide → bord haut
+        if (y === 0 || matrix[y - 1][x] === 0) {
+          ctx.moveTo(px, py);
+          ctx.lineTo(px + TILE, py);
+        }
+        // voisin bas vide → bord bas
+        if (y === h - 1 || matrix[y + 1][x] === 0) {
+          ctx.moveTo(px, py + TILE);
+          ctx.lineTo(px + TILE, py + TILE);
+        }
+      }
+    }
+
+    ctx.stroke();
+  }
+
+  // --- Rendu principal ---
   function draw() {
     ctx.fillStyle = "#fff";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     
     drawGrid();
-    drawMatrix(arena, {x:0, y:0});
+    drawMatrix(arena, {x:0, y:0});   // blocs posés
 
     if (gameState === "playing") {
+      // GHOST
       const ghost = {
         matrix: player.matrix,
         pos: {x: player.pos.x, y: player.pos.y}
       };
-      while(!collide(arena, ghost)) {
+      while (!collide(arena, ghost)) {
         ghost.pos.y++;
       }
       ghost.pos.y--;
       
       ctx.globalAlpha = 0.2;
-      drawMatrix(ghost.matrix, ghost.pos, ctx, TILE, false); 
+      drawMatrix(ghost.matrix, ghost.pos, ctx, TILE);
       ctx.globalAlpha = 1;
 
-      drawMatrix(player.matrix, player.pos, ctx, TILE, true);
+      // Pièce active
+      drawMatrix(player.matrix, player.pos, ctx, TILE);
+
+      // Contour qui suit la forme de la pièce
+      drawPieceOutline(player.matrix, player.pos);
     }
   }
 
@@ -700,7 +879,7 @@
     }
   }
 
-  /* --- GAME OVER --- */
+  /* --- GAME OVER & SCORES --- */
   function loadHighScores() {
     try { return JSON.parse(localStorage.getItem("tetris_scores") || "[]"); } catch { return []; }
   }
@@ -736,6 +915,7 @@
     gameState = "animating";
     sGameOver();
     messageCenter.textContent = "GAME OVER";
+    showProviseur("gameover");
 
     let y = ROWS - 1;
     const animInterval = setInterval(() => {
@@ -764,6 +944,7 @@
     gameState = "playing";
     messageCenter.textContent = "";
     sStart();
+    showProviseur("start");
     requestAnimationFrame(update);
   }
 
@@ -822,15 +1003,21 @@
   setupMobileBtn("btn-rotate", () => { if(gameState==="playing") playerRotate(1); draw(); });
   setupMobileBtn("btn-drop", () => { if(gameState==="playing") hardDrop(); draw(); });
 
-  startBtn.addEventListener("click", () => { if(!audioCtx) initAudioContext(); resetGame(); });
+  startBtn.addEventListener("click", () => {
+      startBtn.blur();  // évite que Space reclique sur le bouton
+      if(!audioCtx) initAudioContext();
+      resetGame();
+  });
+
   muteBtn.addEventListener("click", () => {
+      muteBtn.blur();
       muted = !muted;
       muteBtn.textContent = muted ? "Son : OFF" : "Son : ON";
       if(!muted && !audioCtx) initAudioContext();
   });
 
   refreshHighScoreList();
-  updateScore(); // Affiche le grade initial
+  updateScore();
   draw(); 
 
 </script>
