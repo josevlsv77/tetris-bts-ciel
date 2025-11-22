@@ -1020,6 +1020,15 @@
   updateScore();
   draw(); 
 
+// --- TAP POUR DÉMARRER SUR MOBILE ---
+canvas.addEventListener("touchstart", () => {
+    if (!audioCtx) initAudioContext();
+    if (gameState === "waiting" || gameState === "gameover") {
+        resetGame();
+    }
+});
+
+
 </script>
 </body>
 </html>
