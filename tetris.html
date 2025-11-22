@@ -3,17 +3,17 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Tetris BTS CIEL - Ultimate</title>
+<title>Tetris BTS CIEL - Lycée Simone Veil</title>
 
 <style>
   html, body {
     height: 100%;
     margin: 0;
-    overflow: hidden; /* Empêche le scroll sur mobile */
+    padding: 0;
+    overflow: hidden;
   }
 
   body {
-    /* Fond : si l'image n'est pas là, on met un dégradé sympa */
     background: url("fond_lycee.jpg") no-repeat center center fixed;
     background-color: #2c3e50; 
     background-size: cover;
@@ -21,52 +21,57 @@
     font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     display: flex;
     justify-content: center;
-    align-items: center; /* Centré verticalement */
-    padding: 10px;
-    box-sizing: border-box;
+    align-items: center;
   }
 
   #main {
     background: rgba(255,255,255,0.92);
     border-radius: 16px;
-    padding: 15px 20px;
+    padding: 10px;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 10px;
+    gap: 5px;
     box-sizing: border-box;
     box-shadow: 0 10px 25px rgba(0,0,0,0.5);
-    max-height: 100vh;
+    width: 98%;
+    height: 98%;
+    max-width: 1000px;
+    justify-content: center; 
   }
 
   #header-group {
     text-align: center;
+    margin-bottom: 5px;
   }
 
   #logo {
-    width: 80px; /* Un peu plus petit pour gagner de la place */
+    width: 60px;
     height: auto;
     display: block;
     margin: 0 auto;
   }
 
   #title {
-    font-size: 24px;
+    font-size: 20px;
     font-weight: 900;
     color: #222;
-    margin: 5px 0 0 0;
+    margin: 0;
   }
 
   #subtitle {
-    font-size: 12px;
+    font-size: 11px;
     color: #555;
     font-weight: 600;
   }
 
   #game-container {
     display: flex;
-    gap: 15px;
+    gap: 20px;
     align-items: flex-start;
+    justify-content: center;
+    height: 80vh; 
+    width: 100%;
   }
 
   /* Canvas principal */
@@ -75,9 +80,8 @@
     background: #fff;
     display: block;
     box-shadow: 5px 5px 15px rgba(0,0,0,0.2);
-    /* Responsive simple */
-    max-height: 65vh; 
-    width: auto;
+    height: 100%; 
+    width: auto; 
     aspect-ratio: 1/2;
   }
 
@@ -86,99 +90,135 @@
     flex-direction: column;
     gap: 8px;
     background: rgba(255,255,255,0.6);
-    padding: 10px;
+    padding: 15px;
     border-radius: 10px;
-    min-width: 160px;
+    min-width: 180px; /* Un peu plus large pour les noms de grades */
     border: 2px solid #333;
     box-sizing: border-box;
+    height: 100%;
+    justify-content: center;
   }
 
-  /* Prévisualisation */
   #next-piece-container {
     text-align: center;
-    margin-bottom: 5px;
+    margin-bottom: 10px;
   }
   canvas#next {
     background: #fff;
     border: 2px solid #555;
     margin-top: 2px;
+    width: 80px; 
+    height: 80px;
   }
 
-  #score, #level {
-    font-size: 16px;
+  #score-box, #level-box {
+    text-align: center;
+    margin-bottom: 5px;
+  }
+
+  .label-text {
+    font-size: 12px;
+    text-transform: uppercase;
+    color: #555;
     font-weight: bold;
+  }
+
+  #score {
+    font-size: 20px;
+    font-weight: 900;
     color: #000;
   }
 
-  #highscore-title {
-    font-size: 13px;
+  #level {
+    font-size: 18px;
     font-weight: bold;
-    margin-top: 5px;
+    color: #000;
+  }
+  
+  /* Style spécifique pour le grade BTS CIEL */
+  #rank-name {
+    font-size: 14px;
+    font-weight: 900;
+    color: #d32f2f; /* Rouge dynamique */
+    margin-top: 2px;
+    min-height: 20px;
+  }
+
+  #highscore-title {
+    font-size: 14px;
+    font-weight: bold;
+    margin-top: 10px;
     text-decoration: underline;
   }
 
   #highscore-list {
     padding-left: 18px; 
-    margin: 2px 0; 
-    font-size: 12px;
-    max-height: 100px;
+    margin: 5px 0; 
+    font-size: 13px;
+    max-height: 150px;
     overflow-y: auto;
   }
 
   button {
-    padding: 8px;
+    padding: 12px;
     border-radius: 6px;
     border: 2px solid #333;
     background: #fff;
     font-weight: bold;
-    font-size: 12px;
+    font-size: 13px;
     cursor: pointer;
     transition: background 0.2s;
+    margin-top: 5px;
   }
   button:hover { background: #eee; }
   button:active { background: #ccc; }
 
   #controls-info {
-    font-size: 10px;
-    line-height: 1.3;
-    margin-top: 5px;
+    font-size: 11px;
+    line-height: 1.4;
+    margin-top: 15px;
     color: #444;
+    background: rgba(0,0,0,0.05);
+    padding: 5px;
+    border-radius: 4px;
   }
 
   #message-center {
-    font-size: 16px;
+    font-size: 18px;
     font-weight: 900;
     text-align: center;
     color: #d32f2f;
-    min-height: 20px;
+    min-height: 24px;
+    margin-top: 5px;
   }
 
   /* --- CONTRÔLES MOBILE --- */
   #mobile-controls {
-    display: none; /* Caché par défaut */
+    display: none;
     width: 100%;
     justify-content: space-between;
     margin-top: 5px;
     gap: 10px;
+    padding-bottom: 5px;
   }
-  
+   
   .pad-group {
     display: flex;
-    gap: 8px;
+    gap: 15px;
   }
 
   .mob-btn {
-    width: 48px;
-    height: 48px;
-    font-size: 20px;
+    width: 55px;
+    height: 55px;
+    font-size: 24px;
     display: flex;
     justify-content: center;
     align-items: center;
     background: rgba(255,255,255,0.9);
     border: 2px solid #333;
-    border-radius: 8px;
+    border-radius: 50%;
     box-shadow: 0 4px 0 #333;
-    touch-action: manipulation; /* Améliore la réactivité tactile */
+    touch-action: manipulation;
     user-select: none;
   }
   .mob-btn:active {
@@ -187,27 +227,30 @@
     background: #ddd;
   }
   .mob-btn.big {
-    width: 55px;
-    height: 55px;
+    width: 65px;
+    height: 65px;
     background: #ffeba7;
   }
 
-  /* RESPONSIVE : Adaptation Mobile */
   @media (max-width: 800px) {
-    body { align-items: flex-start; }
-    #main { padding: 10px; width: 100%; max-width: 400px; }
-    #game-container { width: 100%; justify-content: center; }
-    #side-panel { display: none; } /* On cache le panneau latéral sur mobile pour la place */
-    
-    /* On affiche une version mini du score en haut */
-    #mobile-header { display: flex; justify-content: space-between; width: 100%; font-weight: bold; font-size: 14px; margin-bottom: 5px;}
-    
-    #mobile-controls { display: flex; }
-    #logo { width: 40px; }
-    #title { font-size: 18px; }
-    #subtitle { display: none; }
-    #controls-info { display: none; }
+    #main { 
+        width: 100%; height: 100%; padding: 5px; border-radius: 0; justify-content: space-between;
+    }
+    #header-group { display: none; }
+    #game-container { height: 60vh; align-items: center; }
+    #side-panel { display: none; } 
+    #mobile-header { 
+        display: flex; flex-direction: column; align-items: center; width: 95%; 
+        font-weight: bold; font-size: 14px; margin-top: 5px;
+        background: rgba(255,255,255,0.8); padding: 5px; border-radius: 8px;
+    }
+    #mobile-header-row { display: flex; justify-content: space-between; width: 100%; }
+    #mob-rank { color: #d32f2f; font-size: 12px; margin-top: 2px; font-weight: 900;}
+
+    #mobile-controls { display: flex; padding: 0 15px 15px 15px; box-sizing: border-box;}
+    #message-center { font-size: 14px; margin-bottom: 5px; }
   }
+  
   @media (min-width: 801px) {
     #mobile-header { display: none; }
   }
@@ -221,25 +264,36 @@
   <div id="header-group">
     <img id="logo" src="Logo.gif" alt="Logo BTS" onerror="this.style.display='none'">
     <div id="title">TETRIS – BTS CIEL</div>
-    <div id="subtitle">Valide tes modules pour avoir ton diplôme !</div>
+    <div id="subtitle">Lycée Simone Veil - Noisiel</div>
   </div>
 
   <div id="mobile-header">
-    <span id="mob-score">Score: 0</span>
-    <span id="mob-level">Niv: 1</span>
+    <div id="mobile-header-row">
+        <span id="mob-score">Score: 0</span>
+        <span id="mob-level">Niv: 1</span>
+    </div>
+    <div id="mob-rank">Nouvelle Recrue</div>
   </div>
 
   <div id="game-container">
-    <canvas id="tetris" width="400" height="800"></canvas>
+    <canvas id="tetris" width="800" height="1600"></canvas>
 
     <div id="side-panel">
       <div id="next-piece-container">
-        <div>Suivante :</div>
-        <canvas id="next" width="80" height="80"></canvas>
+        <div style="font-weight:bold; margin-bottom:5px;">Suivante :</div>
+        <canvas id="next" width="160" height="160"></canvas>
       </div>
 
-      <div id="score">Score : 0</div>
-      <div id="level">Niveau : 1</div>
+      <div id="score-box">
+        <div class="label-text">Score</div>
+        <div id="score">0</div>
+      </div>
+
+      <div id="level-box">
+        <div class="label-text">Niveau</div>
+        <div id="level">1</div>
+        <div id="rank-name">Nouvelle Recrue</div>
+      </div>
 
       <div id="highscore-title">Meilleurs scores :</div>
       <ul id="highscore-list"></ul>
@@ -248,7 +302,7 @@
       <button id="mute-btn">Son : ON</button>
 
       <div id="controls-info">
-        <b>Clavier :</b><br>
+        <b>Contrôles :</b><br>
         ◀/▶/▼ : Bouger<br>
         ▲ : Hard Drop<br>
         Espace : Rotation<br>
@@ -278,16 +332,22 @@
   const ctx = canvas.getContext("2d");
   const nextCanvas = document.getElementById("next");
   const nextCtx = nextCanvas.getContext("2d");
-  
-  // Optimisation affichage
-  ctx.imageSmoothingEnabled = false;
-  nextCtx.imageSmoothingEnabled = false;
+   
+  // HD
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = 'high';
+  nextCtx.imageSmoothingEnabled = true;
+  nextCtx.imageSmoothingQuality = 'high';
 
   // Éléments UI
   const scoreElem = document.getElementById("score");
   const levelElem = document.getElementById("level");
+  const rankElem = document.getElementById("rank-name"); // Élément pour le nom du grade
+
   const mobScoreElem = document.getElementById("mob-score");
   const mobLevelElem = document.getElementById("mob-level");
+  const mobRankElem = document.getElementById("mob-rank"); // Élément mobile pour le grade
+
   const messageCenter = document.getElementById("message-center");
   const startBtn = document.getElementById("start-btn");
   const muteBtn = document.getElementById("mute-btn");
@@ -296,20 +356,42 @@
   // Constantes Jeu
   const COLS = 10;
   const ROWS = 20;
-  const TILE = 40;
-  const NEXT_TILE = 20; // Taille plus petite pour la preview
+  const TILE = 80; 
+  const NEXT_TILE = 40; 
   const BASE_DROP = 800;
 
   // Variables État
-  let gameState = "waiting"; // waiting, playing, paused, gameover, animating
+  let gameState = "waiting"; 
   let dropInterval = BASE_DROP;
   let dropCounter = 0;
   let lastTime = 0;
-  let nextPieceMatrix = null; // Stocke la pièce suivante
+  let nextPieceMatrix = null; 
 
   // Audio
   let muted = false;
   let audioCtx = null;
+
+  /* --- LISTE DES GRADES BTS CIEL --- */
+  const cielRanks = [
+      "Nouvelle Recrue",        // Niv 1
+      "Apprenti Câbleur",       // Niv 2
+      "Scripteur Bash",         // Niv 3
+      "Décodeur Binaire",       // Niv 4
+      "Admin Réseau",           // Niv 5
+      "Développeur C++",        // Niv 6
+      "Survivant de l'E4",      // Niv 7
+      "Expert Cybersécu",       // Niv 8
+      "Chef de Projet E6",      // Niv 9
+      "Major de Promo",         // Niv 10
+      "Diplômé CIEL",           // Niv 11
+      "Légende de Simone Veil"  // Niv 12+
+  ];
+
+  function getRankName(level) {
+      // Si le niveau dépasse la liste, on garde le dernier grade
+      if (level > cielRanks.length) return cielRanks[cielRanks.length - 1];
+      return cielRanks[level - 1];
+  }
 
   /* --- AUDIO --- */
   function initAudioContext() {
@@ -336,7 +418,6 @@
     osc.stop(audioCtx.currentTime + duration);
   }
 
-  // Sons synthétisés (pas besoin de fichiers)
   function sStart()  { playTone(440, 'triangle', 0.5, 0.1); setTimeout(()=>playTone(880, 'triangle', 0.5, 0.1), 100); }
   function sMove()   { playTone(200, 'sine', 0.1, 0.05); }
   function sRotate() { playTone(300, 'square', 0.1, 0.05); }
@@ -344,29 +425,20 @@
   function sLine()   { playTone(600, 'sine', 0.2, 0.1); setTimeout(()=>playTone(1200, 'sine', 0.4, 0.1), 100); }
   function sGameOver(){ playTone(150, 'sawtooth', 1.0, 0.2); setTimeout(()=>playTone(100, 'sawtooth', 1.0, 0.2), 300); }
 
-  /* --- VISUELS & IMAGES --- */
+  /* --- VISUELS --- */
   const FACE_COUNT = 10;
   const tileImages = [null];
   for (let i = 1; i <= FACE_COUNT; i++) {
     const img = new Image();
-    img.src = "visage" + i + ".jpg"; // Assure-toi que ces fichiers existent
+    img.src = "visage" + i + ".jpg";
     tileImages[i] = img;
   }
 
-  // Palette de secours (Fallback Colors style Tetris officiel)
   const colors = [
-    null,
-    '#FF0D72', // T (Magenta)
-    '#0DC2FF', // I (Cyan)
-    '#0DFF72', // S (Vert)
-    '#F538FF', // Z (Violet)
-    '#FF8E0D', // L (Orange)
-    '#FFE138', // O (Jaune)
-    '#3877FF', // J (Bleu)
-    '#555555', // Gris foncé (Game Over)
+    null, '#FF0D72', '#0DC2FF', '#0DFF72', '#F538FF', '#FF8E0D', '#FFE138', '#3877FF', '#555555'
   ];
 
-  /* --- LOGIQUE DU JEU --- */
+  /* --- LOGIQUE --- */
 
   function createMatrix(w, h) {
     const m = [];
@@ -375,11 +447,10 @@
   }
 
   function createPiece(type) {
-    // Formes officielles
     switch (type) {
       case 'T': return [[0,1,0],[1,1,1],[0,0,0]];
       case 'O': return [[2,2],[2,2]];
-      case 'L': return [[0,0,3],[3,3,3],[0,0,0]]; // Modif indice pour couleur diff
+      case 'L': return [[0,0,3],[3,3,3],[0,0,0]]; 
       case 'J': return [[4,0,0],[4,4,4],[0,0,0]];
       case 'I': return [[0,5,0,0],[0,5,0,0],[0,5,0,0],[0,5,0,0]];
       case 'S': return [[0,6,6],[6,6,0],[0,0,0]];
@@ -399,7 +470,7 @@
 
   function drawGrid() {
     ctx.strokeStyle = "rgba(0,0,0,0.1)";
-    ctx.lineWidth = 1;
+    ctx.lineWidth = 2; 
     for (let x = 0; x <= COLS; x++) {
       ctx.beginPath(); ctx.moveTo(x*TILE, 0); ctx.lineTo(x*TILE, ROWS*TILE); ctx.stroke();
     }
@@ -408,15 +479,13 @@
     }
   }
 
-  // Fonction de dessin améliorée (gère images OU couleurs)
   function drawMatrix(matrix, offset, context = ctx, tileSize = TILE, outline = false) {
     matrix.forEach((row, y) => {
       row.forEach((value, x) => {
         if (value !== 0) {
           const px = (x + offset.x) * tileSize;
           const py = (y + offset.y) * tileSize;
-          
-          // Animation de Game Over (Gris)
+           
           if (value === 99) {
              context.fillStyle = "#555";
              context.fillRect(px, py, tileSize, tileSize);
@@ -425,8 +494,6 @@
              return;
           }
 
-          // Tentative affichage Image
-          // On utilise modulo pour assigner une image même si value > FACE_COUNT
           const imgIndex = (value % FACE_COUNT) || 1; 
           const img = tileImages[imgIndex];
 
@@ -434,21 +501,17 @@
             context.drawImage(img, px, py, tileSize, tileSize);
             if (outline) {
                 context.strokeStyle = "rgba(0,0,0,0.5)";
-                context.lineWidth = 1;
+                context.lineWidth = 2;
                 context.strokeRect(px, py, tileSize, tileSize);
             }
           } else {
-            // FALLBACK COULEUR
             context.fillStyle = colors[value % colors.length] || 'grey';
-            
-            // Effet "biseau" 3D simple
             context.fillRect(px, py, tileSize, tileSize);
-            context.lineWidth = 2;
+            context.lineWidth = 3; 
             context.strokeStyle = 'rgba(255,255,255,0.4)';
             context.strokeRect(px+2, py+2, tileSize-4, tileSize-4);
-            
             context.fillStyle = 'rgba(0,0,0,0.15)';
-            context.fillRect(px+4, py+4, tileSize-8, tileSize-8);
+            context.fillRect(px+6, py+6, tileSize-12, tileSize-12);
           }
         }
       });
@@ -460,7 +523,6 @@
     nextCtx.fillStyle = "#fff";
     nextCtx.fillRect(0, 0, nextCanvas.width, nextCanvas.height);
     
-    // Centrage
     const offsetX = (4 - nextPieceMatrix[0].length) / 2;
     const offsetY = (4 - nextPieceMatrix.length) / 2;
     
@@ -506,10 +568,8 @@
     }
     if (lines > 0) {
       sLine();
-      // Score classique Nintendo
       const linePoints = [0, 40, 100, 300, 1200];
       player.score += linePoints[lines] * player.level;
-      
       if (player.score > player.level * 1000) {
         player.level++;
         dropInterval = Math.max(100, 800 - (player.level * 50));
@@ -519,27 +579,25 @@
   }
 
   function updateScore() {
-    const txtScore = "Score : " + player.score;
-    const txtLevel = "Niveau : " + player.level;
-    scoreElem.textContent = txtScore;
-    levelElem.textContent = txtLevel;
+    scoreElem.textContent = player.score;
+    levelElem.textContent = player.level;
     
-    // Mise à jour mobile
+    // Mise à jour du grade
+    const currentRank = getRankName(player.level);
+    rankElem.textContent = currentRank;
+
+    // Mise à jour Mobile
     mobScoreElem.textContent = "Score: " + player.score;
     mobLevelElem.textContent = "Niv: " + player.level;
+    mobRankElem.textContent = currentRank;
   }
 
   function playerReset() {
     const pieces = 'ILJOTSZ';
-    
-    // Si c'est la toute première pièce
     if (nextPieceMatrix === null) {
         nextPieceMatrix = createPiece(pieces[pieces.length * Math.random() | 0]);
     }
-
     player.matrix = nextPieceMatrix;
-    
-    // Générer la suivante
     nextPieceMatrix = createPiece(pieces[pieces.length * Math.random() | 0]);
     drawNextPiece();
 
@@ -567,7 +625,7 @@
     while (!collide(arena, player)) {
       player.pos.y++;
     }
-    player.pos.y--; // Remonter d'un cran car on est rentré dans le sol
+    player.pos.y--; 
     merge(arena, player);
     sDrop();
     arenaSweep();
@@ -596,14 +654,10 @@
         [matrix[x][y], matrix[y][x]] = [matrix[y][x], matrix[x][y]];
       }
     }
-    if (dir > 0) {
-      matrix.forEach(row => row.reverse());
-    } else {
-      matrix.reverse();
-    }
+    if (dir > 0) matrix.forEach(row => row.reverse());
+    else matrix.reverse();
   }
 
-  let lastGhostY = 0;
   function draw() {
     ctx.fillStyle = "#fff";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -612,7 +666,6 @@
     drawMatrix(arena, {x:0, y:0});
 
     if (gameState === "playing") {
-      // Ghost Piece (Fantôme)
       const ghost = {
         matrix: player.matrix,
         pos: {x: player.pos.x, y: player.pos.y}
@@ -623,7 +676,7 @@
       ghost.pos.y--;
       
       ctx.globalAlpha = 0.2;
-      drawMatrix(ghost.matrix, ghost.pos, ctx, TILE, false); // Pas d'outline sur le fantome
+      drawMatrix(ghost.matrix, ghost.pos, ctx, TILE, false); 
       ctx.globalAlpha = 1;
 
       drawMatrix(player.matrix, player.pos, ctx, TILE, true);
@@ -642,13 +695,12 @@
     }
 
     draw();
-    if (gameState !== "gameover") { // On continue de dessiner sauf si gameover (qui a sa propre anim)
+    if (gameState !== "gameover") { 
         requestAnimationFrame(update);
     }
   }
 
-  /* --- GAME OVER & SCORES --- */
-
+  /* --- GAME OVER --- */
   function loadHighScores() {
     try { return JSON.parse(localStorage.getItem("tetris_scores") || "[]"); } catch { return []; }
   }
@@ -667,17 +719,17 @@
 
   function addHighScore(score) {
     setTimeout(() => {
-        let name = prompt("GAME OVER ! \nScore: " + score + "\nTon pseudo :", "Etudiant CIEL");
+        let name = prompt("GAME OVER ! \nGrade atteint : " + getRankName(player.level) + "\nTon pseudo :", "Etudiant CIEL");
         if (!name) return;
         name = name.trim().substring(0, 10);
 
         const scores = loadHighScores();
         scores.push({name, score});
         scores.sort((a,b)=>b.score-a.score);
-        if (scores.length > 5) scores.length = 5; // Garder le top 5
+        if (scores.length > 5) scores.length = 5; 
         saveHighScores(scores);
         refreshHighScoreList();
-    }, 100); // Petit délai pour laisser le navigateur respirer
+    }, 100); 
   }
 
   function handleGameOver() {
@@ -685,19 +737,17 @@
     sGameOver();
     messageCenter.textContent = "GAME OVER";
 
-    // Animation Rideau Gris
     let y = ROWS - 1;
     const animInterval = setInterval(() => {
         if (y < 0) {
             clearInterval(animInterval);
             addHighScore(player.score);
             gameState = "gameover";
-            messageCenter.textContent = "GAME OVER — APPUYEZ SUR ESPACE";
+            messageCenter.textContent = "GAME OVER — ESPACE POUR REJOUER";
             return;
         }
-        // Remplir la ligne de gris (code 99)
         arena[y].fill(99);
-        draw(); // Forcer le dessin
+        draw(); 
         y--;
     }, 40);
   }
@@ -717,8 +767,7 @@
     requestAnimationFrame(update);
   }
 
-  /* --- INPUTS (CLAVIER & MOBILE) --- */
-
+  /* --- INPUTS --- */
   document.addEventListener("keydown", event => {
     if (!audioCtx) initAudioContext();
 
@@ -730,7 +779,7 @@
     if (gameState === "playing") {
       switch(event.code) {
         case "ArrowLeft": 
-        case "KeyQ": // Support AZERTY
+        case "KeyQ": 
           player.pos.x--;
           if (collide(arena, player)) player.pos.x++; else sMove();
           break;
@@ -744,7 +793,7 @@
           playerDrop();
           break;
         case "ArrowUp": 
-        case "KeyZ": // Optionnel : rotation ou drop ? ici HardDrop
+        case "KeyZ": 
            hardDrop();
            break;
         case "Space":
@@ -761,33 +810,18 @@
     }
   });
 
-  // Gestion Mobile (Click handlers)
   const setupMobileBtn = (id, action) => {
     const btn = document.getElementById(id);
-    // Eviter le double déclenchement (touch + click)
     btn.addEventListener("touchstart", (e) => { e.preventDefault(); if(!audioCtx) initAudioContext(); action(); });
     btn.addEventListener("click", (e) => { if(!audioCtx) initAudioContext(); action(); });
   };
 
-  setupMobileBtn("btn-left", () => { 
-      if(gameState!=="playing") return; 
-      player.pos.x--; 
-      if(collide(arena, player)) player.pos.x++; 
-      else sMove(); 
-      draw(); 
-  });
-  setupMobileBtn("btn-right", () => { 
-      if(gameState!=="playing") return; 
-      player.pos.x++; 
-      if(collide(arena, player)) player.pos.x--; 
-      else sMove(); 
-      draw(); 
-  });
+  setupMobileBtn("btn-left", () => { if(gameState==="playing") { player.pos.x--; if(collide(arena, player)) player.pos.x++; else sMove(); draw(); }});
+  setupMobileBtn("btn-right", () => { if(gameState==="playing") { player.pos.x++; if(collide(arena, player)) player.pos.x--; else sMove(); draw(); }});
   setupMobileBtn("btn-down", () => { if(gameState==="playing") playerDrop(); draw(); });
   setupMobileBtn("btn-rotate", () => { if(gameState==="playing") playerRotate(1); draw(); });
   setupMobileBtn("btn-drop", () => { if(gameState==="playing") hardDrop(); draw(); });
 
-  // Boutons UI
   startBtn.addEventListener("click", () => { if(!audioCtx) initAudioContext(); resetGame(); });
   muteBtn.addEventListener("click", () => {
       muted = !muted;
@@ -795,9 +829,9 @@
       if(!muted && !audioCtx) initAudioContext();
   });
 
-  // Démarrage initial
   refreshHighScoreList();
-  draw(); // Dessin statique avant le début
+  updateScore(); // Affiche le grade initial
+  draw(); 
 
 </script>
 </body>
