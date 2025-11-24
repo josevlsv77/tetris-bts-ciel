@@ -237,7 +237,7 @@
   /* --- PROVISEUR + BULLE BD (en dehors du cadre) --- */
   #proviseur-box {
     position: absolute;
-    left: calc(50% + 400px);  /* à droite du cadre (1000px/2 + marge) */
+    left: calc(50% + 400px);  /* PC : à droite du cadre */
     bottom: 10px;
     display: none;
     pointer-events: none;
@@ -245,7 +245,7 @@
   }
 
   #proviseur-img {
-    height: auto;       /* personnage agrandi */
+    height: auto;
     max-height: 50vh;
   }
 
@@ -254,7 +254,7 @@
     left: 100%;
     bottom: 65%;
     margin-left: 12px;
-    max-width: 320px;    /* augmente ça pour élargir la bulle */
+    max-width: 320px;
     background: #fff;
     border-radius: 18px;
     border: 3px solid #333;
@@ -301,25 +301,33 @@
     #mobile-header-row { display: flex; justify-content: space-between; width: 100%; }
     #mob-rank { color: #d32f2f; font-size: 12px; margin-top: 2px; font-weight: 900;}
 
-    #mobile-controls { display: flex; padding: 0 15px 15px 15px; box-sizing: border-box;}
+    #mobile-controls { 
+      display: flex; 
+      padding: 0 15px 15px 15px; 
+      box-sizing: border-box;
+    }
     #message-center { font-size: 14px; margin-bottom: 5px; }
 
+    /* PROVISEUR MOBILE : en haut à droite, plus petit */
     #proviseur-box {
       left: auto;
       right: 5px;
-      bottom: 5px;
+      bottom: auto;
+      top: 60px;
+      z-index: 2;
     }
     #proviseur-img {
-      height: 240px;
-      max-height: 40vh;
+      height: 180px;
+      max-height: 35vh;
     }
     #speech-bubble {
-      max-width: 220px;
+      max-width: 260px;
       font-size: 12px;
       left: auto;
       right: 100%;
       margin-left: 0;
       margin-right: 8px;
+      white-space: normal;
     }
     #speech-bubble::after,
     #speech-bubble::before {
@@ -805,7 +813,7 @@
         const px = worldX * TILE;
         const py = worldY * TILE;
 
-        // voisin gauche vide → dessiner bord gauche
+        // voisin gauche vide → bord gauche
         if (x === 0 || matrix[y][x - 1] === 0) {
           ctx.moveTo(px, py);
           ctx.lineTo(px, py + TILE);
@@ -948,7 +956,7 @@
     requestAnimationFrame(update);
   }
 
-  /* --- INPUTS --- */
+  /* --- INPUTS CLAVIER --- */
   document.addEventListener("keydown", event => {
     if (!audioCtx) initAudioContext();
 
@@ -991,6 +999,7 @@
     }
   });
 
+  /* --- CONTRÔLES MOBILE --- */
   const setupMobileBtn = (id, action) => {
     const btn = document.getElementById(id);
     btn.addEventListener("touchstart", (e) => { e.preventDefault(); if(!audioCtx) initAudioContext(); action(); });
@@ -1020,14 +1029,13 @@
   updateScore();
   draw(); 
 
-// --- TAP POUR DÉMARRER SUR MOBILE ---
-canvas.addEventListener("touchstart", () => {
-    if (!audioCtx) initAudioContext();
-    if (gameState === "waiting" || gameState === "gameover") {
-        resetGame();
-    }
-});
-
+  // --- TAP POUR DÉMARRER SUR MOBILE ---
+  canvas.addEventListener("touchstart", () => {
+      if (!audioCtx) initAudioContext();
+      if (gameState === "waiting" || gameState === "gameover") {
+          resetGame();
+      }
+  });
 
 </script>
 </body>
