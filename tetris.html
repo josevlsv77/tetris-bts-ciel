@@ -11,7 +11,6 @@
     margin: 0;
     padding: 0;
     overflow: hidden;
-    /* Empêche le rebond élastique sur iOS */
     overscroll-behavior: none;
   }
 
@@ -28,7 +27,7 @@
   }
 
   #main {
-    background: rgba(255,255,255,0.94); /* Légèrement plus opaque pour la lisibilité */
+    background: rgba(255,255,255,0.94);
     border-radius: 16px;
     padding: 10px;
     display: flex;
@@ -43,7 +42,7 @@
     justify-content: center; 
     position: relative;
     z-index: 1;
-    backdrop-filter: blur(5px); /* Effet verre dépoli moderne */
+    backdrop-filter: blur(5px);
   }
 
   #header-group {
@@ -217,7 +216,6 @@
   }
   @keyframes pulse { 0% { opacity: 0.8; } 50% { opacity: 1; } 100% { opacity: 0.8; } }
 
-  /* --- CONTRÔLES MOBILE --- */
   #mobile-controls {
     display: none;
     width: 100%;
@@ -225,41 +223,24 @@
     margin-top: 5px;
     gap: 10px;
     padding-bottom: 5px;
-    touch-action: none; /* Crucial pour le jeu mobile */
+    touch-action: none;
   }
     
-  .pad-group {
-    display: flex;
-    gap: 12px;
-  }
+  .pad-group { display: flex; gap: 12px; }
 
   .mob-btn {
-    width: 58px;
-    height: 58px;
-    font-size: 24px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+    width: 58px; height: 58px; font-size: 24px;
+    display: flex; justify-content: center; align-items: center;
     background: linear-gradient(145deg, #ffffff, #e6e6e6);
-    border: 2px solid #333;
-    border-radius: 50%;
+    border: 2px solid #333; border-radius: 50%;
     box-shadow: 0 4px 0 #333;
-    touch-action: manipulation;
-    user-select: none;
+    touch-action: manipulation; user-select: none;
     -webkit-tap-highlight-color: transparent;
   }
-  .mob-btn:active {
-    transform: translateY(4px);
-    box-shadow: none;
-    background: #ddd;
-  }
-  .mob-btn.big {
-    width: 68px;
-    height: 68px;
-    background: linear-gradient(145deg, #ffeba7, #ffdf80);
-  }
+  .mob-btn:active { transform: translateY(4px); box-shadow: none; background: #ddd; }
+  .mob-btn.big { width: 68px; height: 68px; background: linear-gradient(145deg, #ffeba7, #ffdf80); }
 
-  /* --- PROVISEUR + BULLE BD --- */
+  /* --- PROVISEUR + BULLE BD (AMÉLIORÉE) --- */
   #proviseur-box {
     position: absolute;
     left: calc(50% + 400px); 
@@ -280,32 +261,42 @@
     filter: drop-shadow(5px 5px 10px rgba(0,0,0,0.4));
   }
 
+  /* --- CSS BULLE AMÉLIORÉ --- */
   #speech-bubble {
     position: absolute;
     left: 100%;
     bottom: 65%;
-    margin-left: 12px;
+    margin-left: 15px; /* Plus d'espace */
     max-width: 320px;
-    background: #fff;
-    border-radius: 18px;
-    border: 3px solid #333;
-    padding: 12px 16px;
-    font-size: 14px;
-    font-weight: 700;
-    color: #111;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-    font-family: "Comic Sans MS", "Chalkboard SE", sans-serif; /* Style BD */
+    background: #ffffff;
+    
+    /* Bordure plus subtile et moderne */
+    border: 2px solid #2c3e50; 
+    border-radius: 12px;
+    
+    /* Plus d'espace interne pour la lisibilité */
+    padding: 16px 20px;
+    
+    /* Typo plus propre */
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    font-size: 15px; 
+    line-height: 1.5; /* Aère le texte */
+    font-weight: 600;
+    color: #2c3e50;
+    
+    /* Ombre portée plus douce */
+    box-shadow: 0 8px 20px rgba(0,0,0,0.15);
   }
 
   /* Flèche bulle PC */
   #speech-bubble::after {
     content: ""; position: absolute; right: 100%; bottom: 20%;
     border-width: 10px; border-style: solid;
-    border-color: transparent #333 transparent transparent;
+    border-color: transparent #2c3e50 transparent transparent;
   }
   #speech-bubble::before {
     content: ""; position: absolute; right: 100%; bottom: 20%;
-    margin-right: -4px; border-width: 8px; border-style: solid;
+    margin-right: -3px; border-width: 10px; border-style: solid;
     border-color: transparent #fff transparent transparent;
     z-index: 2;
   }
@@ -327,46 +318,33 @@
     #mob-rank { color: #d32f2f; font-size: 12px; margin-top: 2px; font-weight: 900;}
 
     #mobile-controls { 
-      display: flex; 
-      padding: 0 10px 20px 10px; 
-      box-sizing: border-box;
+      display: flex; padding: 0 10px 20px 10px; box-sizing: border-box;
     }
     #message-center { font-size: 14px; margin-bottom: 5px; }
 
     /* --- PROVISEUR MOBILE --- */
     #proviseur-box {
-      left: auto;
-      right: 0px;
-      bottom: 90px;
-      top: auto;
-      z-index: 20;
-      pointer-events: none; /* Laisse passer les clics en dessous sur mobile */
+      left: auto; right: 0px; bottom: 90px; top: auto;
+      z-index: 20; pointer-events: none;
     }
-    #proviseur-img {
-      height: 100px; 
-      max-height: 20vh;
-    }
+    #proviseur-img { height: 100px; max-height: 20vh; }
     
     #speech-bubble {
-      max-width: 180px;
-      font-size: 12px;
-      left: auto;
-      right: 95%; 
-      bottom: 20%;
-      margin-left: 0;
-      margin-right: 5px;
-      white-space: normal;
-      pointer-events: auto;
+      max-width: 200px;
+      font-size: 13px; /* Un peu plus petit sur mobile mais lisible */
+      left: auto; right: 95%; bottom: 20%;
+      margin-left: 0; margin-right: 10px;
+      white-space: normal; pointer-events: auto;
     }
 
     /* Flèche bulle Mobile */
     #speech-bubble::after {
       left: 100%; right: auto; bottom: 20%;
-      border-color: transparent transparent transparent #333;
+      border-color: transparent transparent transparent #2c3e50;
     }
     #speech-bubble::before {
       left: 100%; right: auto; bottom: 20%;
-      margin-right: 0; margin-left: -4px;
+      margin-right: 0; margin-left: -3px;
       border-color: transparent transparent transparent #fff;
     }
   }
@@ -458,7 +436,6 @@
   const nextCanvas = document.getElementById("next");
   const nextCtx = nextCanvas.getContext("2d");
     
-  // Optimisation rendu
   ctx.imageSmoothingEnabled = true;
   ctx.imageSmoothingQuality = 'high';
   nextCtx.imageSmoothingEnabled = true;
@@ -605,24 +582,18 @@
     tileImages[i] = img;
   }
 
-  // Couleurs améliorées pour le mode sans image
   const colors = [
     null, '#FF0D72', '#0DC2FF', '#0DFF72', '#F538FF', '#FF8E0D', '#FFE138', '#3877FF', '#555555'
   ];
 
-  /* --- LOGIQUE PARTICULES (Effet "Juice") --- */
+  /* --- PARTICULES --- */
   let particles = [];
-  
   function spawnParticles(x, y, color, amount = 10) {
     for (let i = 0; i < amount; i++) {
       particles.push({
-        x: x + TILE / 2,
-        y: y + TILE / 2,
-        vx: (Math.random() - 0.5) * 15,
-        vy: (Math.random() - 0.5) * 15,
-        life: 1.0,
-        color: color,
-        size: Math.random() * 8 + 4
+        x: x + TILE / 2, y: y + TILE / 2,
+        vx: (Math.random() - 0.5) * 15, vy: (Math.random() - 0.5) * 15,
+        life: 1.0, color: color, size: Math.random() * 8 + 4
       });
     }
   }
@@ -630,16 +601,8 @@
   function updateAndDrawParticles(ctx) {
     for (let i = particles.length - 1; i >= 0; i--) {
       let p = particles[i];
-      p.x += p.vx;
-      p.y += p.vy;
-      p.vy += 0.5; // Gravité
-      p.life -= 0.03;
-      
-      if (p.life <= 0) {
-        particles.splice(i, 1);
-        continue;
-      }
-      
+      p.x += p.vx; p.y += p.vy; p.vy += 0.5; p.life -= 0.03;
+      if (p.life <= 0) { particles.splice(i, 1); continue; }
       ctx.globalAlpha = p.life;
       ctx.fillStyle = p.color;
       ctx.fillRect(p.x, p.y, p.size, p.size);
@@ -656,7 +619,6 @@
 
   function createPiece(type) {
     const id = 1 + (Math.random() * FACE_COUNT | 0);
-    // On stocke le type pour la couleur de fallback
     let shape = [];
     switch (type) {
       case 'T': shape = [[0, id, 0],[id, id, id],[0, 0, 0]]; break;
@@ -667,7 +629,6 @@
       case 'S': shape = [[0, id, id],[id, id, 0],[0, 0, 0]]; break;
       case 'Z': shape = [[id, id, 0],[0, id, id],[0, 0, 0]]; break;
     }
-    // Petite astuce: on attache la "couleur" (index 1-7) à la matrice pour le rendu fallback
     shape.typeIdx = "ILJOTSZ".indexOf(type) + 1; 
     return shape;
   }
@@ -686,7 +647,6 @@
   function drawGrid() {
     ctx.strokeStyle = "rgba(0, 0, 0, 0.08)";
     ctx.lineWidth = 1; 
-    
     for (let x = 1; x < COLS; x++) {
       ctx.beginPath(); ctx.moveTo(x*TILE, 0); ctx.lineTo(x*TILE, ROWS*TILE); ctx.stroke();
     }
@@ -695,20 +655,14 @@
     }
   }
 
-  // Helper pour dessiner un bloc joli même sans image
   function drawBeveledRect(ctx, x, y, size, color) {
       ctx.fillStyle = color;
       ctx.fillRect(x, y, size, size);
-      
-      // Relief (Bevel)
       ctx.lineWidth = size / 8;
       ctx.strokeStyle = "rgba(255,255,255,0.4)";
       ctx.beginPath(); ctx.moveTo(x, y+size); ctx.lineTo(x, y); ctx.lineTo(x+size, y); ctx.stroke();
-      
       ctx.strokeStyle = "rgba(0,0,0,0.3)";
       ctx.beginPath(); ctx.moveTo(x+size, y); ctx.lineTo(x+size, y+size); ctx.lineTo(x, y+size); ctx.stroke();
-      
-      // Centre glossy
       ctx.fillStyle = "rgba(255,255,255,0.1)";
       ctx.fillRect(x + size/4, y + size/4, size/2, size/2);
   }
@@ -720,12 +674,16 @@
           const px = (x + offset.x) * tileSize;
           const py = (y + offset.y) * tileSize;
 
-          // Animation suppression (valeur 99)
+          // --- ANIMATION AMÉLIORÉE (FLASH COULEUR) ---
           if (value === 99) {
             const progress = flashPhase / 10; 
             const scale = 1 - progress; 
             const center = tileSize / 2;
             
+            // Fond qui flashe en OR (#FFD700) puis s'estompe
+            context.fillStyle = `rgba(255, 215, 0, ${1 - progress})`;
+            context.fillRect(px, py, tileSize, tileSize);
+
             context.save();
             context.translate(px + center, py + center);
             context.scale(scale, scale);
@@ -737,19 +695,15 @@
 
           const imgIndex = ((value - 1 + FACE_COUNT) % FACE_COUNT) + 1;
           const img = tileImages[imgIndex];
-
-          // Choix de la couleur de repli (basé sur le type de pièce ou aléatoire si fixe)
           const fallbackColor = colors[(matrix.typeIdx || (value % 7) + 1)] || '#888';
 
           if (img && img.complete && img.naturalWidth !== 0) {
             context.drawImage(img, px, py, tileSize, tileSize);
-            // Petit effet de vitre
             context.fillStyle = "rgba(255,255,255,0.1)";
             context.fillRect(px, py, tileSize, tileSize/2);
             context.strokeStyle = "rgba(0,0,0,0.2)";
             context.strokeRect(px, py, tileSize, tileSize);
           } else {
-            // Dessin vectoriel joli si pas d'image
             drawBeveledRect(context, px, py, tileSize, fallbackColor);
           }
         }
@@ -759,12 +713,9 @@
 
   function drawNextPiece() {
     if (!nextPieceMatrix) return;
-    // Fond propre
     nextCtx.clearRect(0,0, nextCanvas.width, nextCanvas.height);
-    
     const offsetX = (4 - nextPieceMatrix[0].length) / 2;
     const offsetY = (4 - nextPieceMatrix.length) / 2;
-    
     drawMatrix(nextPieceMatrix, {x: offsetX, y: offsetY}, nextCtx, NEXT_TILE);
   }
 
@@ -811,10 +762,9 @@
 
     gameState = "lineflash";
     rowsToClear.forEach(y => {
-        // Effet particule sur toute la ligne
         for(let x=0; x<COLS; x++) {
-             // On tente de récupérer la couleur pour les particules
-            spawnParticles(x*TILE, y*TILE, '#FFF', 3);
+            // Particules OR pour célébrer
+            spawnParticles(x*TILE, y*TILE, '#FFD700', 4);
         }
         arena[y].fill(99);
     });
@@ -884,11 +834,9 @@
       player.pos.y--;
       merge(arena, player);
       sDrop();
-      // Petite particule d'atterrissage
       player.matrix.forEach((row, y) => row.forEach((v, x) => {
           if(v) spawnParticles((player.pos.x+x)*TILE, (player.pos.y+y)*TILE, "#ddd", 2);
       }));
-      
       arenaSweep();
       playerReset();
     }
@@ -896,20 +844,15 @@
   }
 
   function hardDrop() {
-    let droppedDist = 0;
     while (!collide(arena, player)) {
       player.pos.y++;
-      droppedDist++;
     }
     player.pos.y--; 
     merge(arena, player);
     sDrop();
-    
-    // Grosse particule pour Hard Drop
     player.matrix.forEach((row, y) => row.forEach((v, x) => {
           if(v) spawnParticles((player.pos.x+x)*TILE, (player.pos.y+y)*TILE, "#fff", 5);
     }));
-
     arenaSweep();
     playerReset();
   }
@@ -942,13 +885,11 @@
 
   function draw() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    
     drawGrid();
     drawMatrix(arena, {x:0, y:0}); 
     updateAndDrawParticles(ctx);
 
     if (gameState === "playing" || gameState === "lineflash") {
-      // GHOST PIECE
       const ghost = {
         matrix: player.matrix,
         pos: {x: player.pos.x, y: player.pos.y}
@@ -960,7 +901,6 @@
       
       ctx.save();
       ctx.globalAlpha = 0.2;
-      // Dessin du fantôme en couleur unie
       const ghostColor = colors[player.matrix.typeIdx || 1];
       ghost.matrix.forEach((row, y) => {
         row.forEach((value, x) => {
@@ -974,7 +914,6 @@
       });
       ctx.restore();
 
-      // JOUEUR
       drawMatrix(player.matrix, player.pos, ctx, TILE);
     }
   }
@@ -982,21 +921,14 @@
   function update(time = 0) {
     const deltaTime = time - lastTime;
     lastTime = time;
-
     if (gameState === "playing") {
       dropCounter += deltaTime;
-      if (dropCounter > dropInterval) {
-        playerDrop();
-      }
+      if (dropCounter > dropInterval) playerDrop();
     }
-
     draw();
-    if (gameState !== "gameover") { 
-        requestAnimationFrame(update);
-    }
+    if (gameState !== "gameover") requestAnimationFrame(update);
   }
 
-  /* --- GAME OVER --- */
   function loadHighScores() {
     try { return JSON.parse(localStorage.getItem("tetris_scores") || "[]"); } catch { return []; }
   }
@@ -1014,12 +946,10 @@
   }
 
   function addHighScore(score) {
-    // Petit délai pour laisser l'animation finir
     setTimeout(() => {
         let name = prompt("GAME OVER !\nGrade : " + getRankName(player.level) + "\nPseudo :", "Etudiant CIEL");
         if (!name) name = "Anonyme";
         name = name.trim().substring(0, 10);
-
         const scores = loadHighScores();
         scores.push({name, score});
         scores.sort((a,b)=>b.score-a.score);
@@ -1034,8 +964,6 @@
     sGameOver();
     messageCenter.textContent = "GAME OVER";
     showProviseur("gameover");
-
-    // Animation rideau
     let y = ROWS - 1;
     const animInterval = setInterval(() => {
         if (y < 0) {
@@ -1045,7 +973,7 @@
             messageCenter.textContent = "GAME OVER — ESPACE POUR REJOUER";
             return;
         }
-        arena[y].fill(99); // 99 = bloc blanc flash
+        arena[y].fill(99); 
         flashPhase = 5; 
         draw(); 
         y--;
@@ -1069,61 +997,35 @@
     requestAnimationFrame(update);
   }
 
-  /* --- INPUTS --- */
   document.addEventListener("keydown", event => {
     if (!audioCtx) initAudioContext();
-
     if (event.code === "Space" && (gameState === "waiting" || gameState === "gameover")) {
         resetGame();
         return;
     }
-
     if (gameState === "playing") {
       switch(event.code) {
-        case "ArrowLeft": 
-        case "KeyQ": 
-          player.pos.x--;
-          if (collide(arena, player)) player.pos.x++; else sMove();
-          break;
-        case "ArrowRight": 
-        case "KeyD":
-          player.pos.x++;
-          if (collide(arena, player)) player.pos.x--; else sMove();
-          break;
-        case "ArrowDown": 
-        case "KeyS":
-          playerDrop();
-          break;
-        case "ArrowUp": 
-        case "KeyZ": 
-           hardDrop();
-           break;
-        case "Space":
-          playerRotate(1);
-          break;
-        case "KeyP":
-          gameState = "paused";
-          messageCenter.textContent = "PAUSE";
-          break;
+        case "ArrowLeft": case "KeyQ": 
+          player.pos.x--; if (collide(arena, player)) player.pos.x++; else sMove(); break;
+        case "ArrowRight": case "KeyD":
+          player.pos.x++; if (collide(arena, player)) player.pos.x--; else sMove(); break;
+        case "ArrowDown": case "KeyS": playerDrop(); break;
+        case "ArrowUp": case "KeyZ": hardDrop(); break;
+        case "Space": playerRotate(1); break;
+        case "KeyP": gameState = "paused"; messageCenter.textContent = "PAUSE"; break;
       }
     } else if (gameState === "paused" && event.code === "KeyP") {
-        gameState = "playing";
-        messageCenter.textContent = "";
+        gameState = "playing"; messageCenter.textContent = "";
     }
   });
 
   const setupMobileBtn = (id, action) => {
     const btn = document.getElementById(id);
-    // Prevents double tap zoom & scroll
     btn.addEventListener("touchstart", (e) => { 
-        e.preventDefault(); 
-        if(!audioCtx) initAudioContext(); 
-        action(); 
+        e.preventDefault(); if(!audioCtx) initAudioContext(); action(); 
     }, {passive: false});
-    // Fallback click
     btn.addEventListener("click", (e) => { 
-        if(!audioCtx) initAudioContext(); 
-        action(); 
+        if(!audioCtx) initAudioContext(); action(); 
     });
   };
 
@@ -1133,31 +1035,17 @@
   setupMobileBtn("btn-rotate", () => { if(gameState==="playing") playerRotate(1); draw(); });
   setupMobileBtn("btn-drop", () => { if(gameState==="playing") hardDrop(); draw(); });
 
-  startBtn.addEventListener("click", () => {
-      startBtn.blur();
-      if(!audioCtx) initAudioContext();
-      resetGame();
-  });
-
-  muteBtn.addEventListener("click", () => {
-      muteBtn.blur();
-      muted = !muted;
-      muteBtn.textContent = muted ? "Son : OFF" : "Son : ON";
-      localStorage.setItem("tetris_muted", muted); 
-      if(!muted && !audioCtx) initAudioContext();
-  });
+  startBtn.addEventListener("click", () => { startBtn.blur(); if(!audioCtx) initAudioContext(); resetGame(); });
+  muteBtn.addEventListener("click", () => { muteBtn.blur(); muted = !muted; muteBtn.textContent = muted ? "Son : OFF" : "Son : ON"; localStorage.setItem("tetris_muted", muted); if(!muted && !audioCtx) initAudioContext(); });
 
   refreshHighScoreList();
   updateScore();
   draw(); 
 
-  // Tap n'importe où sur le canvas pour démarrer sur mobile
   canvas.addEventListener("touchstart", (e) => {
       if(e.target === canvas) e.preventDefault();
       if (!audioCtx) initAudioContext();
-      if (gameState === "waiting" || gameState === "gameover") {
-          resetGame();
-      }
+      if (gameState === "waiting" || gameState === "gameover") resetGame();
   }, {passive: false});
 
 </script>
