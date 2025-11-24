@@ -564,7 +564,8 @@
   function sLine()   { playTone(600, 'sine', 0.2, 0.1); setTimeout(()=>playTone(1200, 'sine', 0.4, 0.1), 100); }
   function sGameOver(){ playTone(150, 'sawtooth', 1.0, 0.2); setTimeout(()=>playTone(100, 'sawtooth', 1.0, 0.2), 300); }
 
-  const FACE_COUNT = 10;
+  // ----- VISAGES -----
+  const FACE_COUNT = 11;   // <-- visage11.jpg pris en compte
   const tileImages = [null];
   for (let i = 1; i <= FACE_COUNT; i++) {
     const img = new Image();
@@ -584,17 +585,35 @@
   }
 
   function createPiece(type) {
-    switch (type) {
-      case 'T': return [[0,1,0],[1,1,1],[0,0,0]];
-      case 'O': return [[2,2],[2,2]];
-      case 'L': return [[0,0,3],[3,3,3],[0,0,0]]; 
-      case 'J': return [[4,0,0],[4,4,4],[0,0,0]];
-      case 'I': return [[0,5,0,0],[0,5,0,0],[0,5,0,0],[0,5,0,0]];
-      case 'S': return [[0,6,6],[6,6,0],[0,0,0]];
-      case 'Z': return [[7,7,0],[0,7,7],[0,0,0]];
-    }
-    return [[1]];
+  // Id de visage aléatoire entre 1 et FACE_COUNT
+  const id = 1 + (Math.random() * FACE_COUNT | 0);
+
+  switch (type) {
+    case 'T': return [[0, id, 0],
+                      [id, id, id],
+                      [0,  0,  0]];
+    case 'O': return [[id, id],
+                      [id, id]];
+    case 'L': return [[0,  0,  id],
+                      [id, id, id],
+                      [0,  0,  0]]; 
+    case 'J': return [[id, 0,  0],
+                      [id, id, id],
+                      [0,  0,  0]];
+    case 'I': return [[0,  id, 0,  0],
+                      [0,  id, 0,  0],
+                      [0,  id, 0,  0],
+                      [0,  id, 0,  0]];
+    case 'S': return [[0,  id, id],
+                      [id, id, 0],
+                      [0,  0,  0]];
+    case 'Z': return [[id, id, 0],
+                      [0,  id, id],
+                      [0,  0,  0]];
   }
+  return [[id]];
+}
+
 
   let arena = createMatrix(COLS, ROWS);
 
@@ -686,23 +705,54 @@
     return false;
   }
 
+  // --- Effet de clignotement + scoring + proviseur ---
   function arenaSweep() {
-    let lines = 0;
-    outer: for (let y = arena.length - 1; y > 0; --y) {
+    const rowsToClear = [];
+
+    // 1. On repère les lignes complètes
+    for (let y = arena.length - 1; y >= 0; --y) {
+      let full = true;
       for (let x = 0; x < arena[y].length; ++x) {
         if (arena[y][x] === 0) {
-          continue outer;
+          full = false;
+          break;
         }
       }
-      const row = arena.splice(y, 1)[0].fill(0);
-      arena.unshift(row);
-      ++y;
-      lines++;
+      if (full) {
+        rowsToClear.push(y);
+      }
     }
-    if (lines > 0) {
+
+    // Aucune ligne → éventuelle intervention générique
+    if (rowsToClear.length === 0) {
+      if (Math.random() < 0.05) {
+        showProviseur("generic");
+      }
+      return;
+    }
+
+    // 2. Flash visuel : on marque les lignes avec la valeur 99 (gérée dans drawMatrix)
+    rowsToClear.forEach(y => {
+      arena[y].fill(99);
+    });
+    draw(); // on affiche le "flash"
+
+    // 3. Après un court délai, on supprime vraiment les lignes + score + niveau
+    setTimeout(() => {
+      rowsToClear.sort((a, b) => a - b);
+      let removed = 0;
+      rowsToClear.forEach(y => {
+        const row = arena.splice(y - removed, 1)[0].fill(0);
+        arena.unshift(row);
+        removed++;
+      });
+
+      const lines = rowsToClear.length;
+
       sLine();
       const linePoints = [0, 40, 100, 300, 1200];
       player.score += linePoints[lines] * player.level;
+
       if (player.score > player.level * 1000) {
         player.level++;
         dropInterval = Math.max(100, 800 - (player.level * 50));
@@ -710,10 +760,10 @@
       } else if (Math.random() < 0.4) {
         showProviseur("line");
       }
+
       updateScore();
-    } else if (Math.random() < 0.05) {
-      showProviseur("generic");
-    }
+      draw();
+    }, 80); // durée du flash en ms (augmente si tu veux un flash plus long)
   }
 
   function updateScore() {
