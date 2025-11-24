@@ -136,7 +136,7 @@
     font-weight: bold;
     color: #000;
   }
-  
+   
   #rank-name {
     font-size: 14px;
     font-weight: 900;
@@ -203,7 +203,7 @@
     gap: 10px;
     padding-bottom: 5px;
   }
-   
+    
   .pad-group {
     display: flex;
     gap: 15px;
@@ -240,7 +240,7 @@
     left: calc(50% + 400px);  /* PC : à droite du cadre */
     bottom: 10px;
     display: none;
-    pointer-events: none;
+    cursor: pointer; /* Indique qu'on peut cliquer pour fermer */
     z-index: 2;
   }
 
@@ -339,7 +339,7 @@
       border-color: transparent transparent transparent #fff;
     }
   }
-  
+   
   @media (min-width: 801px) {
     #mobile-header { display: none; }
   }
@@ -415,7 +415,6 @@
   <div id="message-center">APPUYEZ SUR ESPACE POUR DÉMARRER</div>
 </div>
 
-<!-- PROVISEUR + BULLE BD, en dehors du cadre blanc -->
 <div id="proviseur-box">
   <img id="proviseur-img" src="proviseur.png" alt="Proviseur du lycée">
   <div id="speech-bubble"></div>
@@ -427,7 +426,7 @@
   const ctx = canvas.getContext("2d");
   const nextCanvas = document.getElementById("next");
   const nextCtx = nextCanvas.getContext("2d");
-   
+    
   ctx.imageSmoothingEnabled = true;
   ctx.imageSmoothingQuality = 'high';
   nextCtx.imageSmoothingEnabled = true;
@@ -450,6 +449,15 @@
   const proviseurBox = document.getElementById("proviseur-box");
   const speechBubble = document.getElementById("speech-bubble");
   let proviseurTimeout = null;
+
+  // CLIC POUR FERMER LE PROVISEUR
+  proviseurBox.addEventListener("click", () => {
+      proviseurBox.style.display = "none";
+  });
+  proviseurBox.addEventListener("touchstart", (e) => {
+      e.preventDefault();
+      proviseurBox.style.display = "none";
+  });
 
   const proviseurDialogues = {
     start: [
@@ -512,6 +520,12 @@
   let muted = false;
   let audioCtx = null;
 
+  // Récupération préférence sonore
+  if(localStorage.getItem("tetris_muted") === "true") {
+      muted = true;
+      muteBtn.textContent = "Son : OFF";
+  }
+
   const cielRanks = [
       "Nouvelle Recrue",
       "Apprenti Câbleur",
@@ -565,7 +579,7 @@
   function sGameOver(){ playTone(150, 'sawtooth', 1.0, 0.2); setTimeout(()=>playTone(100, 'sawtooth', 1.0, 0.2), 300); }
 
   // ----- VISAGES -----
-  const FACE_COUNT = 11;   // <-- visage11.jpg pris en compte
+  const FACE_COUNT = 11; 
   const tileImages = [null];
   for (let i = 1; i <= FACE_COUNT; i++) {
     const img = new Image();
@@ -585,35 +599,33 @@
   }
 
   function createPiece(type) {
-  // Id de visage aléatoire entre 1 et FACE_COUNT
-  const id = 1 + (Math.random() * FACE_COUNT | 0);
+    const id = 1 + (Math.random() * FACE_COUNT | 0);
 
-  switch (type) {
-    case 'T': return [[0, id, 0],
-                      [id, id, id],
-                      [0,  0,  0]];
-    case 'O': return [[id, id],
-                      [id, id]];
-    case 'L': return [[0,  0,  id],
-                      [id, id, id],
-                      [0,  0,  0]]; 
-    case 'J': return [[id, 0,  0],
-                      [id, id, id],
-                      [0,  0,  0]];
-    case 'I': return [[0,  id, 0,  0],
-                      [0,  id, 0,  0],
-                      [0,  id, 0,  0],
-                      [0,  id, 0,  0]];
-    case 'S': return [[0,  id, id],
-                      [id, id, 0],
-                      [0,  0,  0]];
-    case 'Z': return [[id, id, 0],
-                      [0,  id, id],
-                      [0,  0,  0]];
+    switch (type) {
+      case 'T': return [[0, id, 0],
+                        [id, id, id],
+                        [0,  0,  0]];
+      case 'O': return [[id, id],
+                        [id, id]];
+      case 'L': return [[0,  0,  id],
+                        [id, id, id],
+                        [0,  0,  0]]; 
+      case 'J': return [[id, 0,  0],
+                        [id, id, id],
+                        [0,  0,  0]];
+      case 'I': return [[0,  id, 0,  0],
+                        [0,  id, 0,  0],
+                        [0,  id, 0,  0],
+                        [0,  id, 0,  0]];
+      case 'S': return [[0,  id, id],
+                        [id, id, 0],
+                        [0,  0,  0]];
+      case 'Z': return [[id, id, 0],
+                        [0,  id, id],
+                        [0,  0,  0]];
+    }
+    return [[id]];
   }
-  return [[id]];
-}
-
 
   let arena = createMatrix(COLS, ROWS);
 
@@ -623,6 +635,8 @@
     score: 0,
     level: 1,
   };
+
+  let flashPhase = 0;
 
   function drawGrid() {
     ctx.strokeStyle = "rgba(0,0,0,0.1)";
@@ -635,7 +649,6 @@
     }
   }
 
-  // Dessine la matrice de blocs (sans contour spécial pour la pièce active)
   function drawMatrix(matrix, offset, context = ctx, tileSize = TILE) {
     matrix.forEach((row, y) => {
       row.forEach((value, x) => {
@@ -643,13 +656,26 @@
           const px = (x + offset.x) * tileSize;
           const py = (y + offset.y) * tileSize;
 
+          // Effet néon (99)
           if (value === 99) {
-            context.fillStyle = "#555";
+            context.fillStyle = "#111822";
             context.fillRect(px, py, tileSize, tileSize);
+
+            const phase = flashPhase;
+            const alphaOuter = 0.15 + 0.1 * (phase % 2);
+            const alphaInner = 0.25 + 0.15 * (phase % 2);
+
+            context.lineWidth = 4;
+            context.strokeStyle = `rgba(0, 255, 255, ${alphaOuter})`;
+            context.strokeRect(px + 1.5, py + 1.5, tileSize - 3, tileSize - 3);
+
+            context.lineWidth = 2;
+            context.strokeStyle = `rgba(180, 230, 255, ${alphaInner})`;
+            context.strokeRect(px + 6, py + 6, tileSize - 12, tileSize - 12);
             return;
           }
 
-          const imgIndex = (value % FACE_COUNT) || 1; 
+          const imgIndex = ((value - 1 + FACE_COUNT) % FACE_COUNT) + 1;
           const img = tileImages[imgIndex];
 
           if (img && img.complete && img.naturalWidth !== 0) {
@@ -657,8 +683,6 @@
           } else {
             context.fillStyle = colors[value % colors.length] || 'grey';
             context.fillRect(px, py, tileSize, tileSize);
-
-            // léger relief (pour les blocs posés ou l'ombre)
             context.lineWidth = 3; 
             context.strokeStyle = 'rgba(255,255,255,0.4)';
             context.strokeRect(px+2, py+2, tileSize-4, tileSize-4);
@@ -705,11 +729,15 @@
     return false;
   }
 
-  // --- Effet de clignotement + scoring + proviseur ---
+  // --- VERSION CORRIGÉE : GESTION DES LIGNES ---
   function arenaSweep() {
+    if (gameState === "lineflash" || gameState === "animating") {
+      return;
+    }
+
     const rowsToClear = [];
 
-    // 1. On repère les lignes complètes
+    // 1. Repérage
     for (let y = arena.length - 1; y >= 0; --y) {
       let full = true;
       for (let x = 0; x < arena[y].length; ++x) {
@@ -723,7 +751,6 @@
       }
     }
 
-    // Aucune ligne → éventuelle intervention générique
     if (rowsToClear.length === 0) {
       if (Math.random() < 0.05) {
         showProviseur("generic");
@@ -731,39 +758,53 @@
       return;
     }
 
-    // 2. Flash visuel : on marque les lignes avec la valeur 99 (gérée dans drawMatrix)
-    rowsToClear.forEach(y => {
-      arena[y].fill(99);
-    });
-    draw(); // on affiche le "flash"
+    // 2. Animation Flash
+    gameState = "lineflash";
+    rowsToClear.forEach(y => arena[y].fill(99));
 
-    // 3. Après un court délai, on supprime vraiment les lignes + score + niveau
-    setTimeout(() => {
-      rowsToClear.sort((a, b) => a - b);
-      let removed = 0;
-      rowsToClear.forEach(y => {
-        const row = arena.splice(y - removed, 1)[0].fill(0);
-        arena.unshift(row);
-        removed++;
-      });
+    let steps = 0;
+    flashPhase = 0;
 
-      const lines = rowsToClear.length;
-
-      sLine();
-      const linePoints = [0, 40, 100, 300, 1200];
-      player.score += linePoints[lines] * player.level;
-
-      if (player.score > player.level * 1000) {
-        player.level++;
-        dropInterval = Math.max(100, 800 - (player.level * 50));
-        showProviseur("level");
-      } else if (Math.random() < 0.4) {
-        showProviseur("line");
-      }
-
-      updateScore();
+    const flashInterval = setInterval(() => {
+      flashPhase++;
+      steps++;
       draw();
-    }, 80); // durée du flash en ms (augmente si tu veux un flash plus long)
+
+      // Fin Animation
+      if (steps >= 6) {
+        clearInterval(flashInterval);
+
+        // --- SUPPRESSION ROBUSTE (Tri décroissant) ---
+        rowsToClear.sort((a, b) => b - a);
+
+        rowsToClear.forEach(y => {
+          arena.splice(y, 1);
+        });
+        
+        // Ajout des lignes vides en haut
+        while (arena.length < ROWS) {
+            arena.unshift(new Array(COLS).fill(0));
+        }
+
+        // --- SCORING ---
+        const lines = rowsToClear.length;
+        sLine();
+        const linePoints = [0, 40, 100, 300, 1200];
+        player.score += (linePoints[lines] || 1200) * player.level;
+
+        if (player.score > player.level * 1000) {
+          player.level++;
+          dropInterval = Math.max(100, 800 - (player.level * 50));
+          showProviseur("level");
+        } else if (Math.random() < 0.4) {
+          showProviseur("line");
+        }
+
+        updateScore();
+        draw();
+        gameState = "playing";
+      }
+    }, 60);
   }
 
   function updateScore() {
@@ -844,7 +885,6 @@
     else matrix.reverse();
   }
 
-  // --- Contour qui suit la forme de la pièce ---
   function drawPieceOutline(matrix, pos) {
     ctx.lineWidth = 4;
     ctx.strokeStyle = "#000";
@@ -859,46 +899,34 @@
 
         const worldX = pos.x + x;
         const worldY = pos.y + y;
-
         const px = worldX * TILE;
         const py = worldY * TILE;
 
-        // voisin gauche vide → bord gauche
         if (x === 0 || matrix[y][x - 1] === 0) {
-          ctx.moveTo(px, py);
-          ctx.lineTo(px, py + TILE);
+          ctx.moveTo(px, py); ctx.lineTo(px, py + TILE);
         }
-        // voisin droit vide → bord droit
         if (x === w - 1 || matrix[y][x + 1] === 0) {
-          ctx.moveTo(px + TILE, py);
-          ctx.lineTo(px + TILE, py + TILE);
+          ctx.moveTo(px + TILE, py); ctx.lineTo(px + TILE, py + TILE);
         }
-        // voisin haut vide → bord haut
         if (y === 0 || matrix[y - 1][x] === 0) {
-          ctx.moveTo(px, py);
-          ctx.lineTo(px + TILE, py);
+          ctx.moveTo(px, py); ctx.lineTo(px + TILE, py);
         }
-        // voisin bas vide → bord bas
         if (y === h - 1 || matrix[y + 1][x] === 0) {
-          ctx.moveTo(px, py + TILE);
-          ctx.lineTo(px + TILE, py + TILE);
+          ctx.moveTo(px, py + TILE); ctx.lineTo(px + TILE, py + TILE);
         }
       }
     }
-
     ctx.stroke();
   }
 
-  // --- Rendu principal ---
   function draw() {
     ctx.fillStyle = "#fff";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     
     drawGrid();
-    drawMatrix(arena, {x:0, y:0});   // blocs posés
+    drawMatrix(arena, {x:0, y:0}); 
 
-    if (gameState === "playing") {
-      // GHOST
+    if (gameState === "playing" || gameState === "lineflash") {
       const ghost = {
         matrix: player.matrix,
         pos: {x: player.pos.x, y: player.pos.y}
@@ -912,10 +940,7 @@
       drawMatrix(ghost.matrix, ghost.pos, ctx, TILE);
       ctx.globalAlpha = 1;
 
-      // Pièce active
       drawMatrix(player.matrix, player.pos, ctx, TILE);
-
-      // Contour qui suit la forme de la pièce
       drawPieceOutline(player.matrix, player.pos);
     }
   }
@@ -1063,7 +1088,7 @@
   setupMobileBtn("btn-drop", () => { if(gameState==="playing") hardDrop(); draw(); });
 
   startBtn.addEventListener("click", () => {
-      startBtn.blur();  // évite que Space reclique sur le bouton
+      startBtn.blur();
       if(!audioCtx) initAudioContext();
       resetGame();
   });
@@ -1072,6 +1097,7 @@
       muteBtn.blur();
       muted = !muted;
       muteBtn.textContent = muted ? "Son : OFF" : "Son : ON";
+      localStorage.setItem("tetris_muted", muted); // Sauvegarde préférence
       if(!muted && !audioCtx) initAudioContext();
   });
 
