@@ -45,6 +45,17 @@
     backdrop-filter: blur(5px);
   }
 
+  /* --- EFFET DE SECOUSSE (SHAKE) --- */
+  @keyframes shake {
+    10%, 90% { transform: translate3d(-1px, 0, 0); }
+    20%, 80% { transform: translate3d(2px, 0, 0); }
+    30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+    40%, 60% { transform: translate3d(4px, 0, 0); }
+  }
+  .shake-effect {
+    animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+  }
+
   #header-group {
     text-align: center;
     margin-bottom: 5px;
@@ -80,7 +91,27 @@
     justify-content: center;
     height: 80vh; 
     width: 100%;
+    position: relative;
   }
+
+  /* Overlay de pause */
+  #pause-overlay {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.6);
+    backdrop-filter: blur(4px);
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 50;
+    color: white;
+    font-weight: 900;
+    font-size: 40px;
+    text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+    border-radius: 4px;
+  }
+  #pause-overlay span { font-size: 14px; font-weight: normal; margin-top: 10px; opacity: 0.8; }
 
   canvas#tetris {
     border: 4px solid #333;
@@ -91,6 +122,8 @@
     width: auto; 
     aspect-ratio: 1/2;
     border-radius: 4px;
+    position: relative;
+    z-index: 5;
   }
 
   #side-panel {
@@ -104,23 +137,30 @@
     border: 2px solid #333;
     box-sizing: border-box;
     height: 100%;
-    justify-content: center;
+    justify-content: flex-start; /* Changé pour aligner en haut */
     box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    overflow-y: auto; /* Au cas où écran petit */
   }
 
-  #next-piece-container {
+  /* Conteneur Next et Hold alignés */
+  .preview-box {
     text-align: center;
-    margin-bottom: 10px;
+    margin-bottom: 5px;
+    background: rgba(255,255,255,0.5);
+    padding: 5px;
+    border-radius: 6px;
+    border: 1px solid rgba(0,0,0,0.1);
   }
-  canvas#next {
+  
+  canvas.preview-canvas {
     background: rgba(255,255,255,0.8);
     border: 2px solid #555;
     margin-top: 2px;
-    width: 80px; 
-    height: 80px;
+    width: 60px; 
+    height: 60px;
     border-radius: 4px;
   }
-
+  
   #score-box, #level-box {
     text-align: center;
     margin-bottom: 5px;
@@ -131,7 +171,7 @@
   }
 
   .label-text {
-    font-size: 11px;
+    font-size: 10px;
     text-transform: uppercase;
     color: #666;
     font-weight: 800;
@@ -139,7 +179,7 @@
   }
 
   #score {
-    font-size: 22px;
+    font-size: 20px;
     font-weight: 900;
     color: #2c3e50;
     font-variant-numeric: tabular-nums;
@@ -152,7 +192,7 @@
   }
     
   #rank-name {
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 900;
     color: #d32f2f;
     margin-top: 2px;
@@ -161,9 +201,9 @@
   }
 
   #highscore-title {
-    font-size: 13px;
+    font-size: 12px;
     font-weight: bold;
-    margin-top: 10px;
+    margin-top: 5px;
     text-decoration: underline;
     text-transform: uppercase;
   }
@@ -171,19 +211,19 @@
   #highscore-list {
     padding-left: 18px; 
     margin: 5px 0; 
-    font-size: 13px;
-    max-height: 120px;
+    font-size: 12px;
+    max-height: 80px;
     overflow-y: auto;
     font-family: monospace;
   }
 
   button {
-    padding: 12px;
+    padding: 10px;
     border-radius: 6px;
     border: 2px solid #333;
     background: #fff;
     font-weight: bold;
-    font-size: 13px;
+    font-size: 12px;
     cursor: pointer;
     transition: all 0.1s;
     margin-top: 5px;
@@ -194,12 +234,12 @@
   button:focus { outline: none; }
 
   #controls-info {
-    font-size: 10px;
+    font-size: 9px;
     line-height: 1.4;
     margin-top: auto;
     color: #444;
     background: rgba(0,0,0,0.05);
-    padding: 8px;
+    padding: 5px;
     border-radius: 4px;
     border: 1px dashed #999;
   }
@@ -229,7 +269,7 @@
   .pad-group { display: flex; gap: 12px; }
 
   .mob-btn {
-    width: 58px; height: 58px; font-size: 24px;
+    width: 55px; height: 55px; font-size: 24px;
     display: flex; justify-content: center; align-items: center;
     background: linear-gradient(145deg, #ffffff, #e6e6e6);
     border: 2px solid #333; border-radius: 50%;
@@ -238,9 +278,10 @@
     -webkit-tap-highlight-color: transparent;
   }
   .mob-btn:active { transform: translateY(4px); box-shadow: none; background: #ddd; }
-  .mob-btn.big { width: 68px; height: 68px; background: linear-gradient(145deg, #ffeba7, #ffdf80); }
+  .mob-btn.big { width: 65px; height: 65px; background: linear-gradient(145deg, #ffeba7, #ffdf80); }
+  .mob-btn.hold-btn { background: #e0f7fa; font-size: 14px; font-weight: bold; width: 45px; height: 45px; }
 
-  /* --- PROVISEUR + BULLE BD (AMÉLIORÉE) --- */
+  /* --- PROVISEUR + BULLE BD --- */
   #proviseur-box {
     position: absolute;
     left: calc(50% + 400px); 
@@ -261,34 +302,24 @@
     filter: drop-shadow(5px 5px 10px rgba(0,0,0,0.4));
   }
 
-  /* --- CSS BULLE AMÉLIORÉ --- */
   #speech-bubble {
     position: absolute;
     left: 100%;
     bottom: 65%;
-    margin-left: 15px; /* Plus d'espace */
+    margin-left: 15px;
     max-width: 320px;
     background: #ffffff;
-    
-    /* Bordure plus subtile et moderne */
     border: 2px solid #2c3e50; 
     border-radius: 12px;
-    
-    /* Plus d'espace interne pour la lisibilité */
     padding: 16px 20px;
-    
-    /* Typo plus propre */
     font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     font-size: 15px; 
-    line-height: 1.5; /* Aère le texte */
+    line-height: 1.5;
     font-weight: 600;
     color: #2c3e50;
-    
-    /* Ombre portée plus douce */
     box-shadow: 0 8px 20px rgba(0,0,0,0.15);
   }
 
-  /* Flèche bulle PC */
   #speech-bubble::after {
     content: ""; position: absolute; right: 100%; bottom: 20%;
     border-width: 10px; border-style: solid;
@@ -318,11 +349,10 @@
     #mob-rank { color: #d32f2f; font-size: 12px; margin-top: 2px; font-weight: 900;}
 
     #mobile-controls { 
-      display: flex; padding: 0 10px 20px 10px; box-sizing: border-box;
+      display: flex; padding: 0 10px 20px 10px; box-sizing: border-box; flex-wrap: wrap; justify-content: center;
     }
     #message-center { font-size: 14px; margin-bottom: 5px; }
 
-    /* --- PROVISEUR MOBILE --- */
     #proviseur-box {
       left: auto; right: 0px; bottom: 90px; top: auto;
       z-index: 20; pointer-events: none;
@@ -331,13 +361,12 @@
     
     #speech-bubble {
       max-width: 200px;
-      font-size: 13px; /* Un peu plus petit sur mobile mais lisible */
+      font-size: 13px;
       left: auto; right: 95%; bottom: 20%;
       margin-left: 0; margin-right: 10px;
       white-space: normal; pointer-events: auto;
     }
 
-    /* Flèche bulle Mobile */
     #speech-bubble::after {
       left: 100%; right: auto; bottom: 20%;
       border-color: transparent transparent transparent #2c3e50;
@@ -375,11 +404,22 @@
 
   <div id="game-container">
     <canvas id="tetris" width="800" height="1600"></canvas>
+    
+    <div id="pause-overlay">
+        PAUSE
+        <span>Appuyez sur P pour reprendre</span>
+    </div>
 
     <div id="side-panel">
-      <div id="next-piece-container">
-        <div style="font-weight:bold; margin-bottom:5px;">Suivante :</div>
-        <canvas id="next" width="160" height="160"></canvas>
+      
+      <div class="preview-box">
+        <div class="label-text">Suivante</div>
+        <canvas id="next" class="preview-canvas" width="120" height="120"></canvas>
+      </div>
+
+      <div class="preview-box">
+        <div class="label-text">Réserve (C)</div>
+        <canvas id="hold" class="preview-canvas" width="120" height="120"></canvas>
       </div>
 
       <div id="score-box">
@@ -404,6 +444,7 @@
         ◀/▶/▼ : Bouger<br>
         ▲ : Hard Drop<br>
         Espace : Rotation<br>
+        C / Maj : Réserve<br>
         P : Pause
       </div>
     </div>
@@ -416,6 +457,7 @@
       <button class="mob-btn" id="btn-right">▶</button>
     </div>
     <div class="pad-group">
+      <button class="mob-btn hold-btn" id="btn-hold">HOLD</button>
       <button class="mob-btn big" id="btn-rotate">↻</button>
       <button class="mob-btn big" id="btn-drop">⤓</button>
     </div>
@@ -429,20 +471,30 @@
   <div id="speech-bubble"></div>
 </div>
 
+<audio id="bg-music" loop>
+    <source src="musique.mp3" type="audio/mpeg">
+</audio>
+
 <script>
   /* --- INITIALISATION --- */
   const canvas = document.getElementById("tetris");
   const ctx = canvas.getContext("2d");
+  
   const nextCanvas = document.getElementById("next");
   const nextCtx = nextCanvas.getContext("2d");
+  
+  const holdCanvas = document.getElementById("hold");
+  const holdCtx = holdCanvas.getContext("2d");
     
-  ctx.imageSmoothingEnabled = true;
-  ctx.imageSmoothingQuality = 'high';
+  ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
   nextCtx.imageSmoothingEnabled = true;
+  holdCtx.imageSmoothingEnabled = true;
 
   const scoreElem = document.getElementById("score");
   const levelElem = document.getElementById("level");
   const rankElem = document.getElementById("rank-name");
+  
+  const pauseOverlay = document.getElementById("pause-overlay");
 
   const mobScoreElem = document.getElementById("mob-score");
   const mobLevelElem = document.getElementById("mob-level");
@@ -452,6 +504,12 @@
   const startBtn = document.getElementById("start-btn");
   const muteBtn = document.getElementById("mute-btn");
   const highscoreList = document.getElementById("highscore-list");
+  
+  const gameContainer = document.getElementById("game-container");
+  
+  // Audio Element
+  const bgMusic = document.getElementById("bg-music");
+  bgMusic.volume = 0.3; // Volume musique à 30%
 
   /* --- GESTION PROVISEUR --- */
   const proviseurBox = document.getElementById("proviseur-box");
@@ -459,10 +517,7 @@
   let proviseurTimeout = null;
 
   proviseurBox.addEventListener("click", () => hideProviseur());
-  proviseurBox.addEventListener("touchstart", (e) => {
-      e.preventDefault();
-      hideProviseur();
-  });
+  proviseurBox.addEventListener("touchstart", (e) => { e.preventDefault(); hideProviseur(); });
 
   function hideProviseur() {
       proviseurBox.classList.remove('pop-in');
@@ -478,22 +533,23 @@
     line: [
       "« Une ligne propre. Si seulement vos copies étaient aussi alignées. »",
       "« Pas mal. Continuez comme ça et je signe la mention. »",
-      "« Une ligne en moins, un neurone en plus : bon calcul. »",
-      "« C’est ce que j’appelle de la gestion de stock efficace. »"
+      "« Une ligne en moins, un neurone en plus : bon calcul. »"
+    ],
+    tetris: [
+      "« 4 lignes d'un coup ?! C'est la mention Très Bien assurée ! »",
+      "« Incroyable ! Vous nettoyez le tableau mieux que le service d'entretien. »",
+      "« Ça c'est du génie CIEL ! Je suis presque ému. »"
     ],
     level: [
       "« Changement de niveau : comme le passage en 2e année ! »",
-      "« Vous montez d’un cran. Gardez ce rythme au conseil de classe. »",
-      "« Nouveau niveau. On va voir si vous tenez la cadence. »"
+      "« Vous montez d’un cran. Gardez ce rythme au conseil de classe. »"
     ],
     gameover: [
       "« GAME OVER… mais au lycée, on n’a pas de bouton Recommencer. »",
-      "« Conseil du proviseur : révisez la stratégie avant la prochaine partie. »",
-      "« Ça, c’est ce qu’on appelle une commission d’appel ratée. »"
+      "« Conseil du proviseur : révisez la stratégie avant la prochaine partie. »"
     ],
     generic: [
       "« Les CIEL, pensez à sauvegarder… vos neurones. »",
-      "« Un Tetris bien rangé, c’est comme une salle serveur : ça respire. »",
       "« Pause ? Après avoir battu le highscore, pas avant. »"
     ]
   };
@@ -513,7 +569,7 @@
   const COLS = 10;
   const ROWS = 20;
   const TILE = 80; 
-  const NEXT_TILE = 40; 
+  const PREVIEW_TILE = 30; // Taille plus petite pour Hold/Next
   const BASE_DROP = 800;
 
   let gameState = "waiting"; 
@@ -521,6 +577,10 @@
   let dropCounter = 0;
   let lastTime = 0;
   let nextPieceMatrix = null; 
+  
+  // VARIABLES HOLD (RESERVE)
+  let holdPieceMatrix = null;
+  let holdUsed = false; // Pour empêcher d'échanger 2 fois de suite
 
   let muted = false;
   let audioCtx = null;
@@ -550,28 +610,68 @@
     if (audioCtx && audioCtx.state === 'suspended') {
       audioCtx.resume();
     }
+    // Lancer la musique si pas mute
+    if (!muted) bgMusic.play().catch(e => console.log("Clic requis pour musique"));
   }
 
-  function playTone(freq, type, duration, vol) {
+  function playModernTone(type, startFreq, endFreq, duration, vol) {
     if (muted || !audioCtx) return;
     const osc = audioCtx.createOscillator();
     const gain = audioCtx.createGain();
-    osc.type = type;
-    osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-    gain.gain.setValueAtTime(vol, audioCtx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
+    
+    osc.type = type; 
+    osc.frequency.setValueAtTime(startFreq, audioCtx.currentTime);
+    if (endFreq && endFreq !== startFreq) {
+        osc.frequency.exponentialRampToValueAtTime(endFreq, audioCtx.currentTime + duration);
+    }
+
+    gain.gain.setValueAtTime(0, audioCtx.currentTime);
+    gain.gain.linearRampToValueAtTime(vol, audioCtx.currentTime + 0.01);
+    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+
     osc.connect(gain);
     gain.connect(audioCtx.destination);
     osc.start();
     osc.stop(audioCtx.currentTime + duration);
   }
 
-  function sStart()  { playTone(440, 'triangle', 0.5, 0.1); setTimeout(()=>playTone(880, 'triangle', 0.5, 0.1), 100); }
-  function sMove()   { playTone(200, 'sine', 0.1, 0.05); }
-  function sRotate() { playTone(300, 'square', 0.1, 0.05); }
-  function sDrop()   { playTone(100, 'sawtooth', 0.2, 0.08); }
-  function sLine()   { playTone(600, 'sine', 0.2, 0.1); setTimeout(()=>playTone(1200, 'sine', 0.4, 0.1), 100); }
-  function sGameOver(){ playTone(150, 'sawtooth', 1.0, 0.2); setTimeout(()=>playTone(100, 'sawtooth', 1.0, 0.2), 300); }
+  function sMove() { 
+      if (muted || !audioCtx) return;
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(200, audioCtx.currentTime);
+      gain.gain.setValueAtTime(0.05, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start();
+      osc.stop(audioCtx.currentTime + 0.1);
+  }
+
+  function sStart() { 
+      playModernTone('sine', 523.25, 523.25, 0.6, 0.1);
+      setTimeout(() => playModernTone('sine', 659.25, 659.25, 0.6, 0.1), 100);
+      setTimeout(() => playModernTone('sine', 783.99, 783.99, 0.8, 0.1), 200);
+  }
+
+  function sRotate() { playModernTone('sine', 300, 500, 0.15, 0.08); }
+  function sDrop() { playModernTone('sine', 180, 50, 0.2, 0.15); }
+  function sLine() { 
+      playModernTone('triangle', 880, 880, 0.3, 0.08);
+      setTimeout(() => playModernTone('triangle', 1108, 1108, 0.3, 0.08), 50);
+      setTimeout(() => playModernTone('triangle', 1318, 1760, 0.5, 0.1), 100);
+  }
+  function sTetris() {
+      playModernTone('triangle', 523.25, 523.25, 0.8, 0.1);
+      setTimeout(() => playModernTone('triangle', 659.25, 659.25, 0.8, 0.1), 80);
+      setTimeout(() => playModernTone('triangle', 783.99, 783.99, 0.8, 0.1), 160);
+      setTimeout(() => playModernTone('triangle', 1046.50, 1046.50, 1.2, 0.15), 240);
+  }
+  function sGameOver() { playModernTone('triangle', 400, 50, 1.5, 0.2); }
+  
+  // Petit son pour le Hold
+  function sHold() { playModernTone('sine', 400, 600, 0.1, 0.1); }
 
   /* --- VISUELS --- */
   const FACE_COUNT = 11; 
@@ -617,6 +717,7 @@
     return m;
   }
 
+  const piecesTypes = 'ILJOTSZ';
   function createPiece(type) {
     const id = 1 + (Math.random() * FACE_COUNT | 0);
     let shape = [];
@@ -629,7 +730,8 @@
       case 'S': shape = [[0, id, id],[id, id, 0],[0, 0, 0]]; break;
       case 'Z': shape = [[id, id, 0],[0, id, id],[0, 0, 0]]; break;
     }
-    shape.typeIdx = "ILJOTSZ".indexOf(type) + 1; 
+    shape.typeIdx = piecesTypes.indexOf(type) + 1; 
+    shape.char = type; // Stocker la lettre pour le hold
     return shape;
   }
 
@@ -674,16 +776,12 @@
           const px = (x + offset.x) * tileSize;
           const py = (y + offset.y) * tileSize;
 
-          // --- ANIMATION AMÉLIORÉE (FLASH COULEUR) ---
           if (value === 99) {
             const progress = flashPhase / 10; 
             const scale = 1 - progress; 
             const center = tileSize / 2;
-            
-            // Fond qui flashe en OR (#FFD700) puis s'estompe
             context.fillStyle = `rgba(255, 215, 0, ${1 - progress})`;
             context.fillRect(px, py, tileSize, tileSize);
-
             context.save();
             context.translate(px + center, py + center);
             context.scale(scale, scale);
@@ -711,12 +809,22 @@
     });
   }
 
-  function drawNextPiece() {
-    if (!nextPieceMatrix) return;
-    nextCtx.clearRect(0,0, nextCanvas.width, nextCanvas.height);
-    const offsetX = (4 - nextPieceMatrix[0].length) / 2;
-    const offsetY = (4 - nextPieceMatrix.length) / 2;
-    drawMatrix(nextPieceMatrix, {x: offsetX, y: offsetY}, nextCtx, NEXT_TILE);
+  // Fonction générique pour dessiner Next et Hold
+  function drawPreview(matrix, context, canvasElem) {
+    context.clearRect(0,0, canvasElem.width, canvasElem.height);
+    if (!matrix) return;
+    const boxSize = 4; // Max taille piece
+    const offsetX = (boxSize - matrix[0].length) / 2;
+    const offsetY = (boxSize - matrix.length) / 2;
+    drawMatrix(matrix, {x: offsetX, y: offsetY}, context, PREVIEW_TILE);
+  }
+
+  function drawNextPiece() { drawPreview(nextPieceMatrix, nextCtx, nextCanvas); }
+  
+  function drawHoldPiece() { 
+      drawPreview(holdPieceMatrix, holdCtx, holdCanvas); 
+      // Si utilisé, griser un peu le canvas
+      holdCanvas.style.opacity = holdUsed ? "0.5" : "1";
   }
 
   function merge(arena, player) {
@@ -743,6 +851,13 @@
     return false;
   }
 
+  function triggerShake() {
+      gameContainer.classList.remove("shake-effect");
+      void gameContainer.offsetWidth; 
+      gameContainer.classList.add("shake-effect");
+      setTimeout(() => { gameContainer.classList.remove("shake-effect"); }, 500);
+  }
+
   function arenaSweep() {
     if (gameState === "lineflash" || gameState === "animating") return;
 
@@ -761,10 +876,13 @@
     }
 
     gameState = "lineflash";
+    const isTetris = (rowsToClear.length === 4);
+    if (isTetris) { triggerShake(); showProviseur("tetris"); }
+
     rowsToClear.forEach(y => {
         for(let x=0; x<COLS; x++) {
-            // Particules OR pour célébrer
-            spawnParticles(x*TILE, y*TILE, '#FFD700', 4);
+            const pColor = (isTetris && Math.random() > 0.5) ? '#0DC2FF' : '#FFD700'; 
+            spawnParticles(x*TILE, y*TILE, pColor, isTetris ? 8 : 4);
         }
         arena[y].fill(99);
     });
@@ -782,7 +900,8 @@
         while (arena.length < ROWS) arena.unshift(new Array(COLS).fill(0));
 
         const lines = rowsToClear.length;
-        sLine();
+        if (isTetris) sTetris(); else sLine();
+
         const linePoints = [0, 40, 100, 300, 1200];
         player.score += (linePoints[lines] || 1200) * player.level;
 
@@ -790,9 +909,7 @@
           player.level++;
           dropInterval = Math.max(100, 800 - (player.level * 50));
           showProviseur("level");
-        } else if (Math.random() < 0.5) {
-          showProviseur("line");
-        }
+        } else if (!isTetris && Math.random() < 0.5) showProviseur("line");
 
         updateScore();
         gameState = "playing";
@@ -812,13 +929,16 @@
   }
 
   function playerReset() {
-    const pieces = 'ILJOTSZ';
     if (nextPieceMatrix === null) {
-        nextPieceMatrix = createPiece(pieces[pieces.length * Math.random() | 0]);
+        nextPieceMatrix = createPiece(piecesTypes[piecesTypes.length * Math.random() | 0]);
     }
     player.matrix = nextPieceMatrix;
-    nextPieceMatrix = createPiece(pieces[pieces.length * Math.random() | 0]);
+    nextPieceMatrix = createPiece(piecesTypes[piecesTypes.length * Math.random() | 0]);
     drawNextPiece();
+    
+    // Reset de l'état "déjà utilisé" du Hold
+    holdUsed = false;
+    drawHoldPiece();
 
     player.pos.y = 0;
     player.pos.x = (arena[0].length / 2 | 0) - (player.matrix[0].length / 2 | 0);
@@ -826,6 +946,31 @@
     if (collide(arena, player)) {
       handleGameOver();
     }
+  }
+
+  // --- LOGIQUE HOLD (RESERVE) ---
+  function playerHold() {
+      if (gameState !== "playing" || holdUsed) return;
+      
+      sHold();
+      
+      // Si la réserve est vide
+      if (holdPieceMatrix === null) {
+          holdPieceMatrix = player.matrix;
+          playerReset(); // On prend la suivante
+      } else {
+          // Echange
+          const temp = player.matrix;
+          player.matrix = holdPieceMatrix;
+          holdPieceMatrix = temp;
+          
+          // Repositionner en haut
+          player.pos.y = 0;
+          player.pos.x = (arena[0].length / 2 | 0) - (player.matrix[0].length / 2 | 0);
+      }
+      
+      holdUsed = true; // Verrouille pour ce tour
+      drawHoldPiece();
   }
 
   function playerDrop() {
@@ -961,6 +1106,7 @@
 
   function handleGameOver() {
     gameState = "animating";
+    bgMusic.pause(); // Stop musique
     sGameOver();
     messageCenter.textContent = "GAME OVER";
     showProviseur("gameover");
@@ -986,15 +1132,40 @@
     player.level = 1;
     dropInterval = BASE_DROP;
     particles = [];
+    holdPieceMatrix = null; // Reset hold
+    holdUsed = false;
+    drawHoldPiece();
     updateScore();
     nextPieceMatrix = null;
     playerReset();
     dropCounter = 0;
     gameState = "playing";
     messageCenter.textContent = "";
+    pauseOverlay.style.display = "none";
     sStart();
+    
+    // Relancer musique si active
+    if (!muted) {
+        bgMusic.currentTime = 0;
+        bgMusic.play().catch(e => console.log(e));
+    }
+    
     showProviseur("start");
     requestAnimationFrame(update);
+  }
+
+  function togglePause() {
+      if (gameState === "playing") {
+          gameState = "paused";
+          messageCenter.textContent = "";
+          pauseOverlay.style.display = "flex";
+          bgMusic.pause();
+      } else if (gameState === "paused") {
+          gameState = "playing";
+          messageCenter.textContent = "";
+          pauseOverlay.style.display = "none";
+          if(!muted) bgMusic.play();
+      }
   }
 
   document.addEventListener("keydown", event => {
@@ -1012,10 +1183,11 @@
         case "ArrowDown": case "KeyS": playerDrop(); break;
         case "ArrowUp": case "KeyZ": hardDrop(); break;
         case "Space": playerRotate(1); break;
-        case "KeyP": gameState = "paused"; messageCenter.textContent = "PAUSE"; break;
+        case "KeyC": case "ShiftLeft": case "ShiftRight": playerHold(); break; // Touche C ou MAJ pour Hold
+        case "KeyP": togglePause(); break;
       }
     } else if (gameState === "paused" && event.code === "KeyP") {
-        gameState = "playing"; messageCenter.textContent = "";
+        togglePause();
     }
   });
 
@@ -1034,12 +1206,27 @@
   setupMobileBtn("btn-down", () => { if(gameState==="playing") playerDrop(); draw(); });
   setupMobileBtn("btn-rotate", () => { if(gameState==="playing") playerRotate(1); draw(); });
   setupMobileBtn("btn-drop", () => { if(gameState==="playing") hardDrop(); draw(); });
+  setupMobileBtn("btn-hold", () => { if(gameState==="playing") playerHold(); draw(); });
 
   startBtn.addEventListener("click", () => { startBtn.blur(); if(!audioCtx) initAudioContext(); resetGame(); });
-  muteBtn.addEventListener("click", () => { muteBtn.blur(); muted = !muted; muteBtn.textContent = muted ? "Son : OFF" : "Son : ON"; localStorage.setItem("tetris_muted", muted); if(!muted && !audioCtx) initAudioContext(); });
+  
+  muteBtn.addEventListener("click", () => { 
+      muteBtn.blur(); 
+      muted = !muted; 
+      muteBtn.textContent = muted ? "Son : OFF" : "Son : ON"; 
+      localStorage.setItem("tetris_muted", muted); 
+      
+      if(!muted) {
+          if(!audioCtx) initAudioContext();
+          if(gameState === "playing") bgMusic.play();
+      } else {
+          bgMusic.pause();
+      }
+  });
 
   refreshHighScoreList();
   updateScore();
+  drawHoldPiece();
   draw(); 
 
   canvas.addEventListener("touchstart", (e) => {
