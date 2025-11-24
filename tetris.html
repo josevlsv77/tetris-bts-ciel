@@ -234,14 +234,14 @@
     background: #ffeba7;
   }
 
-  /* --- PROVISEUR + BULLE BD (en dehors du cadre) --- */
+  /* --- PROVISEUR + BULLE BD (VERSION PC : DROITE) --- */
   #proviseur-box {
     position: absolute;
-    left: calc(50% + 400px);  /* PC : à droite du cadre */
+    left: calc(50% + 400px); 
     bottom: 10px;
     display: none;
-    cursor: pointer; /* Indique qu'on peut cliquer pour fermer */
-    z-index: 2;
+    cursor: pointer;
+    z-index: 10;
   }
 
   #proviseur-img {
@@ -265,24 +265,15 @@
     box-shadow: 0 4px 10px rgba(0,0,0,0.3);
   }
 
+  /* Flèche bulle PC */
   #speech-bubble::after {
-    content: "";
-    position: absolute;
-    right: 100%;
-    bottom: 20%;
-    border-width: 10px;
-    border-style: solid;
+    content: ""; position: absolute; right: 100%; bottom: 20%;
+    border-width: 10px; border-style: solid;
     border-color: transparent #333 transparent transparent;
   }
-
   #speech-bubble::before {
-    content: "";
-    position: absolute;
-    right: 100%;
-    bottom: 20%;
-    margin-right: -2px;
-    border-width: 9px;
-    border-style: solid;
+    content: ""; position: absolute; right: 100%; bottom: 20%;
+    margin-right: -2px; border-width: 9px; border-style: solid;
     border-color: transparent #fff transparent transparent;
   }
 
@@ -308,34 +299,41 @@
     }
     #message-center { font-size: 14px; margin-bottom: 5px; }
 
-    /* PROVISEUR MOBILE : en haut à droite, plus petit */
+    /* --- PROVISEUR MOBILE : EN BAS À DROITE --- */
     #proviseur-box {
       left: auto;
       right: 5px;
-      bottom: auto;
-      top: 60px;
-      z-index: 2;
+      bottom: 85px; /* Juste au dessus des boutons contrôles */
+      top: auto;
+      z-index: 20;
     }
     #proviseur-img {
-      height: 180px;
-      max-height: 35vh;
+      height: 120px; /* Plus petit sur mobile pour pas gêner */
+      max-height: 20vh;
     }
+    
     #speech-bubble {
-      max-width: 260px;
+      max-width: 200px;
       font-size: 12px;
+      
+      /* Positionnement : à gauche de la tête */
       left: auto;
-      right: 100%;
+      right: 100%; 
+      bottom: 20%;
+      
       margin-left: 0;
-      margin-right: 8px;
+      margin-right: 10px;
       white-space: normal;
     }
-    #speech-bubble::after,
-    #speech-bubble::before {
-      left: 100%;
-      right: auto;
+
+    /* Flèche bulle Mobile (pointe vers la droite) */
+    #speech-bubble::after {
+      left: 100%; right: auto; bottom: 20%;
       border-color: transparent transparent transparent #333;
     }
     #speech-bubble::before {
+      left: 100%; right: auto; bottom: 20%;
+      margin-right: 0; margin-left: -2px;
       border-color: transparent transparent transparent #fff;
     }
   }
@@ -636,19 +634,22 @@
     level: 1,
   };
 
-  let flashPhase = 0;
+  let flashPhase = 0; // Sert à l'animation de suppression
 
+  // --- NOUVEAU : Grille plus fine ---
   function drawGrid() {
-    ctx.strokeStyle = "rgba(0,0,0,0.1)";
-    ctx.lineWidth = 2; 
-    for (let x = 0; x <= COLS; x++) {
+    ctx.strokeStyle = "rgba(0, 0, 0, 0.05)"; // Gris très fin
+    ctx.lineWidth = 1; 
+    
+    for (let x = 1; x < COLS; x++) {
       ctx.beginPath(); ctx.moveTo(x*TILE, 0); ctx.lineTo(x*TILE, ROWS*TILE); ctx.stroke();
     }
-    for (let y = 0; y <= ROWS; y++) {
+    for (let y = 1; y < ROWS; y++) {
       ctx.beginPath(); ctx.moveTo(0, y*TILE); ctx.lineTo(COLS*TILE, y*TILE); ctx.stroke();
     }
   }
 
+  // --- NOUVEAU : Dessin "Pro" avec animation Data Purge ---
   function drawMatrix(matrix, offset, context = ctx, tileSize = TILE) {
     matrix.forEach((row, y) => {
       row.forEach((value, x) => {
@@ -656,39 +657,60 @@
           const px = (x + offset.x) * tileSize;
           const py = (y + offset.y) * tileSize;
 
-          // Effet néon (99)
+          // Animation suppression (99)
           if (value === 99) {
-            context.fillStyle = "#111822";
+            // flashPhase va de 1 à 10
+            const progress = flashPhase / 10; 
+            const scale = 1 - progress; // De 1 à 0
+
+            const centerX = px + tileSize / 2;
+            const centerY = py + tileSize / 2;
+            const size = tileSize * scale;
+            const offsetSize = size / 2;
+
+            // Fond blanc éclatant
+            context.fillStyle = `rgba(255, 255, 255, ${1 - progress})`; 
             context.fillRect(px, py, tileSize, tileSize);
 
-            const phase = flashPhase;
-            const alphaOuter = 0.15 + 0.1 * (phase % 2);
-            const alphaInner = 0.25 + 0.15 * (phase % 2);
+            // Le bloc qui rétrécit
+            context.save();
+            context.translate(centerX, centerY);
+            
+            // Carré couleur CIEL par défaut pour l'anim
+            context.fillStyle = "#0DC2FF"; 
+            context.fillRect(-offsetSize, -offsetSize, size, size);
+            
+            // Flash blanc par dessus
+            context.fillStyle = `rgba(255, 255, 255, 0.5)`;
+            context.fillRect(-offsetSize, -offsetSize, size, size);
 
-            context.lineWidth = 4;
-            context.strokeStyle = `rgba(0, 255, 255, ${alphaOuter})`;
-            context.strokeRect(px + 1.5, py + 1.5, tileSize - 3, tileSize - 3);
-
-            context.lineWidth = 2;
-            context.strokeStyle = `rgba(180, 230, 255, ${alphaInner})`;
-            context.strokeRect(px + 6, py + 6, tileSize - 12, tileSize - 12);
+            context.restore();
             return;
           }
 
+          // Dessin normal
           const imgIndex = ((value - 1 + FACE_COUNT) % FACE_COUNT) + 1;
           const img = tileImages[imgIndex];
 
           if (img && img.complete && img.naturalWidth !== 0) {
             context.drawImage(img, px, py, tileSize, tileSize);
+            // Reflet glossy
+            context.fillStyle = "rgba(255,255,255,0.15)";
+            context.fillRect(px, py, tileSize, tileSize/3);
           } else {
+            // Fallback
             context.fillStyle = colors[value % colors.length] || 'grey';
             context.fillRect(px, py, tileSize, tileSize);
-            context.lineWidth = 3; 
-            context.strokeStyle = 'rgba(255,255,255,0.4)';
-            context.strokeRect(px+2, py+2, tileSize-4, tileSize-4);
-            context.fillStyle = 'rgba(0,0,0,0.15)';
-            context.fillRect(px+6, py+6, tileSize-12, tileSize-12);
+            context.fillStyle = "rgba(255,255,255,0.3)";
+            context.fillRect(px, py, tileSize, 4);
+            context.fillStyle = "rgba(0,0,0,0.2)";
+            context.fillRect(px, py + tileSize - 4, tileSize, 4);
           }
+          
+          // Bordure fine
+          context.strokeStyle = "rgba(0,0,0,0.1)";
+          context.lineWidth = 1;
+          context.strokeRect(px, py, tileSize, tileSize);
         }
       });
     });
@@ -729,64 +751,42 @@
     return false;
   }
 
-  // --- VERSION CORRIGÉE : GESTION DES LIGNES ---
+  // --- NOUVEAU : Animation fluide et suppression robuste ---
   function arenaSweep() {
-    if (gameState === "lineflash" || gameState === "animating") {
-      return;
-    }
+    if (gameState === "lineflash" || gameState === "animating") return;
 
     const rowsToClear = [];
-
-    // 1. Repérage
     for (let y = arena.length - 1; y >= 0; --y) {
       let full = true;
       for (let x = 0; x < arena[y].length; ++x) {
-        if (arena[y][x] === 0) {
-          full = false;
-          break;
-        }
+        if (arena[y][x] === 0) { full = false; break; }
       }
-      if (full) {
-        rowsToClear.push(y);
-      }
+      if (full) rowsToClear.push(y);
     }
 
     if (rowsToClear.length === 0) {
-      if (Math.random() < 0.05) {
-        showProviseur("generic");
-      }
+      if (Math.random() < 0.05) showProviseur("generic");
       return;
     }
 
-    // 2. Animation Flash
     gameState = "lineflash";
     rowsToClear.forEach(y => arena[y].fill(99));
 
-    let steps = 0;
-    flashPhase = 0;
+    let frame = 0;
+    const maxFrames = 10; // Animation sur 10 images
 
     const flashInterval = setInterval(() => {
-      flashPhase++;
-      steps++;
-      draw();
+      frame++;
+      flashPhase = frame; 
+      draw(); 
 
-      // Fin Animation
-      if (steps >= 6) {
+      if (frame >= maxFrames) {
         clearInterval(flashInterval);
 
-        // --- SUPPRESSION ROBUSTE (Tri décroissant) ---
         rowsToClear.sort((a, b) => b - a);
+        rowsToClear.forEach(y => arena.splice(y, 1));
+        while (arena.length < ROWS) arena.unshift(new Array(COLS).fill(0));
 
-        rowsToClear.forEach(y => {
-          arena.splice(y, 1);
-        });
-        
-        // Ajout des lignes vides en haut
-        while (arena.length < ROWS) {
-            arena.unshift(new Array(COLS).fill(0));
-        }
-
-        // --- SCORING ---
         const lines = rowsToClear.length;
         sLine();
         const linePoints = [0, 40, 100, 300, 1200];
@@ -801,10 +801,10 @@
         }
 
         updateScore();
-        draw();
         gameState = "playing";
+        draw(); 
       }
-    }, 60);
+    }, 30);
   }
 
   function updateScore() {
@@ -885,38 +885,13 @@
     else matrix.reverse();
   }
 
+  // Cette fonction n'est plus utilisée directement car le ghost est dessiné inline
+  // mais on la garde pour l'animation de Game Over ou autre
   function drawPieceOutline(matrix, pos) {
     ctx.lineWidth = 4;
     ctx.strokeStyle = "#000";
     ctx.beginPath();
-
-    const h = matrix.length;
-    const w = matrix[0].length;
-
-    for (let y = 0; y < h; y++) {
-      for (let x = 0; x < w; x++) {
-        if (matrix[y][x] === 0) continue;
-
-        const worldX = pos.x + x;
-        const worldY = pos.y + y;
-        const px = worldX * TILE;
-        const py = worldY * TILE;
-
-        if (x === 0 || matrix[y][x - 1] === 0) {
-          ctx.moveTo(px, py); ctx.lineTo(px, py + TILE);
-        }
-        if (x === w - 1 || matrix[y][x + 1] === 0) {
-          ctx.moveTo(px + TILE, py); ctx.lineTo(px + TILE, py + TILE);
-        }
-        if (y === 0 || matrix[y - 1][x] === 0) {
-          ctx.moveTo(px, py); ctx.lineTo(px + TILE, py);
-        }
-        if (y === h - 1 || matrix[y + 1][x] === 0) {
-          ctx.moveTo(px, py + TILE); ctx.lineTo(px + TILE, py + TILE);
-        }
-      }
-    }
-    ctx.stroke();
+    // (code simplifié si besoin, mais ici le draw() s'occupe de tout)
   }
 
   function draw() {
@@ -936,12 +911,34 @@
       }
       ghost.pos.y--;
       
-      ctx.globalAlpha = 0.2;
-      drawMatrix(ghost.matrix, ghost.pos, ctx, TILE);
-      ctx.globalAlpha = 1;
+      // --- NOUVEAU : GHOST STYLE "OUTLINE" ---
+      ctx.save();
+      ctx.globalAlpha = 0.3; // Transparence légère
+      ctx.strokeStyle = "#333"; // Contour gris foncé
+      ctx.lineWidth = 2;
+      // On dessine manuellement les contours sans remplir
+      ghost.matrix.forEach((row, y) => {
+        row.forEach((value, x) => {
+          if (value !== 0) {
+             ctx.strokeRect((x + ghost.pos.x) * TILE, (y + ghost.pos.y) * TILE, TILE, TILE);
+          }
+        });
+      });
+      ctx.restore();
 
+      // DESSIN DU JOUEUR
       drawMatrix(player.matrix, player.pos, ctx, TILE);
-      drawPieceOutline(player.matrix, player.pos);
+      
+      // Outline autour de la pièce du joueur
+      ctx.lineWidth = 3;
+      ctx.strokeStyle = "#000";
+      player.matrix.forEach((row, y) => {
+        row.forEach((value, x) => {
+          if (value !== 0) {
+             ctx.strokeRect((x + player.pos.x) * TILE, (y + player.pos.y) * TILE, TILE, TILE);
+          }
+        });
+      });
     }
   }
 
@@ -1010,6 +1007,7 @@
             return;
         }
         arena[y].fill(99);
+        flashPhase = 5; // Pour qu'on voit quelque chose
         draw(); 
         y--;
     }, 40);
@@ -1097,7 +1095,7 @@
       muteBtn.blur();
       muted = !muted;
       muteBtn.textContent = muted ? "Son : OFF" : "Son : ON";
-      localStorage.setItem("tetris_muted", muted); // Sauvegarde préférence
+      localStorage.setItem("tetris_muted", muted); 
       if(!muted && !audioCtx) initAudioContext();
   });
 
