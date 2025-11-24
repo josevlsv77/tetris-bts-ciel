@@ -11,6 +11,8 @@
     margin: 0;
     padding: 0;
     overflow: hidden;
+    /* Empêche le rebond élastique sur iOS */
+    overscroll-behavior: none;
   }
 
   body {
@@ -26,7 +28,7 @@
   }
 
   #main {
-    background: rgba(255,255,255,0.92);
+    background: rgba(255,255,255,0.94); /* Légèrement plus opaque pour la lisibilité */
     border-radius: 16px;
     padding: 10px;
     display: flex;
@@ -34,13 +36,14 @@
     align-items: center;
     gap: 5px;
     box-sizing: border-box;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+    box-shadow: 0 15px 35px rgba(0,0,0,0.6);
     width: 98%;
     height: 98%;
     max-width: 1000px;
     justify-content: center; 
     position: relative;
     z-index: 1;
+    backdrop-filter: blur(5px); /* Effet verre dépoli moderne */
   }
 
   #header-group {
@@ -60,12 +63,15 @@
     font-weight: 900;
     color: #222;
     margin: 0;
+    letter-spacing: -0.5px;
   }
 
   #subtitle {
     font-size: 11px;
     color: #555;
     font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
   }
 
   #game-container {
@@ -78,20 +84,21 @@
   }
 
   canvas#tetris {
-    border: 3px solid #333;
-    background: #fff;
+    border: 4px solid #333;
+    background: linear-gradient(180deg, #fff 0%, #f4f4f4 100%);
     display: block;
-    box-shadow: 5px 5px 15px rgba(0,0,0,0.2);
+    box-shadow: inset 0 0 20px rgba(0,0,0,0.1), 5px 5px 15px rgba(0,0,0,0.3);
     height: 100%; 
     width: auto; 
     aspect-ratio: 1/2;
+    border-radius: 4px;
   }
 
   #side-panel {
     display: flex;
     flex-direction: column;
     gap: 8px;
-    background: rgba(255,255,255,0.6);
+    background: rgba(255,255,255,0.7);
     padding: 15px;
     border-radius: 10px;
     min-width: 180px;
@@ -99,6 +106,7 @@
     box-sizing: border-box;
     height: 100%;
     justify-content: center;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
   }
 
   #next-piece-container {
@@ -106,58 +114,68 @@
     margin-bottom: 10px;
   }
   canvas#next {
-    background: #fff;
+    background: rgba(255,255,255,0.8);
     border: 2px solid #555;
     margin-top: 2px;
     width: 80px; 
     height: 80px;
+    border-radius: 4px;
   }
 
   #score-box, #level-box {
     text-align: center;
     margin-bottom: 5px;
+    background: rgba(255,255,255,0.5);
+    padding: 5px;
+    border-radius: 6px;
+    border: 1px solid rgba(0,0,0,0.1);
   }
 
   .label-text {
-    font-size: 12px;
+    font-size: 11px;
     text-transform: uppercase;
-    color: #555;
-    font-weight: bold;
+    color: #666;
+    font-weight: 800;
+    letter-spacing: 0.5px;
   }
 
   #score {
-    font-size: 20px;
+    font-size: 22px;
     font-weight: 900;
-    color: #000;
+    color: #2c3e50;
+    font-variant-numeric: tabular-nums;
   }
 
   #level {
     font-size: 18px;
     font-weight: bold;
-    color: #000;
+    color: #2c3e50;
   }
-   
+    
   #rank-name {
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 900;
     color: #d32f2f;
     margin-top: 2px;
     min-height: 20px;
+    line-height: 1.2;
   }
 
   #highscore-title {
-    font-size: 14px;
+    font-size: 13px;
     font-weight: bold;
     margin-top: 10px;
     text-decoration: underline;
+    text-transform: uppercase;
   }
 
   #highscore-list {
     padding-left: 18px; 
     margin: 5px 0; 
     font-size: 13px;
-    max-height: 150px;
+    max-height: 120px;
     overflow-y: auto;
+    font-family: monospace;
   }
 
   button {
@@ -168,21 +186,23 @@
     font-weight: bold;
     font-size: 13px;
     cursor: pointer;
-    transition: background 0.2s;
+    transition: all 0.1s;
     margin-top: 5px;
+    box-shadow: 0 2px 0 #333;
   }
-  button:hover { background: #eee; }
-  button:active { background: #ccc; }
+  button:hover { background: #f0f0f0; transform: translateY(-1px); }
+  button:active { background: #ccc; transform: translateY(2px); box-shadow: none; }
   button:focus { outline: none; }
 
   #controls-info {
-    font-size: 11px;
+    font-size: 10px;
     line-height: 1.4;
-    margin-top: 15px;
+    margin-top: auto;
     color: #444;
     background: rgba(0,0,0,0.05);
-    padding: 5px;
+    padding: 8px;
     border-radius: 4px;
+    border: 1px dashed #999;
   }
 
   #message-center {
@@ -192,7 +212,10 @@
     color: #d32f2f;
     min-height: 24px;
     margin-top: 5px;
+    text-shadow: 0 1px 0 rgba(255,255,255,0.8);
+    animation: pulse 2s infinite;
   }
+  @keyframes pulse { 0% { opacity: 0.8; } 50% { opacity: 1; } 100% { opacity: 0.8; } }
 
   /* --- CONTRÔLES MOBILE --- */
   #mobile-controls {
@@ -202,26 +225,28 @@
     margin-top: 5px;
     gap: 10px;
     padding-bottom: 5px;
+    touch-action: none; /* Crucial pour le jeu mobile */
   }
     
   .pad-group {
     display: flex;
-    gap: 15px;
+    gap: 12px;
   }
 
   .mob-btn {
-    width: 55px;
-    height: 55px;
+    width: 58px;
+    height: 58px;
     font-size: 24px;
     display: flex;
     justify-content: center;
     align-items: center;
-    background: rgba(255,255,255,0.9);
+    background: linear-gradient(145deg, #ffffff, #e6e6e6);
     border: 2px solid #333;
     border-radius: 50%;
     box-shadow: 0 4px 0 #333;
     touch-action: manipulation;
     user-select: none;
+    -webkit-tap-highlight-color: transparent;
   }
   .mob-btn:active {
     transform: translateY(4px);
@@ -229,12 +254,12 @@
     background: #ddd;
   }
   .mob-btn.big {
-    width: 65px;
-    height: 65px;
-    background: #ffeba7;
+    width: 68px;
+    height: 68px;
+    background: linear-gradient(145deg, #ffeba7, #ffdf80);
   }
 
-  /* --- PROVISEUR + BULLE BD (VERSION PC : DROITE) --- */
+  /* --- PROVISEUR + BULLE BD --- */
   #proviseur-box {
     position: absolute;
     left: calc(50% + 400px); 
@@ -242,11 +267,17 @@
     display: none;
     cursor: pointer;
     z-index: 10;
+    transition: transform 0.3s ease-out;
   }
+  #proviseur-box.pop-in {
+    animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  }
+  @keyframes popIn { from { transform: scale(0) translateY(50px); } to { transform: scale(1) translateY(0); } }
 
   #proviseur-img {
     height: auto;
     max-height: 50vh;
+    filter: drop-shadow(5px 5px 10px rgba(0,0,0,0.4));
   }
 
   #speech-bubble {
@@ -258,11 +289,12 @@
     background: #fff;
     border-radius: 18px;
     border: 3px solid #333;
-    padding: 10px 14px;
+    padding: 12px 16px;
     font-size: 14px;
     font-weight: 700;
     color: #111;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    font-family: "Comic Sans MS", "Chalkboard SE", sans-serif; /* Style BD */
   }
 
   /* Flèche bulle PC */
@@ -273,8 +305,9 @@
   }
   #speech-bubble::before {
     content: ""; position: absolute; right: 100%; bottom: 20%;
-    margin-right: -2px; border-width: 9px; border-style: solid;
+    margin-right: -4px; border-width: 8px; border-style: solid;
     border-color: transparent #fff transparent transparent;
+    z-index: 2;
   }
 
   @media (max-width: 800px) {
@@ -282,62 +315,62 @@
         width: 100%; height: 100%; padding: 5px; border-radius: 0; justify-content: space-between;
     }
     #header-group { display: none; }
-    #game-container { height: 60vh; align-items: center; }
+    #game-container { height: 60vh; align-items: center; width: 100%; gap: 5px; }
     #side-panel { display: none; } 
     #mobile-header { 
         display: flex; flex-direction: column; align-items: center; width: 95%; 
         font-weight: bold; font-size: 14px; margin-top: 5px;
         background: rgba(255,255,255,0.8); padding: 5px; border-radius: 8px;
+        border: 1px solid rgba(0,0,0,0.1);
     }
     #mobile-header-row { display: flex; justify-content: space-between; width: 100%; }
     #mob-rank { color: #d32f2f; font-size: 12px; margin-top: 2px; font-weight: 900;}
 
     #mobile-controls { 
       display: flex; 
-      padding: 0 15px 15px 15px; 
+      padding: 0 10px 20px 10px; 
       box-sizing: border-box;
     }
     #message-center { font-size: 14px; margin-bottom: 5px; }
 
-    /* --- PROVISEUR MOBILE : EN BAS À DROITE --- */
+    /* --- PROVISEUR MOBILE --- */
     #proviseur-box {
       left: auto;
-      right: 5px;
-      bottom: 85px; /* Juste au dessus des boutons contrôles */
+      right: 0px;
+      bottom: 90px;
       top: auto;
       z-index: 20;
+      pointer-events: none; /* Laisse passer les clics en dessous sur mobile */
     }
     #proviseur-img {
-      height: 120px; /* Plus petit sur mobile pour pas gêner */
+      height: 100px; 
       max-height: 20vh;
     }
     
     #speech-bubble {
-      max-width: 200px;
+      max-width: 180px;
       font-size: 12px;
-      
-      /* Positionnement : à gauche de la tête */
       left: auto;
-      right: 100%; 
+      right: 95%; 
       bottom: 20%;
-      
       margin-left: 0;
-      margin-right: 10px;
+      margin-right: 5px;
       white-space: normal;
+      pointer-events: auto;
     }
 
-    /* Flèche bulle Mobile (pointe vers la droite) */
+    /* Flèche bulle Mobile */
     #speech-bubble::after {
       left: 100%; right: auto; bottom: 20%;
       border-color: transparent transparent transparent #333;
     }
     #speech-bubble::before {
       left: 100%; right: auto; bottom: 20%;
-      margin-right: 0; margin-left: -2px;
+      margin-right: 0; margin-left: -4px;
       border-color: transparent transparent transparent #fff;
     }
   }
-   
+    
   @media (min-width: 801px) {
     #mobile-header { display: none; }
   }
@@ -349,7 +382,7 @@
 <div id="main">
 
   <div id="header-group">
-    <img id="logo" src="Logo.gif" alt="Logo BTS" onerror="this.style.display='none'">
+    <img id="logo" src="Logo.gif" alt="Logo BTS" onerror="this.style.display='none'"> 
     <div id="title">TETRIS – BTS CIEL</div>
     <div id="subtitle">Lycée Simone Veil - Noisiel</div>
   </div>
@@ -425,10 +458,10 @@
   const nextCanvas = document.getElementById("next");
   const nextCtx = nextCanvas.getContext("2d");
     
+  // Optimisation rendu
   ctx.imageSmoothingEnabled = true;
   ctx.imageSmoothingQuality = 'high';
   nextCtx.imageSmoothingEnabled = true;
-  nextCtx.imageSmoothingQuality = 'high';
 
   const scoreElem = document.getElementById("score");
   const levelElem = document.getElementById("level");
@@ -443,35 +476,37 @@
   const muteBtn = document.getElementById("mute-btn");
   const highscoreList = document.getElementById("highscore-list");
 
-  /* --- PROVISEUR --- */
+  /* --- GESTION PROVISEUR --- */
   const proviseurBox = document.getElementById("proviseur-box");
   const speechBubble = document.getElementById("speech-bubble");
   let proviseurTimeout = null;
 
-  // CLIC POUR FERMER LE PROVISEUR
-  proviseurBox.addEventListener("click", () => {
-      proviseurBox.style.display = "none";
-  });
+  proviseurBox.addEventListener("click", () => hideProviseur());
   proviseurBox.addEventListener("touchstart", (e) => {
       e.preventDefault();
-      proviseurBox.style.display = "none";
+      hideProviseur();
   });
+
+  function hideProviseur() {
+      proviseurBox.classList.remove('pop-in');
+      proviseurBox.style.display = "none";
+  }
 
   const proviseurDialogues = {
     start: [
-      "« Bienvenue en BTS CIEL… essayez de faire mieux que vos bulletins. »",
+      "« Bienvenue en BTS CIEL. Essayez de faire mieux que vos bulletins. »",
       "« On s’échauffe : comme à la rentrée, mais avec moins de paperasse. »",
-      "« Tetris CIEL : si vous ragez déjà, attendez l’E4. »"
+      "« Tetris CIEL : si vous ragez déjà, attendez l’épreuve E4. »"
     ],
     line: [
-      "« Voilà, une ligne propre. Si seulement vos copies étaient aussi alignées. »",
+      "« Une ligne propre. Si seulement vos copies étaient aussi alignées. »",
       "« Pas mal. Continuez comme ça et je signe la mention. »",
       "« Une ligne en moins, un neurone en plus : bon calcul. »",
       "« C’est ce que j’appelle de la gestion de stock efficace. »"
     ],
     level: [
-      "« Changement de niveau : comme le passage en 2e année, mais sans rattrapage. »",
-      "« Vous venez de monter d’un cran. Gardez ce rythme au conseil de classe. »",
+      "« Changement de niveau : comme le passage en 2e année ! »",
+      "« Vous montez d’un cran. Gardez ce rythme au conseil de classe. »",
       "« Nouveau niveau. On va voir si vous tenez la cadence. »"
     ],
     gameover: [
@@ -481,28 +516,23 @@
     ],
     generic: [
       "« Les CIEL, pensez à sauvegarder… vos neurones. »",
-      "« Un Tetris bien rangé, c’est comme une bonne salle machine : ça respire. »",
-      "« Pause ? Après avoir battu le highscore, pas avant. »",
-      "« Vous jouez, mais n’oubliez pas que les notes, elles, sont bien réelles. »"
+      "« Un Tetris bien rangé, c’est comme une salle serveur : ça respire. »",
+      "« Pause ? Après avoir battu le highscore, pas avant. »"
     ]
   };
 
-  function getProviseurText(reason) {
-    const pool = proviseurDialogues[reason] || proviseurDialogues.generic;
-    return pool[Math.floor(Math.random() * pool.length)];
-  }
-
   function showProviseur(reason) {
-    const text = getProviseurText(reason);
+    const pool = proviseurDialogues[reason] || proviseurDialogues.generic;
+    const text = pool[Math.floor(Math.random() * pool.length)];
     speechBubble.textContent = text;
     proviseurBox.style.display = "block";
+    proviseurBox.classList.add('pop-in');
+    
     if (proviseurTimeout) clearTimeout(proviseurTimeout);
-    proviseurTimeout = setTimeout(() => {
-      proviseurBox.style.display = "none";
-    }, 4500);
+    proviseurTimeout = setTimeout(() => hideProviseur(), 5000);
   }
 
-  // Constantes Jeu
+  // --- Constantes Jeu ---
   const COLS = 10;
   const ROWS = 20;
   const TILE = 80; 
@@ -518,25 +548,15 @@
   let muted = false;
   let audioCtx = null;
 
-  // Récupération préférence sonore
   if(localStorage.getItem("tetris_muted") === "true") {
       muted = true;
       muteBtn.textContent = "Son : OFF";
   }
 
   const cielRanks = [
-      "Nouvelle Recrue",
-      "Apprenti Câbleur",
-      "Scripteur Bash",
-      "Décodeur Binaire",
-      "Admin Réseau",
-      "Développeur C++",
-      "Survivant de l'E4",
-      "Expert Cybersécu",
-      "Chef de Projet E6",
-      "Major de Promo",
-      "Diplômé CIEL",
-      "Légende de Simone Veil"
+      "Nouvelle Recrue", "Apprenti Câbleur", "Scripteur Bash", "Décodeur Binaire",
+      "Admin Réseau", "Développeur C++", "Survivant de l'E4", "Expert Cybersécu",
+      "Chef de Projet E6", "Major de Promo", "Diplômé CIEL", "Légende du Lycée"
   ];
 
   function getRankName(level) {
@@ -576,7 +596,7 @@
   function sLine()   { playTone(600, 'sine', 0.2, 0.1); setTimeout(()=>playTone(1200, 'sine', 0.4, 0.1), 100); }
   function sGameOver(){ playTone(150, 'sawtooth', 1.0, 0.2); setTimeout(()=>playTone(100, 'sawtooth', 1.0, 0.2), 300); }
 
-  // ----- VISAGES -----
+  /* --- VISUELS --- */
   const FACE_COUNT = 11; 
   const tileImages = [null];
   for (let i = 1; i <= FACE_COUNT; i++) {
@@ -585,11 +605,49 @@
     tileImages[i] = img;
   }
 
+  // Couleurs améliorées pour le mode sans image
   const colors = [
     null, '#FF0D72', '#0DC2FF', '#0DFF72', '#F538FF', '#FF8E0D', '#FFE138', '#3877FF', '#555555'
   ];
 
-  /* --- LOGIQUE --- */
+  /* --- LOGIQUE PARTICULES (Effet "Juice") --- */
+  let particles = [];
+  
+  function spawnParticles(x, y, color, amount = 10) {
+    for (let i = 0; i < amount; i++) {
+      particles.push({
+        x: x + TILE / 2,
+        y: y + TILE / 2,
+        vx: (Math.random() - 0.5) * 15,
+        vy: (Math.random() - 0.5) * 15,
+        life: 1.0,
+        color: color,
+        size: Math.random() * 8 + 4
+      });
+    }
+  }
+
+  function updateAndDrawParticles(ctx) {
+    for (let i = particles.length - 1; i >= 0; i--) {
+      let p = particles[i];
+      p.x += p.vx;
+      p.y += p.vy;
+      p.vy += 0.5; // Gravité
+      p.life -= 0.03;
+      
+      if (p.life <= 0) {
+        particles.splice(i, 1);
+        continue;
+      }
+      
+      ctx.globalAlpha = p.life;
+      ctx.fillStyle = p.color;
+      ctx.fillRect(p.x, p.y, p.size, p.size);
+      ctx.globalAlpha = 1.0;
+    }
+  }
+
+  /* --- LOGIQUE TETRIS --- */
   function createMatrix(w, h) {
     const m = [];
     for (let y = 0; y < h; y++) m.push(new Array(w).fill(0));
@@ -598,31 +656,20 @@
 
   function createPiece(type) {
     const id = 1 + (Math.random() * FACE_COUNT | 0);
-
+    // On stocke le type pour la couleur de fallback
+    let shape = [];
     switch (type) {
-      case 'T': return [[0, id, 0],
-                        [id, id, id],
-                        [0,  0,  0]];
-      case 'O': return [[id, id],
-                        [id, id]];
-      case 'L': return [[0,  0,  id],
-                        [id, id, id],
-                        [0,  0,  0]]; 
-      case 'J': return [[id, 0,  0],
-                        [id, id, id],
-                        [0,  0,  0]];
-      case 'I': return [[0,  id, 0,  0],
-                        [0,  id, 0,  0],
-                        [0,  id, 0,  0],
-                        [0,  id, 0,  0]];
-      case 'S': return [[0,  id, id],
-                        [id, id, 0],
-                        [0,  0,  0]];
-      case 'Z': return [[id, id, 0],
-                        [0,  id, id],
-                        [0,  0,  0]];
+      case 'T': shape = [[0, id, 0],[id, id, id],[0, 0, 0]]; break;
+      case 'O': shape = [[id, id],[id, id]]; break;
+      case 'L': shape = [[0, 0, id],[id, id, id],[0, 0, 0]]; break;
+      case 'J': shape = [[id, 0, 0],[id, id, id],[0, 0, 0]]; break;
+      case 'I': shape = [[0, id, 0, 0],[0, id, 0, 0],[0, id, 0, 0],[0, id, 0, 0]]; break;
+      case 'S': shape = [[0, id, id],[id, id, 0],[0, 0, 0]]; break;
+      case 'Z': shape = [[id, id, 0],[0, id, id],[0, 0, 0]]; break;
     }
-    return [[id]];
+    // Petite astuce: on attache la "couleur" (index 1-7) à la matrice pour le rendu fallback
+    shape.typeIdx = "ILJOTSZ".indexOf(type) + 1; 
+    return shape;
   }
 
   let arena = createMatrix(COLS, ROWS);
@@ -634,11 +681,10 @@
     level: 1,
   };
 
-  let flashPhase = 0; // Sert à l'animation de suppression
+  let flashPhase = 0; 
 
-  // --- NOUVEAU : Grille plus fine ---
   function drawGrid() {
-    ctx.strokeStyle = "rgba(0, 0, 0, 0.05)"; // Gris très fin
+    ctx.strokeStyle = "rgba(0, 0, 0, 0.08)";
     ctx.lineWidth = 1; 
     
     for (let x = 1; x < COLS; x++) {
@@ -649,7 +695,24 @@
     }
   }
 
-  // --- NOUVEAU : Dessin "Pro" avec animation Data Purge ---
+  // Helper pour dessiner un bloc joli même sans image
+  function drawBeveledRect(ctx, x, y, size, color) {
+      ctx.fillStyle = color;
+      ctx.fillRect(x, y, size, size);
+      
+      // Relief (Bevel)
+      ctx.lineWidth = size / 8;
+      ctx.strokeStyle = "rgba(255,255,255,0.4)";
+      ctx.beginPath(); ctx.moveTo(x, y+size); ctx.lineTo(x, y); ctx.lineTo(x+size, y); ctx.stroke();
+      
+      ctx.strokeStyle = "rgba(0,0,0,0.3)";
+      ctx.beginPath(); ctx.moveTo(x+size, y); ctx.lineTo(x+size, y+size); ctx.lineTo(x, y+size); ctx.stroke();
+      
+      // Centre glossy
+      ctx.fillStyle = "rgba(255,255,255,0.1)";
+      ctx.fillRect(x + size/4, y + size/4, size/2, size/2);
+  }
+
   function drawMatrix(matrix, offset, context = ctx, tileSize = TILE) {
     matrix.forEach((row, y) => {
       row.forEach((value, x) => {
@@ -657,60 +720,38 @@
           const px = (x + offset.x) * tileSize;
           const py = (y + offset.y) * tileSize;
 
-          // Animation suppression (99)
+          // Animation suppression (valeur 99)
           if (value === 99) {
-            // flashPhase va de 1 à 10
             const progress = flashPhase / 10; 
-            const scale = 1 - progress; // De 1 à 0
-
-            const centerX = px + tileSize / 2;
-            const centerY = py + tileSize / 2;
-            const size = tileSize * scale;
-            const offsetSize = size / 2;
-
-            // Fond blanc éclatant
-            context.fillStyle = `rgba(255, 255, 255, ${1 - progress})`; 
-            context.fillRect(px, py, tileSize, tileSize);
-
-            // Le bloc qui rétrécit
+            const scale = 1 - progress; 
+            const center = tileSize / 2;
+            
             context.save();
-            context.translate(centerX, centerY);
-            
-            // Carré couleur CIEL par défaut pour l'anim
-            context.fillStyle = "#0DC2FF"; 
-            context.fillRect(-offsetSize, -offsetSize, size, size);
-            
-            // Flash blanc par dessus
-            context.fillStyle = `rgba(255, 255, 255, 0.5)`;
-            context.fillRect(-offsetSize, -offsetSize, size, size);
-
+            context.translate(px + center, py + center);
+            context.scale(scale, scale);
+            context.fillStyle = "#fff"; 
+            context.fillRect(-center, -center, tileSize, tileSize);
             context.restore();
             return;
           }
 
-          // Dessin normal
           const imgIndex = ((value - 1 + FACE_COUNT) % FACE_COUNT) + 1;
           const img = tileImages[imgIndex];
 
+          // Choix de la couleur de repli (basé sur le type de pièce ou aléatoire si fixe)
+          const fallbackColor = colors[(matrix.typeIdx || (value % 7) + 1)] || '#888';
+
           if (img && img.complete && img.naturalWidth !== 0) {
             context.drawImage(img, px, py, tileSize, tileSize);
-            // Reflet glossy
-            context.fillStyle = "rgba(255,255,255,0.15)";
-            context.fillRect(px, py, tileSize, tileSize/3);
+            // Petit effet de vitre
+            context.fillStyle = "rgba(255,255,255,0.1)";
+            context.fillRect(px, py, tileSize, tileSize/2);
+            context.strokeStyle = "rgba(0,0,0,0.2)";
+            context.strokeRect(px, py, tileSize, tileSize);
           } else {
-            // Fallback
-            context.fillStyle = colors[value % colors.length] || 'grey';
-            context.fillRect(px, py, tileSize, tileSize);
-            context.fillStyle = "rgba(255,255,255,0.3)";
-            context.fillRect(px, py, tileSize, 4);
-            context.fillStyle = "rgba(0,0,0,0.2)";
-            context.fillRect(px, py + tileSize - 4, tileSize, 4);
+            // Dessin vectoriel joli si pas d'image
+            drawBeveledRect(context, px, py, tileSize, fallbackColor);
           }
-          
-          // Bordure fine
-          context.strokeStyle = "rgba(0,0,0,0.1)";
-          context.lineWidth = 1;
-          context.strokeRect(px, py, tileSize, tileSize);
         }
       });
     });
@@ -718,8 +759,8 @@
 
   function drawNextPiece() {
     if (!nextPieceMatrix) return;
-    nextCtx.fillStyle = "#fff";
-    nextCtx.fillRect(0, 0, nextCanvas.width, nextCanvas.height);
+    // Fond propre
+    nextCtx.clearRect(0,0, nextCanvas.width, nextCanvas.height);
     
     const offsetX = (4 - nextPieceMatrix[0].length) / 2;
     const offsetY = (4 - nextPieceMatrix.length) / 2;
@@ -751,7 +792,6 @@
     return false;
   }
 
-  // --- NOUVEAU : Animation fluide et suppression robuste ---
   function arenaSweep() {
     if (gameState === "lineflash" || gameState === "animating") return;
 
@@ -770,19 +810,23 @@
     }
 
     gameState = "lineflash";
-    rowsToClear.forEach(y => arena[y].fill(99));
+    rowsToClear.forEach(y => {
+        // Effet particule sur toute la ligne
+        for(let x=0; x<COLS; x++) {
+             // On tente de récupérer la couleur pour les particules
+            spawnParticles(x*TILE, y*TILE, '#FFF', 3);
+        }
+        arena[y].fill(99);
+    });
 
     let frame = 0;
-    const maxFrames = 10; // Animation sur 10 images
-
     const flashInterval = setInterval(() => {
       frame++;
       flashPhase = frame; 
       draw(); 
 
-      if (frame >= maxFrames) {
+      if (frame >= 8) {
         clearInterval(flashInterval);
-
         rowsToClear.sort((a, b) => b - a);
         rowsToClear.forEach(y => arena.splice(y, 1));
         while (arena.length < ROWS) arena.unshift(new Array(COLS).fill(0));
@@ -796,7 +840,7 @@
           player.level++;
           dropInterval = Math.max(100, 800 - (player.level * 50));
           showProviseur("level");
-        } else if (Math.random() < 0.4) {
+        } else if (Math.random() < 0.5) {
           showProviseur("line");
         }
 
@@ -804,16 +848,14 @@
         gameState = "playing";
         draw(); 
       }
-    }, 30);
+    }, 40);
   }
 
   function updateScore() {
     scoreElem.textContent = player.score;
     levelElem.textContent = player.level;
-    
     const currentRank = getRankName(player.level);
     rankElem.textContent = currentRank;
-
     mobScoreElem.textContent = "Score: " + player.score;
     mobLevelElem.textContent = "Niv: " + player.level;
     mobRankElem.textContent = currentRank;
@@ -842,6 +884,11 @@
       player.pos.y--;
       merge(arena, player);
       sDrop();
+      // Petite particule d'atterrissage
+      player.matrix.forEach((row, y) => row.forEach((v, x) => {
+          if(v) spawnParticles((player.pos.x+x)*TILE, (player.pos.y+y)*TILE, "#ddd", 2);
+      }));
+      
       arenaSweep();
       playerReset();
     }
@@ -849,12 +896,20 @@
   }
 
   function hardDrop() {
+    let droppedDist = 0;
     while (!collide(arena, player)) {
       player.pos.y++;
+      droppedDist++;
     }
     player.pos.y--; 
     merge(arena, player);
     sDrop();
+    
+    // Grosse particule pour Hard Drop
+    player.matrix.forEach((row, y) => row.forEach((v, x) => {
+          if(v) spawnParticles((player.pos.x+x)*TILE, (player.pos.y+y)*TILE, "#fff", 5);
+    }));
+
     arenaSweep();
     playerReset();
   }
@@ -885,23 +940,15 @@
     else matrix.reverse();
   }
 
-  // Cette fonction n'est plus utilisée directement car le ghost est dessiné inline
-  // mais on la garde pour l'animation de Game Over ou autre
-  function drawPieceOutline(matrix, pos) {
-    ctx.lineWidth = 4;
-    ctx.strokeStyle = "#000";
-    ctx.beginPath();
-    // (code simplifié si besoin, mais ici le draw() s'occupe de tout)
-  }
-
   function draw() {
-    ctx.fillStyle = "#fff";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
     
     drawGrid();
     drawMatrix(arena, {x:0, y:0}); 
+    updateAndDrawParticles(ctx);
 
     if (gameState === "playing" || gameState === "lineflash") {
+      // GHOST PIECE
       const ghost = {
         matrix: player.matrix,
         pos: {x: player.pos.x, y: player.pos.y}
@@ -911,34 +958,24 @@
       }
       ghost.pos.y--;
       
-      // --- NOUVEAU : GHOST STYLE "OUTLINE" ---
       ctx.save();
-      ctx.globalAlpha = 0.3; // Transparence légère
-      ctx.strokeStyle = "#333"; // Contour gris foncé
-      ctx.lineWidth = 2;
-      // On dessine manuellement les contours sans remplir
+      ctx.globalAlpha = 0.2;
+      // Dessin du fantôme en couleur unie
+      const ghostColor = colors[player.matrix.typeIdx || 1];
       ghost.matrix.forEach((row, y) => {
         row.forEach((value, x) => {
           if (value !== 0) {
+             ctx.fillStyle = ghostColor;
+             ctx.fillRect((x + ghost.pos.x) * TILE, (y + ghost.pos.y) * TILE, TILE, TILE);
+             ctx.strokeStyle = "#000";
              ctx.strokeRect((x + ghost.pos.x) * TILE, (y + ghost.pos.y) * TILE, TILE, TILE);
           }
         });
       });
       ctx.restore();
 
-      // DESSIN DU JOUEUR
+      // JOUEUR
       drawMatrix(player.matrix, player.pos, ctx, TILE);
-      
-      // Outline autour de la pièce du joueur
-      ctx.lineWidth = 3;
-      ctx.strokeStyle = "#000";
-      player.matrix.forEach((row, y) => {
-        row.forEach((value, x) => {
-          if (value !== 0) {
-             ctx.strokeRect((x + player.pos.x) * TILE, (y + player.pos.y) * TILE, TILE, TILE);
-          }
-        });
-      });
     }
   }
 
@@ -959,7 +996,7 @@
     }
   }
 
-  /* --- GAME OVER & SCORES --- */
+  /* --- GAME OVER --- */
   function loadHighScores() {
     try { return JSON.parse(localStorage.getItem("tetris_scores") || "[]"); } catch { return []; }
   }
@@ -977,9 +1014,10 @@
   }
 
   function addHighScore(score) {
+    // Petit délai pour laisser l'animation finir
     setTimeout(() => {
-        let name = prompt("GAME OVER ! \nGrade atteint : " + getRankName(player.level) + "\nTon pseudo :", "Etudiant CIEL");
-        if (!name) return;
+        let name = prompt("GAME OVER !\nGrade : " + getRankName(player.level) + "\nPseudo :", "Etudiant CIEL");
+        if (!name) name = "Anonyme";
         name = name.trim().substring(0, 10);
 
         const scores = loadHighScores();
@@ -997,6 +1035,7 @@
     messageCenter.textContent = "GAME OVER";
     showProviseur("gameover");
 
+    // Animation rideau
     let y = ROWS - 1;
     const animInterval = setInterval(() => {
         if (y < 0) {
@@ -1006,11 +1045,11 @@
             messageCenter.textContent = "GAME OVER — ESPACE POUR REJOUER";
             return;
         }
-        arena[y].fill(99);
-        flashPhase = 5; // Pour qu'on voit quelque chose
+        arena[y].fill(99); // 99 = bloc blanc flash
+        flashPhase = 5; 
         draw(); 
         y--;
-    }, 40);
+    }, 30);
   }
 
   function resetGame() {
@@ -1018,6 +1057,7 @@
     player.score = 0;
     player.level = 1;
     dropInterval = BASE_DROP;
+    particles = [];
     updateScore();
     nextPieceMatrix = null;
     playerReset();
@@ -1029,7 +1069,7 @@
     requestAnimationFrame(update);
   }
 
-  /* --- INPUTS CLAVIER --- */
+  /* --- INPUTS --- */
   document.addEventListener("keydown", event => {
     if (!audioCtx) initAudioContext();
 
@@ -1072,11 +1112,19 @@
     }
   });
 
-  /* --- CONTRÔLES MOBILE --- */
   const setupMobileBtn = (id, action) => {
     const btn = document.getElementById(id);
-    btn.addEventListener("touchstart", (e) => { e.preventDefault(); if(!audioCtx) initAudioContext(); action(); });
-    btn.addEventListener("click", (e) => { if(!audioCtx) initAudioContext(); action(); });
+    // Prevents double tap zoom & scroll
+    btn.addEventListener("touchstart", (e) => { 
+        e.preventDefault(); 
+        if(!audioCtx) initAudioContext(); 
+        action(); 
+    }, {passive: false});
+    // Fallback click
+    btn.addEventListener("click", (e) => { 
+        if(!audioCtx) initAudioContext(); 
+        action(); 
+    });
   };
 
   setupMobileBtn("btn-left", () => { if(gameState==="playing") { player.pos.x--; if(collide(arena, player)) player.pos.x++; else sMove(); draw(); }});
@@ -1103,13 +1151,14 @@
   updateScore();
   draw(); 
 
-  // --- TAP POUR DÉMARRER SUR MOBILE ---
-  canvas.addEventListener("touchstart", () => {
+  // Tap n'importe où sur le canvas pour démarrer sur mobile
+  canvas.addEventListener("touchstart", (e) => {
+      if(e.target === canvas) e.preventDefault();
       if (!audioCtx) initAudioContext();
       if (gameState === "waiting" || gameState === "gameover") {
           resetGame();
       }
-  });
+  }, {passive: false});
 
 </script>
 </body>
