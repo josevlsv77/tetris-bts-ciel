@@ -8,7 +8,6 @@
 <link rel="icon" type="image/jpeg" href="logo 2.png">
 
 <style>
-/* ... (Reste de votre section <style>) ... */
   html, body {
     height: 100%;
     margin: 0;
@@ -140,12 +139,11 @@
     border: 2px solid #333;
     box-sizing: border-box;
     height: 100%;
-    justify-content: flex-start; /* Changé pour aligner en haut */
+    justify-content: flex-start;
     box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-    overflow-y: auto; /* Au cas où écran petit */
+    overflow-y: auto; 
   }
 
-  /* Conteneur Next et Hold alignés */
   .preview-box {
     text-align: center;
     margin-bottom: 5px;
@@ -219,6 +217,11 @@
     overflow-y: auto;
     font-family: monospace;
   }
+  
+  /* Ajout : style pour l'affichage du pseudo */
+  #highscore-list li {
+    margin-bottom: 2px;
+  }
 
   button {
     padding: 10px;
@@ -284,7 +287,10 @@
   .mob-btn.big { width: 65px; height: 65px; background: linear-gradient(145deg, #ffeba7, #ffdf80); }
   .mob-btn.hold-btn { background: #e0f7fa; font-size: 14px; font-weight: bold; width: 45px; height: 45px; }
 
-  /* --- PROVISEUR + BULLE BD --- */
+  /* --- ANIMATION POP-IN COMMUNE --- */
+  @keyframes popIn { from { transform: scale(0) translateY(50px); } to { transform: scale(1) translateY(0); } }
+
+  /* --- PROVISEUR (DROITE) --- */
   #proviseur-box {
     position: absolute;
     left: calc(50% + 400px); 
@@ -294,35 +300,19 @@
     z-index: 10;
     transition: transform 0.3s ease-out;
   }
-  #proviseur-box.pop-in {
-    animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  }
-  @keyframes popIn { from { transform: scale(0) translateY(50px); } to { transform: scale(1) translateY(0); } }
-
+  #proviseur-box.pop-in { animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
   #proviseur-img {
-    height: auto;
-    max-height: 50vh;
+    height: auto; max-height: 50vh;
     filter: drop-shadow(5px 5px 10px rgba(0,0,0,0.4));
   }
-
   #speech-bubble {
-    position: absolute;
-    left: 100%;
-    bottom: 65%;
-    margin-left: 15px;
-    max-width: 320px;
-    background: #ffffff;
-    border: 2px solid #2c3e50; 
-    border-radius: 12px;
-    padding: 16px 20px;
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-    font-size: 15px; 
-    line-height: 1.5;
-    font-weight: 600;
-    color: #2c3e50;
+    position: absolute; left: 100%; bottom: 65%;
+    margin-left: 15px; max-width: 250px;
+    background: #ffffff; border: 2px solid #2c3e50; 
+    border-radius: 12px; padding: 12px 15px;
+    font-size: 14px; line-height: 1.4; font-weight: 600; color: #2c3e50;
     box-shadow: 0 8px 20px rgba(0,0,0,0.15);
   }
-
   #speech-bubble::after {
     content: ""; position: absolute; right: 100%; bottom: 20%;
     border-width: 10px; border-style: solid;
@@ -331,8 +321,45 @@
   #speech-bubble::before {
     content: ""; position: absolute; right: 100%; bottom: 20%;
     margin-right: -3px; border-width: 10px; border-style: solid;
-    border-color: transparent #fff transparent transparent;
-    z-index: 2;
+    border-color: transparent #fff transparent transparent; z-index: 2;
+  }
+
+  /* --- PROFESSEURS (GAUCHE) --- */
+  #prof-box {
+    position: absolute;
+    right: calc(50% + 400px); /* Symétrie par rapport au centre */
+    bottom: 10px;
+    display: none;
+    cursor: pointer;
+    z-index: 10;
+    transition: transform 0.3s ease-out;
+  }
+  #prof-box.pop-in { animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+  
+  #prof-img {
+    height: auto; max-height: 50vh;
+    filter: drop-shadow(-5px 5px 10px rgba(0,0,0,0.4));
+  }
+  
+  /* Bulle Professeur (pointe vers la droite, vers le jeu) */
+  #prof-bubble {
+    position: absolute; right: 100%; bottom: 65%;
+    margin-right: 15px; max-width: 250px;
+    background: #ffffff; border: 2px solid #2c3e50; 
+    border-radius: 12px; padding: 12px 15px;
+    font-size: 14px; line-height: 1.4; font-weight: 600; color: #2c3e50;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+    text-align: right;
+  }
+  #prof-bubble::after {
+    content: ""; position: absolute; left: 100%; bottom: 20%;
+    border-width: 10px; border-style: solid;
+    border-color: transparent transparent transparent #2c3e50;
+  }
+  #prof-bubble::before {
+    content: ""; position: absolute; left: 100%; bottom: 20%;
+    margin-left: -3px; border-width: 10px; border-style: solid;
+    border-color: transparent transparent transparent #fff; z-index: 2;
   }
 
   @media (max-width: 800px) {
@@ -356,29 +383,8 @@
     }
     #message-center { font-size: 14px; margin-bottom: 5px; }
 
-    #proviseur-box {
-      left: auto; right: 0px; bottom: 90px; top: auto;
-      z-index: 20; pointer-events: none;
-    }
-    #proviseur-img { height: 100px; max-height: 20vh; }
-    
-    #speech-bubble {
-      max-width: 200px;
-      font-size: 13px;
-      left: auto; right: 95%; bottom: 20%;
-      margin-left: 0; margin-right: 10px;
-      white-space: normal; pointer-events: auto;
-    }
-
-    #speech-bubble::after {
-      left: 100%; right: auto; bottom: 20%;
-      border-color: transparent transparent transparent #2c3e50;
-    }
-    #speech-bubble::before {
-      left: 100%; right: auto; bottom: 20%;
-      margin-right: 0; margin-left: -3px;
-      border-color: transparent transparent transparent #fff;
-    }
+    /* Cache les persos sur mobile pour ne pas gêner le jeu */
+    #proviseur-box, #prof-box { display: none !important; }
   }
     
   @media (min-width: 801px) {
@@ -474,6 +480,11 @@
   <div id="speech-bubble"></div>
 </div>
 
+<div id="prof-box">
+  <img id="prof-img" src="Perso1.png" alt="Professeur">
+  <div id="prof-bubble"></div>
+</div>
+
 <audio id="bg-music" loop>
     <source src="musique.mp3" type="audio/mpeg">
 </audio>
@@ -514,58 +525,140 @@
   const bgMusic = document.getElementById("bg-music");
   bgMusic.volume = 0.3; // Volume musique à 30%
 
-  /* --- GESTION PROVISEUR --- */
+  /* --- GESTION PERSONNAGES (PROVISEUR ET PROFS) --- */
   const proviseurBox = document.getElementById("proviseur-box");
   const speechBubble = document.getElementById("speech-bubble");
-  let proviseurTimeout = null;
+  
+  const profBox = document.getElementById("prof-box");
+  const profImg = document.getElementById("prof-img");
+  const profBubble = document.getElementById("prof-bubble");
 
-  proviseurBox.addEventListener("click", () => hideProviseur());
-  proviseurBox.addEventListener("touchstart", (e) => { e.preventDefault(); hideProviseur(); });
+  let charTimeout = null;
 
-  function hideProviseur() {
+  // Masquer au clic
+  proviseurBox.addEventListener("click", () => hideCharacters());
+  profBox.addEventListener("click", () => hideCharacters());
+
+  function hideCharacters() {
       proviseurBox.classList.remove('pop-in');
       proviseurBox.style.display = "none";
+      profBox.classList.remove('pop-in');
+      profBox.style.display = "none";
   }
+
+  // --- CONFIG PROFESSEURS ---
+  // On utilise bien .png
+  const profs = [
+      { img: 'Perso1.png', type: 'chimie' }, 
+      { img: 'Perso2.png', type: 'strict' }, 
+      { img: 'Perso3.png', type: 'sport' },  
+      { img: 'Perso4.png', type: 'cool' },   
+      { img: 'Perso5.png', type: 'geek' },   
+      { img: 'Perso6.png', type: 'histoire'}, 
+      { img: 'Perso7.png', type: 'style' }    
+  ];
+
+  const profDialogues = {
+      chimie: [
+          "« La pureté de cette ligne est de 99.1%. »",
+          "« Attention, réaction en chaîne imminente ! »",
+          "« Je suis celui qui emboîte. »"
+      ],
+      strict: [
+          "Ce n'est pas aligné ! Recommencez !",
+          "Une erreur de plus et c'est la retenue.",
+          "Je vous ai à l'œil, jeune CIEL."
+      ],
+      sport: [
+          "Musclez votre jeu !",
+          "Allez, on ne lâche rien, compris ?!",
+          "C'est ça ! un mental de champion !"
+      ],
+      cool: [
+          "Tranquille, pas de pression.",
+          "C'est carré comme en Corée.",
+          "Joli move, ça mérite un café."
+      ],
+      geek: [
+          "Avez-vous essayé de redémarrer...la pièce ?",
+          "C'est un bug ou une feature ce trou ?",
+          "Optimisation du stack : validée."
+      ],
+      histoire: [
+          "Aussi beau que U=RI.",
+          "Isaac Newton n'aurait pas fait mieux.",
+          "Ce mouvement fera date dans les annales de la dynamique."
+      ],
+      style: [
+          "Ce placement... c'est de l'art !",
+          "Un peu de couleur dans ce monde de gris.",
+          "La classe à l'état pur, bravo !"
+      ],
+      generic: [
+          "Continuez comme ça !",
+          "Le BTS est dans la poche à ce rythme.",
+          "Focus !"
+      ]
+  };
 
   const proviseurDialogues = {
     start: [
-      "« Bienvenue en BTS CIEL. Essayez de faire mieux que vos bulletins. »",
-      "« On s’échauffe : comme à la rentrée, mais avec moins de paperasse. »",
-      "« Tetris CIEL : si vous ragez déjà, attendez l’épreuve E4. »"
+      "Bienvenue en BTS CIEL. Essayez de faire mieux que vos bulletins.",
+      "On s’échauffe : comme à la rentrée, mais avec moins de paperasse."
     ],
     line: [
-      "« Une ligne propre. Si seulement vos copies étaient aussi alignées. »",
-      "« Pas mal. Continuez comme ça et je signe la mention. »",
-      "« Une ligne en moins, un neurone en plus : bon calcul. »"
+      "Une ligne propre. Si seulement vos copies étaient aussi alignées.",
+      "Pas mal. Continuez comme ça et je signe la mention."
     ],
     tetris: [
-      "« 4 lignes d'un coup ?! C'est la mention Très Bien assurée ! »",
-      "« Incroyable ! Vous nettoyez le tableau mieux que le service d'entretien. »",
-      "« Ça c'est du génie CIEL ! Je suis presque ému. »"
+      "4 lignes d'un coup ?! C'est la mention Très Bien assurée !",
+      "Incroyable ! Vous nettoyez le tableau mieux que le service d'entretien."
     ],
     level: [
-      "« Changement de niveau : comme le passage en 2e année ! »",
-      "« Vous montez d’un cran. Gardez ce rythme au conseil de classe. »"
+      "Changement de niveau : comme le passage en 2e année !",
+      "Vous montez d’un cran. Gardez ce rythme au conseil de classe."
     ],
     gameover: [
-      "« GAME OVER… mais au lycée, on n’a pas de bouton Recommencer. »",
-      "« Conseil du proviseur : révisez la stratégie avant la prochaine partie. »"
-    ],
-    generic: [
-      "« Les CIEL, pensez à sauvegarder… vos neurones. »",
-      "« Pause ? Après avoir battu le highscore, pas avant. »"
+      "GAME OVER… mais au lycée, on n’a pas de bouton Recommencer.",
+      "Conseil du proviseur : révisez la stratégie avant la prochaine partie."
     ]
   };
 
-  function showProviseur(reason) {
-    const pool = proviseurDialogues[reason] || proviseurDialogues.generic;
-    const text = pool[Math.floor(Math.random() * pool.length)];
-    speechBubble.textContent = text;
-    proviseurBox.style.display = "block";
-    proviseurBox.classList.add('pop-in');
-    
-    if (proviseurTimeout) clearTimeout(proviseurTimeout);
-    proviseurTimeout = setTimeout(() => hideProviseur(), 5000);
+  function triggerCharacterEvent(reason) {
+      if (charTimeout) clearTimeout(charTimeout);
+      hideCharacters();
+
+      // 50% de chance Proviseur (Droite), 50% de chance Prof (Gauche)
+      // Sauf pour Game Over où le Proviseur a la priorité (70%)
+      let isProviseur = Math.random() > 0.5;
+      if (reason === "gameover") isProviseur = Math.random() > 0.3;
+
+      if (isProviseur) {
+          // --- AFFICHER PROVISEUR ---
+          const pool = proviseurDialogues[reason] || proviseurDialogues.line;
+          const text = pool[Math.floor(Math.random() * pool.length)];
+          speechBubble.textContent = text;
+          proviseurBox.style.display = "block";
+          proviseurBox.classList.add('pop-in');
+      } else {
+          // --- AFFICHER PROF ---
+          // Choisir un prof au hasard
+          const randomProf = profs[Math.floor(Math.random() * profs.length)];
+          profImg.src = randomProf.img;
+          
+          // Choisir dialogue selon type ou generic
+          const specificPool = profDialogues[randomProf.type] || profDialogues.generic;
+          // Mélanger avec des dialogues génériques pour varier
+          const finalPool = Math.random() > 0.3 ? specificPool : profDialogues.generic;
+          
+          const text = finalPool[Math.floor(Math.random() * finalPool.length)];
+          
+          profBubble.textContent = text;
+          profBox.style.display = "block";
+          profBox.classList.add('pop-in');
+      }
+
+      charTimeout = setTimeout(() => hideCharacters(), 5000);
   }
 
   // --- Constantes Jeu ---
@@ -874,13 +967,16 @@
     }
 
     if (rowsToClear.length === 0) {
-      if (Math.random() < 0.05) showProviseur("generic");
+      if (Math.random() < 0.05) triggerCharacterEvent("generic");
       return;
     }
 
     gameState = "lineflash";
     const isTetris = (rowsToClear.length === 4);
-    if (isTetris) { triggerShake(); showProviseur("tetris"); }
+    if (isTetris) { 
+        triggerShake(); 
+        triggerCharacterEvent("tetris"); 
+    }
 
     rowsToClear.forEach(y => {
         for(let x=0; x<COLS; x++) {
@@ -911,8 +1007,10 @@
         if (player.score > player.level * 1000) {
           player.level++;
           dropInterval = Math.max(100, 800 - (player.level * 50));
-          showProviseur("level");
-        } else if (!isTetris && Math.random() < 0.5) showProviseur("line");
+          triggerCharacterEvent("level");
+        } else if (!isTetris && Math.random() < 0.5) {
+            triggerCharacterEvent("line");
+        }
 
         updateScore();
         gameState = "playing";
@@ -1062,181 +1160,192 @@
       });
       ctx.restore();
 
-      drawMatrix(player.matrix, player.pos, ctx, TILE);
+      drawMatrix(player.matrix, player.pos);
     }
   }
 
+  let lastTouchTime = 0;
   function update(time = 0) {
-    const deltaTime = time - lastTime;
-    lastTime = time;
     if (gameState === "playing") {
-      dropCounter += deltaTime;
-      if (dropCounter > dropInterval) playerDrop();
+        const deltaTime = time - lastTime;
+        lastTime = time;
+        dropCounter += deltaTime;
+        if (dropCounter > dropInterval) {
+          playerDrop();
+        }
     }
     draw();
-    if (gameState !== "gameover") requestAnimationFrame(update);
-  }
-
-  function loadHighScores() {
-    try { return JSON.parse(localStorage.getItem("tetris_scores") || "[]"); } catch { return []; }
-  }
-  function saveHighScores(list) {
-    localStorage.setItem("tetris_scores", JSON.stringify(list));
-  }
-  function refreshHighScoreList() {
-    const scores = loadHighScores();
-    highscoreList.innerHTML = "";
-    scores.forEach(s => {
-      const li = document.createElement("li");
-      li.textContent = `${s.name} : ${s.score}`;
-      highscoreList.appendChild(li);
-    });
-  }
-
-  function addHighScore(score) {
-    setTimeout(() => {
-        let name = prompt("GAME OVER !\nGrade : " + getRankName(player.level) + "\nPseudo :", "Etudiant CIEL");
-        if (!name) name = "Anonyme";
-        name = name.trim().substring(0, 10);
-        const scores = loadHighScores();
-        scores.push({name, score});
-        scores.sort((a,b)=>b.score-a.score);
-        if (scores.length > 5) scores.length = 5; 
-        saveHighScores(scores);
-        refreshHighScoreList();
-    }, 100); 
-  }
-
-  function handleGameOver() {
-    gameState = "animating";
-    bgMusic.pause(); // Stop musique
-    sGameOver();
-    messageCenter.textContent = "GAME OVER";
-    showProviseur("gameover");
-    let y = ROWS - 1;
-    const animInterval = setInterval(() => {
-        if (y < 0) {
-            clearInterval(animInterval);
-            addHighScore(player.score);
-            gameState = "gameover";
-            messageCenter.textContent = "GAME OVER — ESPACE POUR REJOUER";
-            return;
-        }
-        arena[y].fill(99); 
-        flashPhase = 5; 
-        draw(); 
-        y--;
-    }, 30);
-  }
-
-  function resetGame() {
-    arena.forEach(row => row.fill(0));
-    player.score = 0;
-    player.level = 1;
-    dropInterval = BASE_DROP;
-    particles = [];
-    holdPieceMatrix = null; // Reset hold
-    holdUsed = false;
-    drawHoldPiece();
-    updateScore();
-    nextPieceMatrix = null;
-    playerReset();
-    dropCounter = 0;
-    gameState = "playing";
-    messageCenter.textContent = "";
-    pauseOverlay.style.display = "none";
-    sStart();
-    
-    // Relancer musique si active
-    if (!muted) {
-        bgMusic.currentTime = 0;
-        bgMusic.play().catch(e => console.log(e));
-    }
-    
-    showProviseur("start");
     requestAnimationFrame(update);
   }
+
+  /* --- GESTION DU CLAVIER --- */
+  document.addEventListener('keydown', event => {
+    if (event.keyCode === 32 && gameState === "waiting") {
+        startGame();
+        return;
+    }
+    if (event.keyCode === 80) { // P
+        togglePause();
+        return;
+    }
+
+    if (gameState !== "playing") return;
+
+    if (event.keyCode === 37) { player.pos.x--; if (collide(arena, player)) player.pos.x++; else sMove(); }
+    else if (event.keyCode === 39) { player.pos.x++; if (collide(arena, player)) player.pos.x--; else sMove(); }
+    else if (event.keyCode === 40) { playerDrop(); }
+    else if (event.keyCode === 38) { hardDrop(); }
+    else if (event.keyCode === 32) { playerRotate(1); } // Espace pour tourner
+    else if (event.keyCode === 67 || event.keyCode === 16) { playerHold(); } // C ou Shift
+  });
+
+  /* --- GESTION MOBILE / SOURIS --- */
+  const btnLeft = document.getElementById("btn-left");
+  const btnRight = document.getElementById("btn-right");
+  const btnDown = document.getElementById("btn-down");
+  const btnRotate = document.getElementById("btn-rotate");
+  const btnDrop = document.getElementById("btn-drop");
+  const btnHold = document.getElementById("btn-hold");
+
+  function addRepeatAction(btn, action) {
+      let interval, timeout;
+      const start = (e) => {
+          if(e.type==="touchstart") e.preventDefault();
+          if(gameState!=="playing") return;
+          action();
+          timeout = setTimeout(() => {
+              interval = setInterval(action, 100);
+          }, 200);
+      };
+      const end = (e) => {
+          if(e.type==="touchend") e.preventDefault();
+          clearTimeout(timeout); clearInterval(interval);
+      };
+      btn.addEventListener("mousedown", start);
+      btn.addEventListener("touchstart", start, {passive:false});
+      btn.addEventListener("mouseup", end);
+      btn.addEventListener("mouseleave", end);
+      btn.addEventListener("touchend", end);
+  }
+
+  addRepeatAction(btnLeft, () => { player.pos.x--; if (collide(arena, player)) player.pos.x++; else sMove(); });
+  addRepeatAction(btnRight, () => { player.pos.x++; if (collide(arena, player)) player.pos.x--; else sMove(); });
+  addRepeatAction(btnDown, () => playerDrop());
+  
+  btnRotate.addEventListener("touchstart", (e)=>{ e.preventDefault(); if(gameState==="playing") playerRotate(1); });
+  btnRotate.addEventListener("mousedown", (e)=>{ if(gameState==="playing") playerRotate(1); });
+  
+  btnDrop.addEventListener("touchstart", (e)=>{ e.preventDefault(); if(gameState==="playing") hardDrop(); });
+  btnDrop.addEventListener("mousedown", (e)=>{ if(gameState==="playing") hardDrop(); });
+
+  btnHold.addEventListener("touchstart", (e)=>{ e.preventDefault(); if(gameState==="playing") playerHold(); });
+  btnHold.addEventListener("mousedown", (e)=>{ if(gameState==="playing") playerHold(); });
+
+  messageCenter.addEventListener("click", () => {
+     if(gameState==="waiting" || gameState==="gameover") startGame();
+  });
+  
+  startBtn.addEventListener("click", () => {
+     startGame();
+     startBtn.blur();
+  });
+  
+  muteBtn.addEventListener("click", () => {
+     muted = !muted;
+     muteBtn.textContent = muted ? "Son : OFF" : "Son : ON";
+     localStorage.setItem("tetris_muted", muted);
+     if(!muted) { 
+         initAudioContext();
+         bgMusic.play().catch(()=>{});
+     } else {
+         bgMusic.pause();
+     }
+     muteBtn.blur();
+  });
 
   function togglePause() {
       if (gameState === "playing") {
           gameState = "paused";
-          messageCenter.textContent = "";
           pauseOverlay.style.display = "flex";
           bgMusic.pause();
       } else if (gameState === "paused") {
           gameState = "playing";
-          messageCenter.textContent = "";
           pauseOverlay.style.display = "none";
           if(!muted) bgMusic.play();
+          update();
       }
   }
 
-  document.addEventListener("keydown", event => {
-    if (!audioCtx) initAudioContext();
-    if (event.code === "Space" && (gameState === "waiting" || gameState === "gameover")) {
-        resetGame();
-        return;
-    }
-    if (gameState === "playing") {
-      switch(event.code) {
-        case "ArrowLeft": case "KeyQ": 
-          player.pos.x--; if (collide(arena, player)) player.pos.x++; else sMove(); break;
-        case "ArrowRight": case "KeyD":
-          player.pos.x++; if (collide(arena, player)) player.pos.x--; else sMove(); break;
-        case "ArrowDown": case "KeyS": playerDrop(); break;
-        case "ArrowUp": case "KeyZ": hardDrop(); break;
-        case "Space": playerRotate(1); break;
-        case "KeyC": case "ShiftLeft": case "ShiftRight": playerHold(); break; // Touche C ou MAJ pour Hold
-        case "KeyP": togglePause(); break;
-      }
-    } else if (gameState === "paused" && event.code === "KeyP") {
-        togglePause();
-    }
-  });
+  function startGame() {
+    initAudioContext();
+    arena.forEach(row => row.fill(0));
+    player.score = 0;
+    player.level = 1;
+    dropInterval = BASE_DROP;
+    nextPieceMatrix = null; 
+    holdPieceMatrix = null;
+    holdUsed = false;
+    playerReset();
+    updateScore();
+    drawNextPiece();
+    drawHoldPiece();
+    gameState = "playing";
+    messageCenter.textContent = "";
+    triggerCharacterEvent("start"); 
+    sStart();
+    update();
+  }
 
-  const setupMobileBtn = (id, action) => {
-    const btn = document.getElementById(id);
-    btn.addEventListener("touchstart", (e) => { 
-        e.preventDefault(); if(!audioCtx) initAudioContext(); action(); 
-    }, {passive: false});
-    btn.addEventListener("click", (e) => { 
-        if(!audioCtx) initAudioContext(); action(); 
-    });
-  };
+  function handleGameOver() {
+    gameState = "gameover";
+    sGameOver();
+    messageCenter.innerHTML = "GAME OVER<br>Score: " + player.score;
+    triggerCharacterEvent("gameover");
+    
+    // Vérification du highscore et demande du pseudo
+    checkAndSaveHighscore(player.score);
+  }
 
-  setupMobileBtn("btn-left", () => { if(gameState==="playing") { player.pos.x--; if(collide(arena, player)) player.pos.x++; else sMove(); draw(); }});
-  setupMobileBtn("btn-right", () => { if(gameState==="playing") { player.pos.x++; if(collide(arena, player)) player.pos.x--; else sMove(); draw(); }});
-  setupMobileBtn("btn-down", () => { if(gameState==="playing") playerDrop(); draw(); });
-  setupMobileBtn("btn-rotate", () => { if(gameState==="playing") playerRotate(1); draw(); });
-  setupMobileBtn("btn-drop", () => { if(gameState==="playing") hardDrop(); draw(); });
-  setupMobileBtn("btn-hold", () => { if(gameState==="playing") playerHold(); draw(); });
-
-  startBtn.addEventListener("click", () => { startBtn.blur(); if(!audioCtx) initAudioContext(); resetGame(); });
+  /* --- HIGHSCORES --- */
+  function getHighScores() {
+      const stored = localStorage.getItem("tetris_highscores");
+      return stored ? JSON.parse(stored) : [];
+  }
   
-  muteBtn.addEventListener("click", () => { 
-      muteBtn.blur(); 
-      muted = !muted; 
-      muteBtn.textContent = muted ? "Son : OFF" : "Son : ON"; 
-      localStorage.setItem("tetris_muted", muted); 
+  function checkAndSaveHighscore(score) {
+      let scores = getHighScores();
+      // On regarde le score le plus bas du top 5 (ou 0 si moins de 5 scores)
+      const lowestScore = scores.length < 5 ? 0 : scores[scores.length - 1].score;
       
-      if(!muted) {
-          if(!audioCtx) initAudioContext();
-          if(gameState === "playing") bgMusic.play();
-      } else {
-          bgMusic.pause();
+      if (score > lowestScore) {
+          // Petit délai pour laisser le message Game Over s'afficher
+          setTimeout(() => {
+              let name = prompt("Nouveau Record ! Entrez votre pseudo :", "Joueur");
+              // Si annulation ou vide, nom par défaut
+              if (!name) name = "Anonyme"; 
+              
+              const date = new Date().toLocaleDateString('fr-FR', {day:'2-digit', month:'2-digit'});
+              scores.push({ name: name, score: score, date: date });
+              scores.sort((a, b) => b.score - a.score);
+              scores = scores.slice(0, 5); 
+              
+              localStorage.setItem("tetris_highscores", JSON.stringify(scores));
+              updateHighScores();
+          }, 300);
       }
-  });
+  }
+  
+  function updateHighScores() {
+      const scores = getHighScores();
+      highscoreList.innerHTML = scores.map((s, i) => 
+          `<li>#${i+1} <strong>${s.name || 'Anonyme'}</strong>: ${s.score}</li>`
+      ).join('');
+  }
 
-  refreshHighScoreList();
-  updateScore();
-  drawHoldPiece();
-  draw(); 
-
-  canvas.addEventListener("touchstart", (e) => {
-      if(e.target === canvas) e.preventDefault();
-      if (!audioCtx) initAudioContext();
-      if (gameState === "waiting" || gameState === "gameover") resetGame();
-  }, {passive: false});
+  // Init
+  updateHighScores();
+  playerReset();
+  draw();
 
 </script>
 </body>
