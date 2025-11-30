@@ -218,7 +218,6 @@
     font-family: monospace;
   }
   
-  /* Ajout : style pour l'affichage du pseudo */
   #highscore-list li {
     margin-bottom: 2px;
   }
@@ -270,6 +269,9 @@
     gap: 10px;
     padding-bottom: 5px;
     touch-action: none;
+    /* Ajout Z-index pour être sûr que c'est au dessus */
+    z-index: 100;
+    position: relative;
   }
     
   .pad-group { display: flex; gap: 12px; }
@@ -280,7 +282,9 @@
     background: linear-gradient(145deg, #ffffff, #e6e6e6);
     border: 2px solid #333; border-radius: 50%;
     box-shadow: 0 4px 0 #333;
-    touch-action: manipulation; user-select: none;
+    /* IMPORTANT : empêche le navigateur de zoomer/scroller sur les boutons */
+    touch-action: none; 
+    user-select: none;
     -webkit-tap-highlight-color: transparent;
   }
   .mob-btn:active { transform: translateY(4px); box-shadow: none; background: #ddd; }
@@ -680,11 +684,13 @@
 
   let muted = false;
   let audioCtx = null;
-
-  if(localStorage.getItem("tetris_muted") === "true") {
-      muted = true;
-      muteBtn.textContent = "Son : OFF";
-  }
+  
+  try {
+      if(localStorage.getItem("tetris_muted") === "true") {
+          muted = true;
+          muteBtn.textContent = "Son : OFF";
+      }
+  } catch(e) { console.log("Storage error"); }
 
   const cielRanks = [
       "Nouvelle Recrue", "Apprenti Câbleur", "Scripteur Bash", "Décodeur Binaire",
@@ -1199,7 +1205,7 @@
     else if (event.keyCode === 67 || event.keyCode === 16) { playerHold(); } // C ou Shift
   });
 
-  /* --- GESTION MOBILE / SOURIS --- */
+  /* --- GESTION MOBILE / SOURIS (CORRIGÉE) --- */
   const btnLeft = document.getElementById("btn-left");
   const btnRight = document.getElementById("btn-right");
   const btnDown = document.getElementById("btn-down");
@@ -1207,40 +1213,64 @@
   const btnDrop = document.getElementById("btn-drop");
   const btnHold = document.getElementById("btn-hold");
 
+  // Fonction pour gérer les actions répétitives (gauche, droite, bas)
   function addRepeatAction(btn, action) {
       let interval, timeout;
-      const start = (e) => {
-          if(e.type==="touchstart") e.preventDefault();
-          if(gameState!=="playing") return;
+      
+      const start = () => {
+          if (gameState !== "playing") return;
           action();
+          // Délai avant le début de la répétition
           timeout = setTimeout(() => {
               interval = setInterval(action, 100);
           }, 200);
       };
-      const end = (e) => {
-          if(e.type==="touchend") e.preventDefault();
-          clearTimeout(timeout); clearInterval(interval);
+
+      const stop = (e) => {
+          // Empêcher le comportement souris fantôme si c'est du tactile
+          if (e && e.cancelable && e.type !== 'mouseleave') e.preventDefault(); 
+          clearTimeout(timeout); 
+          clearInterval(interval);
       };
-      btn.addEventListener("mousedown", start);
-      btn.addEventListener("touchstart", start, {passive:false});
-      btn.addEventListener("mouseup", end);
-      btn.addEventListener("mouseleave", end);
-      btn.addEventListener("touchend", end);
+
+      // Écouteur tactile avec { passive: false } CRUCIAL pour bloquer le scroll
+      btn.addEventListener("touchstart", (e) => {
+          if (e.cancelable) e.preventDefault();
+          start();
+      }, { passive: false });
+
+      btn.addEventListener("touchend", stop);
+      btn.addEventListener("touchcancel", stop); // Sécurité si le doigt sort de l'écran
+
+      // Souris (PC)
+      btn.addEventListener("mousedown", (e) => { start(); });
+      btn.addEventListener("mouseup", stop);
+      btn.addEventListener("mouseleave", stop);
   }
 
+  // Fonction pour les actions simples (Rotation, Drop, Hold)
+  function addSimpleAction(btn, action) {
+      const handler = (e) => {
+          // Bloquer le scroll/zoom et l'émulation souris sur mobile
+          if (e.cancelable && e.type === "touchstart") e.preventDefault();
+          if (gameState === "playing") action();
+      };
+      
+      // { passive: false } est indispensable sur mobile moderne
+      btn.addEventListener("touchstart", handler, { passive: false });
+      btn.addEventListener("mousedown", handler);
+  }
+
+  // Assignation des contrôles corrigés
   addRepeatAction(btnLeft, () => { player.pos.x--; if (collide(arena, player)) player.pos.x++; else sMove(); });
   addRepeatAction(btnRight, () => { player.pos.x++; if (collide(arena, player)) player.pos.x--; else sMove(); });
   addRepeatAction(btnDown, () => playerDrop());
   
-  btnRotate.addEventListener("touchstart", (e)=>{ e.preventDefault(); if(gameState==="playing") playerRotate(1); });
-  btnRotate.addEventListener("mousedown", (e)=>{ if(gameState==="playing") playerRotate(1); });
-  
-  btnDrop.addEventListener("touchstart", (e)=>{ e.preventDefault(); if(gameState==="playing") hardDrop(); });
-  btnDrop.addEventListener("mousedown", (e)=>{ if(gameState==="playing") hardDrop(); });
+  addSimpleAction(btnRotate, () => playerRotate(1));
+  addSimpleAction(btnDrop, () => hardDrop());
+  addSimpleAction(btnHold, () => playerHold());
 
-  btnHold.addEventListener("touchstart", (e)=>{ e.preventDefault(); if(gameState==="playing") playerHold(); });
-  btnHold.addEventListener("mousedown", (e)=>{ if(gameState==="playing") playerHold(); });
-
+  // Gestion du Start / Mute
   messageCenter.addEventListener("click", () => {
      if(gameState==="waiting" || gameState==="gameover") startGame();
   });
@@ -1253,7 +1283,7 @@
   muteBtn.addEventListener("click", () => {
      muted = !muted;
      muteBtn.textContent = muted ? "Son : OFF" : "Son : ON";
-     localStorage.setItem("tetris_muted", muted);
+     try { localStorage.setItem("tetris_muted", muted); } catch(e){}
      if(!muted) { 
          initAudioContext();
          bgMusic.play().catch(()=>{});
@@ -1308,8 +1338,10 @@
 
   /* --- HIGHSCORES --- */
   function getHighScores() {
-      const stored = localStorage.getItem("tetris_highscores");
-      return stored ? JSON.parse(stored) : [];
+      try {
+        const stored = localStorage.getItem("tetris_highscores");
+        return stored ? JSON.parse(stored) : [];
+      } catch(e) { return []; }
   }
   
   function checkAndSaveHighscore(score) {
@@ -1329,7 +1361,7 @@
               scores.sort((a, b) => b.score - a.score);
               scores = scores.slice(0, 5); 
               
-              localStorage.setItem("tetris_highscores", JSON.stringify(scores));
+              try { localStorage.setItem("tetris_highscores", JSON.stringify(scores)); } catch(e){}
               updateHighScores();
           }, 300);
       }
