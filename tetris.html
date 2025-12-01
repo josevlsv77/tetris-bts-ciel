@@ -28,8 +28,12 @@
     position: relative;
   }
 
+  /* --- MODIFICATION CADRE PRINCIPAL (COPIE D'ARKANOID) --- */
   #main {
-    background: rgba(255,255,255,0.94);
+    /* Effet verre dépoli plus qualitatif et transparent */
+    background: rgba(255, 255, 255, 0.65); 
+    backdrop-filter: blur(12px); 
+    -webkit-backdrop-filter: blur(12px);
     border-radius: 16px;
     padding: 10px;
     display: flex;
@@ -37,14 +41,14 @@
     align-items: center;
     gap: 5px;
     box-sizing: border-box;
-    box-shadow: 0 15px 35px rgba(0,0,0,0.6);
+    /* Ombre profonde + bordure interne blanche pour l'effet vitre */
+    box-shadow: 0 20px 50px rgba(0,0,0,0.5), inset 0 0 0 1px rgba(255,255,255,0.5);
     width: 98%;
     height: 98%;
     max-width: 1000px;
     justify-content: center; 
     position: relative;
     z-index: 1;
-    backdrop-filter: blur(5px);
   }
 
   /* --- EFFET DE SECOUSSE (SHAKE) --- */
@@ -625,6 +629,15 @@
     gameover: [
       "GAME OVER… mais au lycée, on n’a pas de bouton Recommencer.",
       "Conseil du proviseur : révisez la stratégie avant la prochaine partie."
+    ],
+    // --- NOUVEAUX DIALOGUES PIECES SPECIALES ---
+    bomb: [
+        "Un nettoyage radical ! On dirait que vous avez vidé le cache du serveur.",
+        "L'art de faire disparaître les preuves. Bien joué."
+    ],
+    patch: [
+        "Ce petit bloc vous sauve la mise. Une excellente initiative !",
+        "La perfection est dans les détails. Bravo pour ce patch."
     ]
   };
 
@@ -635,7 +648,7 @@
       // 50% de chance Proviseur (Droite), 50% de chance Prof (Gauche)
       // Sauf pour Game Over où le Proviseur a la priorité (70%)
       let isProviseur = Math.random() > 0.5;
-      if (reason === "gameover") isProviseur = Math.random() > 0.3;
+      if (reason === "gameover" || reason === "bomb") isProviseur = Math.random() > 0.3; // Proviseur plus présent pour les gros évènements
 
       if (isProviseur) {
           // --- AFFICHER PROVISEUR ---
@@ -671,6 +684,10 @@
   const TILE = 80; 
   const PREVIEW_TILE = 30; // Taille plus petite pour Hold/Next
   const BASE_DROP = 800;
+  
+  // --- CONSTANTES PIECES SPECIALES ---
+  const BOMB_ID = 200; // rm -rf
+  const PATCH_ID = 100; // Patch 1x1
 
   let gameState = "waiting"; 
   let dropInterval = BASE_DROP;
@@ -774,6 +791,8 @@
   
   // Petit son pour le Hold
   function sHold() { playModernTone('sine', 400, 600, 0.1, 0.1); }
+  // Son pour la bombe (plus grave)
+  function sBomb() { playModernTone('sawtooth', 100, 20, 0.5, 0.3); }
 
   /* --- VISUELS --- */
   const FACE_COUNT = 11; 
@@ -785,7 +804,10 @@
   }
 
   const colors = [
-    null, '#FF0D72', '#0DC2FF', '#0DFF72', '#F538FF', '#FF8E0D', '#FFE138', '#3877FF', '#555555'
+    null, '#FF0D72', '#0DC2FF', '#0DFF72', '#F538FF', '#FF8E0D', '#FFE138', '#3877FF', 
+    // Couleurs pour pièces spéciales
+    '#D32F2F', // BOMB (Index 8)
+    '#00BCD4'  // PATCH (Index 9)
   ];
 
   /* --- PARTICULES --- */
@@ -819,21 +841,57 @@
     return m;
   }
 
-  const piecesTypes = 'ILJOTSZ';
+  const piecesTypes = 'ILJOTSZ'; 
+
+  // NOUVELLE FONCTION: Choisit entre une pièce standard, la bombe (B) ou le patch (P)
+  function generateNextPiece() {
+      const r = Math.random();
+      // 85% chance pour les pièces standard
+      if (r < 0.85) {
+          const standardTypes = 'ILJOTSZ';
+          return createPiece(standardTypes[standardTypes.length * Math.random() | 0]);
+      } 
+      // 10% chance pour le Patch (aide)
+      else if (r < 0.95) {
+          return createPiece('P');
+      }
+      // 5% chance pour la Bombe (outil puissant)
+      else {
+          return createPiece('B');
+      }
+  }
+
   function createPiece(type) {
     const id = 1 + (Math.random() * FACE_COUNT | 0);
     let shape = [];
-    switch (type) {
-      case 'T': shape = [[0, id, 0],[id, id, id],[0, 0, 0]]; break;
-      case 'O': shape = [[id, id],[id, id]]; break;
-      case 'L': shape = [[0, 0, id],[id, id, id],[0, 0, 0]]; break;
-      case 'J': shape = [[id, 0, 0],[id, id, id],[0, 0, 0]]; break;
-      case 'I': shape = [[0, id, 0, 0],[0, id, 0, 0],[0, id, 0, 0],[0, id, 0, 0]]; break;
-      case 'S': shape = [[0, id, id],[id, id, 0],[0, 0, 0]]; break;
-      case 'Z': shape = [[id, id, 0],[0, id, id],[0, 0, 0]]; break;
+    
+    if (type === 'B') {
+        const specialId = BOMB_ID; 
+        shape = [[0, specialId, 0],[specialId, specialId, specialId],[0, specialId, 0]]; 
+        shape.typeIdx = 8; 
+        shape.char = 'B';
+        shape.special = 'bomb';
     }
-    shape.typeIdx = piecesTypes.indexOf(type) + 1; 
-    shape.char = type; // Stocker la lettre pour le hold
+    else if (type === 'P') {
+        const specialId = PATCH_ID;
+        shape = [[specialId]];
+        shape.typeIdx = 9; 
+        shape.char = 'P';
+        shape.special = 'patch';
+    }
+    else {
+        switch (type) {
+          case 'T': shape = [[0, id, 0],[id, id, id],[0, 0, 0]]; break;
+          case 'O': shape = [[id, id],[id, id]]; break;
+          case 'L': shape = [[0, 0, id],[id, id, id],[0, 0, 0]]; break;
+          case 'J': shape = [[id, 0, 0],[id, id, id],[0, 0, 0]]; break;
+          case 'I': shape = [[0, id, 0, 0],[0, id, 0, 0],[0, id, 0, 0],[0, id, 0, 0]]; break;
+          case 'S': shape = [[0, id, id],[id, id, 0],[0, 0, 0]]; break;
+          case 'Z': shape = [[id, id, 0],[0, id, id],[0, 0, 0]]; break;
+        }
+        shape.typeIdx = piecesTypes.indexOf(type) + 1; 
+        shape.char = type;
+    }
     return shape;
   }
 
@@ -878,6 +936,14 @@
           const px = (x + offset.x) * tileSize;
           const py = (y + offset.y) * tileSize;
 
+          // --- GESTION DE LA LUEUR (GLOW EFFECT) ---
+          if (value === BOMB_ID || value === PATCH_ID) {
+              context.save();
+              context.shadowBlur = tileSize * 0.5; // Lueur proportionnelle à la taille du bloc
+              context.shadowColor = (value === BOMB_ID) ? 'rgba(255, 50, 50, 1)' : 'rgba(0, 200, 255, 1)';
+          }
+          // ------------------------------------------
+
           if (value === 99) {
             const progress = flashPhase / 10; 
             const scale = 1 - progress; 
@@ -896,6 +962,10 @@
           const imgIndex = ((value - 1 + FACE_COUNT) % FACE_COUNT) + 1;
           const img = tileImages[imgIndex];
           const fallbackColor = colors[(matrix.typeIdx || (value % 7) + 1)] || '#888';
+          
+          // Couleur spécifique pour les blocs spéciaux sans image
+          const specialColor = (value === BOMB_ID) ? colors[8] : (value === PATCH_ID) ? colors[9] : fallbackColor;
+
 
           if (img && img.complete && img.naturalWidth !== 0) {
             context.drawImage(img, px, py, tileSize, tileSize);
@@ -904,7 +974,11 @@
             context.strokeStyle = "rgba(0,0,0,0.2)";
             context.strokeRect(px, py, tileSize, tileSize);
           } else {
-            drawBeveledRect(context, px, py, tileSize, fallbackColor);
+            drawBeveledRect(context, px, py, tileSize, specialColor);
+          }
+
+          if (value === BOMB_ID || value === PATCH_ID) {
+              context.restore(); // Enlever l'effet de lueur après le dessin
           }
         }
       });
@@ -933,7 +1007,9 @@
     player.matrix.forEach((row, y) => {
       row.forEach((value, x) => {
         if (value !== 0) {
-          arena[y + player.pos.y][x + player.pos.x] = value;
+          // Si c'est un patch, on ne le marque pas avec l'ID spécial
+          const finalValue = (value === PATCH_ID) ? (1 + (Math.random() * FACE_COUNT | 0)) : value;
+          arena[y + player.pos.y][x + player.pos.x] = finalValue;
         }
       });
     });
@@ -958,6 +1034,38 @@
       void gameContainer.offsetWidth; 
       gameContainer.classList.add("shake-effect");
       setTimeout(() => { gameContainer.classList.remove("shake-effect"); }, 500);
+  }
+
+  // NOUVELLE FONCTION: Gère l'explosion de la Bombe
+  function handleBombExplosion(px, py, matrix) {
+      sBomb();
+      triggerCharacterEvent("bomb");
+
+      // Le centre de la bombe est le bloc central de la matrice 3x3
+      const centerOffsetX = 1;
+      const centerOffsetY = 1;
+
+      const centerX = px + centerOffsetX;
+      const centerY = py + centerOffsetY;
+      const radius = 1; // Explosion 3x3 (1 bloc autour du centre)
+
+      for (let y = -radius; y <= radius; y++) {
+          for (let x = -radius; x <= radius; x++) {
+              const targetY = centerY + y;
+              const targetX = centerX + x;
+
+              // Vérifie les limites de l'arène
+              if (targetY >= 0 && targetY < ROWS && targetX >= 0 && targetX < COLS) {
+                  if (arena[targetY][targetX] !== 0) {
+                      // Particles et nettoyage
+                      const color = colors[arena[targetY][targetX] % 7 + 1] || '#FF5733';
+                      spawnParticles(targetX * TILE, targetY * TILE, color, 10);
+                      arena[targetY][targetX] = 0;
+                  }
+              }
+          }
+      }
+      triggerShake();
   }
 
   function arenaSweep() {
@@ -1037,10 +1145,11 @@
 
   function playerReset() {
     if (nextPieceMatrix === null) {
-        nextPieceMatrix = createPiece(piecesTypes[piecesTypes.length * Math.random() | 0]);
+        // UTILISATION DE LA NOUVELLE FONCTION
+        nextPieceMatrix = generateNextPiece();
     }
     player.matrix = nextPieceMatrix;
-    nextPieceMatrix = createPiece(piecesTypes[piecesTypes.length * Math.random() | 0]);
+    nextPieceMatrix = generateNextPiece(); // ET ICI
     drawNextPiece();
     
     // Reset de l'état "déjà utilisé" du Hold
@@ -1083,7 +1192,22 @@
   function playerDrop() {
     player.pos.y++;
     if (collide(arena, player)) {
-      player.pos.y--;
+      player.pos.y--; // Retour à la position avant collision
+
+      // --- LOGIQUE PIÈCE SPÉCIALE À L'ATTERRISSAGE ---
+      if (player.matrix.special === 'bomb') {
+          handleBombExplosion(player.pos.x, player.pos.y, player.matrix);
+          playerReset(); 
+          arenaSweep(); // Vérifie les lignes après explosion
+          return; // La bombe ne merge PAS elle-même
+      } 
+      
+      if (player.matrix.special === 'patch') {
+          triggerCharacterEvent("patch");
+          // Le patch se merge normalement, on continue
+      }
+      // ------------------------------------------------
+
       merge(arena, player);
       sDrop();
       player.matrix.forEach((row, y) => row.forEach((v, x) => {
@@ -1096,12 +1220,29 @@
   }
 
   function hardDrop() {
+    let droppedBlocks = 0;
     while (!collide(arena, player)) {
       player.pos.y++;
+      droppedBlocks++;
     }
     player.pos.y--; 
+
+    // --- LOGIQUE PIÈCE SPÉCIALE À L'ATTERRISSAGE ---
+    if (player.matrix.special === 'bomb') {
+        handleBombExplosion(player.pos.x, player.pos.y, player.matrix);
+        playerReset(); 
+        arenaSweep(); 
+        return; 
+    }
+    
+    if (player.matrix.special === 'patch') {
+        triggerCharacterEvent("patch");
+    }
+    // ------------------------------------------------
+    
     merge(arena, player);
     sDrop();
+    player.score += droppedBlocks * player.level; // Score bonus pour Hard Drop
     player.matrix.forEach((row, y) => row.forEach((v, x) => {
           if(v) spawnParticles((player.pos.x+x)*TILE, (player.pos.y+y)*TILE, "#fff", 5);
     }));
@@ -1146,25 +1287,29 @@
         matrix: player.matrix,
         pos: {x: player.pos.x, y: player.pos.y}
       };
-      while (!collide(arena, ghost)) {
-        ghost.pos.y++;
-      }
-      ghost.pos.y--;
       
-      ctx.save();
-      ctx.globalAlpha = 0.2;
-      const ghostColor = colors[player.matrix.typeIdx || 1];
-      ghost.matrix.forEach((row, y) => {
-        row.forEach((value, x) => {
-          if (value !== 0) {
-             ctx.fillStyle = ghostColor;
-             ctx.fillRect((x + ghost.pos.x) * TILE, (y + ghost.pos.y) * TILE, TILE, TILE);
-             ctx.strokeStyle = "#000";
-             ctx.strokeRect((x + ghost.pos.x) * TILE, (y + ghost.pos.y) * TILE, TILE, TILE);
+      // On ne dessine pas l'ombre pour la bombe, ça n'aurait pas de sens
+      if (player.matrix.special !== 'bomb') {
+          while (!collide(arena, ghost)) {
+            ghost.pos.y++;
           }
-        });
-      });
-      ctx.restore();
+          ghost.pos.y--;
+          
+          ctx.save();
+          ctx.globalAlpha = 0.2;
+          const ghostColor = colors[player.matrix.typeIdx || 1];
+          ghost.matrix.forEach((row, y) => {
+            row.forEach((value, x) => {
+              if (value !== 0) {
+                 ctx.fillStyle = ghostColor;
+                 ctx.fillRect((x + ghost.pos.x) * TILE, (y + ghost.pos.y) * TILE, TILE, TILE);
+                 ctx.strokeStyle = "#000";
+                 ctx.strokeRect((x + ghost.pos.x) * TILE, (y + ghost.pos.y) * TILE, TILE, TILE);
+              }
+            });
+          });
+          ctx.restore();
+      }
 
       drawMatrix(player.matrix, player.pos);
     }
