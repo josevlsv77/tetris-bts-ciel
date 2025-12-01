@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Arcade BTS CIEL – Hub</title>
+
+<link rel="icon" type="image/jpeg" href="logo 2.png">
+
+<style>
+  html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    overscroll-behavior: none;
+  }
+
+  body {
+    background: url("fond_lycee.jpg") no-repeat center center fixed;
+    background-color: #2c3e50;
+    background-size: cover;
+    color: #000;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+  }
+
+  #main {
+    background: rgba(255, 255, 255, 0.70);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-radius: 16px;
+    padding: 16px 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    box-sizing: border-box;
+    box-shadow:
+      0 20px 50px rgba(0,0,0,0.5),
+      inset 0 0 0 1px rgba(255,255,255,0.6);
+    width: 98%;
+    height: 98%;
+    max-width: 1000px;
+    position: relative;
+    z-index: 5;
+  }
+
+  #header-group {
+    text-align: center;
+    margin-bottom: 8px;
+  }
+
+  #logo {
+    width: 70px;
+    height: auto;
+    display: block;
+    margin: 0 auto 4px auto;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+  }
+
+  #title {
+    font-size: 22px;
+    font-weight: 900;
+    color: #222;
+    margin: 0;
+    letter-spacing: -0.5px;
+    text-shadow: 0 1px 0 rgba(255,255,255,0.9);
+    text-transform: uppercase;
+  }
+
+  #subtitle {
+    font-size: 11px;
+    color: #444;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-top: 4px;
+  }
+
+  #hint {
+    font-size: 11px;
+    color: #555;
+    margin-top: 6px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  #hub-container {
+    display: flex;
+    gap: 20px;
+    align-items: stretch;
+    justify-content: center;
+    width: 100%;
+    max-width: 900px;
+    flex: 1;
+  }
+
+  .game-card {
+    flex: 1 1 0;
+    min-width: 0;
+    min-height: 260px;
+    border-radius: 14px;
+    padding: 16px 16px 14px 16px;
+    box-shadow:
+      0 10px 25px rgba(0,0,0,0.25),
+      inset 0 0 0 1px rgba(255,255,255,0.75);
+    border: 1px solid rgba(0,0,0,0.08);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
+    transition:
+      transform 0.18s ease-out,
+      box-shadow 0.18s ease-out,
+      background 0.18s ease-out;
+    background: rgba(255,255,255,0.92);
+  }
+
+  /* GIF visibles, mais décalés et masqués en haut sous les icônes */
+  .card-bg {
+    position: absolute;
+    inset: 0;
+    background-position: center bottom;
+    background-repeat: no-repeat;
+    background-size: cover;
+    opacity: 0.7;
+    filter: saturate(1.2);
+    z-index: 0;
+  }
+
+  .card-bg-tetris   { background-image: url("CaseTetris.gif"); }
+  .card-bg-arkanoid { background-image: url("CaseArkanoid.gif"); }
+
+  /* Bande blanche en haut (option C : ~20%) + voile léger en dessous */
+  .game-card::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      to bottom,
+      rgba(255,255,255,1) 0%,
+      rgba(255,255,255,1) 20%,
+      rgba(255,255,255,0.88) 55%,
+      rgba(255,255,255,0.78) 100%
+    );
+    z-index: 0;
+  }
+
+  .game-card::after {
+    content: "";
+    position: absolute;
+    top: -40%;
+    right: -40%;
+    width: 70%;
+    height: 70%;
+    background: radial-gradient(circle at center,
+      rgba(255,255,255,0.9) 0%,
+      rgba(255,255,255,0.0) 70%);
+    opacity: 0.7;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .game-card:hover {
+    transform: translateY(-4px) scale(1.01);
+    box-shadow:
+      0 18px 40px rgba(0,0,0,0.35),
+      inset 0 0 0 1px rgba(255,255,255,0.9);
+  }
+
+  .game-card:active {
+    transform: translateY(1px) scale(0.995);
+    box-shadow:
+      0 10px 20px rgba(0,0,0,0.25),
+      inset 0 0 0 1px rgba(255,255,255,0.9);
+  }
+
+  .game-header,
+  .game-body,
+  .game-footer {
+    position: relative;
+    z-index: 1;
+  }
+
+  .game-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 8px;
+    border-radius: 12px;
+    background: rgba(255,255,255,0.98); /* plaque blanche : aucun GIF derrière icônes + texte */
+    box-shadow: 0 2px 5px rgba(0,0,0,0.12);
+  }
+
+  .game-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.25);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    font-weight: 900;
+    color: #fff;
+  }
+
+  /* Tetris : nuances de bleu, sobres */
+  .game-icon.tetris {
+    background: linear-gradient(135deg, #1f75d6, #6ac3ff);
+  }
+
+  /* Arkanoid : nuances de rouge, sobres */
+  .game-icon.arkanoid {
+    background: linear-gradient(135deg, #e53935, #b71c1c);
+  }
+
+  .game-title {
+    font-size: 17px;
+    font-weight: 900;
+    color: #2c3e50;
+    letter-spacing: -0.3px;
+    text-shadow: 0 1px 0 rgba(255,255,255,0.8);
+  }
+
+  .game-subtitle {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #7f8c8d;
+  }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 6px;
+    padding: 3px 8px;
+    border-radius: 999px;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.7px;
+    background: rgba(44,62,80,0.05);
+    color: #34495e;
+    border: 1px solid rgba(44,62,80,0.12);
+  }
+
+  .badge span { font-size: 12px; }
+
+  .game-body {
+    margin-top: 8px;
+    min-height: 10px; /* pas de texte ici, juste un peu d'air */
+  }
+
+  .game-footer {
+    margin-top: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .play-btn {
+    padding: 10px 16px;
+    border-radius: 999px;
+    border: none;
+    background: #34495e;
+    color: #fff;
+    font-weight: 800;
+    font-size: 12px;
+    cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: 0.9px;
+    box-shadow: 0 4px 0 #2c3e50;
+    transition: all 0.16s ease-out;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .play-btn span { font-size: 14px; }
+
+  .game-card:hover .play-btn {
+    background: #415b76;
+    box-shadow: 0 5px 0 #2c3e50;
+    transform: translateY(-1px);
+  }
+
+  .game-card:active .play-btn {
+    transform: translateY(2px);
+    box-shadow: 0 2px 0 #2c3e50;
+  }
+
+  .shortcut {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.9px;
+    color: #7f8c8d;
+  }
+
+  #bottom-info {
+    font-size: 11px;
+    color: #555;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-top: 6px;
+    text-align: center;
+  }
+
+  #bottom-info strong { color: #2c3e50; }
+
+  /* Proviseur + bulle */
+  #proviseur-box {
+    position: fixed;
+    right: 2%;
+    bottom: 2%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    z-index: 50;
+    cursor: pointer;
+  }
+
+  #proviseur-img {
+    max-height: 50vh;
+    height: auto;
+    filter: drop-shadow(0 10px 20px rgba(0,0,0,0.4));
+  }
+
+  #speech-bubble {
+    position: relative;
+    margin-bottom: 10px;
+    background: #ffffff;
+    border: 3px solid #2c3e50;
+    border-radius: 18px;
+    padding: 12px 16px;
+    font-size: 13px;
+    line-height: 1.4;
+    font-weight: 700;
+    color: #2c3e50;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.25);
+    max-width: 260px;
+  }
+
+  #speech-bubble::after {
+    content: '';
+    position: absolute;
+    left: 60%;
+    top: 100%;
+    width: 0;
+    height: 0;
+    border-style: solid;
+    border-width: 12px 10px 0 10px;
+    border-color: #2c3e50 transparent transparent transparent;
+  }
+
+  #speech-bubble::before {
+    content: '';
+    position: absolute;
+    left: 60%;
+    top: 100%;
+    width: 0;
+    height: 0;
+    border-style: solid;
+    border-width: 10px 8px 0 8px;
+    border-color: #ffffff transparent transparent transparent;
+    transform: translateY(-2px);
+  }
+
+  #speech-bubble small {
+    display: block;
+    margin-top: 6px;
+    font-size: 11px;
+    font-weight: 600;
+    color: #7f8c8d;
+  }
+
+  @media (max-width: 860px) {
+    #main {
+      width: 100%;
+      height: 100%;
+      border-radius: 0;
+      padding: 10px;
+    }
+    #hub-container {
+      flex-direction: column;
+      gap: 12px;
+    }
+    .game-card {
+      min-height: 200px;
+    }
+  }
+
+  @media (max-width: 720px) {
+    #proviseur-box { display: none; }
+  }
+
+  @media (max-width: 480px) {
+    #title { font-size: 18px; }
+    #subtitle { font-size: 10px; }
+    .game-title { font-size: 15px; }
+    .play-btn { padding: 8px 12px; font-size: 11px; }
+  }
+</style>
+</head>
+<body>
+
+<div id="main">
+  <div id="header-group">
+    <img id="logo" src="Logo.gif" alt="Logo BTS" onerror="this.style.display='none'">
+    <div id="title">Arcade – BTS CIEL</div>
+    <div id="subtitle">Lycée Simone Veil – Noisiel</div>
+    <div id="hint">Choisissez votre mission</div>
+  </div>
+
+  <div id="hub-container">
+
+    <!-- Tetris -->
+    <article class="game-card" data-target="tetris.html">
+      <div class="card-bg card-bg-tetris"></div>
+
+      <header class="game-header">
+        <div class="game-icon tetris">T</div>
+        <div>
+          <div class="game-title">Tetris – BTS CIEL</div>
+          <div class="game-subtitle">Empilement critique contrôlé</div>
+          <div class="badge">
+            <span>■</span> Puzzle / Réflexes
+          </div>
+        </div>
+      </header>
+
+      <div class="game-body"></div>
+
+      <footer class="game-footer">
+        <button class="play-btn" type="button">
+          <span>▶</span> Jouer
+        </button>
+        <div class="shortcut">Raccourcis : T ou 1</div>
+      </footer>
+    </article>
+
+    <!-- Arkanoid -->
+    <article class="game-card" data-target="Arkanoid.html">
+      <div class="card-bg card-bg-arkanoid"></div>
+
+      <header class="game-header">
+        <div class="game-icon arkanoid">A</div>
+        <div>
+          <div class="game-title">Arkanoid – BTS CIEL</div>
+          <div class="game-subtitle">Débogage par rebonds contrôlés</div>
+          <div class="badge">
+            <span>●</span> Arcade / Réflexes
+          </div>
+        </div>
+      </header>
+
+      <div class="game-body"></div>
+
+      <footer class="game-footer">
+        <button class="play-btn" type="button">
+          <span>▶</span> Jouer
+        </button>
+        <div class="shortcut">Raccourcis : A ou 2</div>
+      </footer>
+    </article>
+
+  </div>
+
+  <div id="bottom-info">
+    <strong>BTS CIEL</strong> – Arcade pédagogique du Lycée Simone Veil
+  </div>
+</div>
+
+<div id="proviseur-box">
+  <div id="speech-bubble"></div>
+  <img id="proviseur-img" src="proviseur.png" alt="Proviseur">
+</div>
+
+<script>
+  function goTo(target) {
+    if (!target) return;
+    window.location.href = target;
+  }
+
+  document.querySelectorAll(".game-card").forEach(card => {
+    const target = card.getAttribute("data-target");
+
+    card.addEventListener("click", (e) => {
+      e.preventDefault();
+      goTo(target);
+    });
+
+    const btn = card.querySelector(".play-btn");
+    if (btn) {
+      btn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        e.preventDefault();
+        goTo(target);
+      });
+    }
+  });
+
+  document.addEventListener("keydown", (e) => {
+    const key = e.key.toLowerCase();
+    if (key === "t" || key === "1") {
+      goTo("tetris.html");
+    } else if (key === "a" || key === "2") {
+      goTo("Arkanoid.html");
+    }
+  });
+
+  const proviseurMessages = [
+    "Bienvenue en BTS CIEL.\nChoisissez votre terrain d'entraînement :\nTetris pour l’anticipation, Arkanoid pour les réflexes.",
+    "En tant que proviseur, je recommande\nau moins une partie de chaque.\nPour la science, bien sûr.",
+    "Tetris : gestion de flux, optimisation.\nArkanoid : gestion de crise, rebond maîtrisé.\nÀ vous de voir ce qui vous ressemble.",
+    "Rappel réglementaire :\nles pauses Arcade sont autorisées…\nsi les devoirs sont faits.",
+    "Vous hésitez ?\nCommencez par Tetris pour chauffer le cerveau,\npuis Arkanoid pour tester vos nerfs.",
+    "Ici, pas de conseil de classe,\njuste un conseil de jeu :\ntestez les deux et revenez avec un highscore.",
+    "Arkanoid pour les bourrins précis,\nTetris pour les stratèges patients.\nJe prends des notes.",
+    "Je surveille les résultats.\nLes meilleurs scores ne sont pas encore\nau bulletin, mais ça peut s’arranger."
+  ];
+
+  function pickRandomMessage() {
+    const idx = Math.floor(Math.random() * proviseurMessages.length);
+    return proviseurMessages[idx];
+  }
+
+  function setProviseurMessage() {
+    const bubble = document.getElementById("speech-bubble");
+    if (!bubble) return;
+    const msg = pickRandomMessage();
+    bubble.innerHTML = msg.replace(/\n/g, "<br>") +
+      '<small>(Cliquez ici ou sur le proviseur pour changer le message.)</small>';
+  }
+
+  const proviseurBox = document.getElementById("proviseur-box");
+  const speechBubble = document.getElementById("speech-bubble");
+
+  if (proviseurBox) {
+    proviseurBox.addEventListener("click", (e) => {
+      e.stopPropagation();
+      setProviseurMessage();
+    });
+  }
+  if (speechBubble) {
+    speechBubble.addEventListener("click", (e) => {
+      e.stopPropagation();
+      setProviseurMessage();
+    });
+  }
+
+  setProviseurMessage();
+</script>
+
+</body>
+</html>

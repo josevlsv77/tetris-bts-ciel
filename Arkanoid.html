@@ -591,7 +591,8 @@
   }
 
   function triggerCharacter(type) {
-      if (gameState === "paused" || (type === 'inGame' && charTimeout !== null)) return; 
+      // NEW: Do not trigger random characters during recovery
+      if (gameState === "paused" || gameState === "recovering" || (type === 'inGame' && charTimeout !== null)) return; 
 
       let charType;
       
@@ -643,7 +644,8 @@
   // ------------------------------
 
 
-  let gameState = "waiting"; 
+  // NEW: Added "recovering" state
+  let gameState = "waiting"; // Can be: "waiting", "playing", "paused", "gameover", "recovering" 
   let score = 0;
   let level = 1;
   let lives = 3; 
@@ -710,7 +712,7 @@
           ctx.globalAlpha = 1.0;
       }
 
-      // --- Paddle avec Glow ---
+      // --- Paddle avec Glow --- 
       const p = paddle;
       ctx.shadowBlur = 15; ctx.shadowColor = "#3498db";
       const grad = ctx.createLinearGradient(p.x, p.y, p.x, p.y + p.height);
@@ -719,7 +721,7 @@
       ctx.shadowBlur = 0; // Reset
       ctx.strokeStyle = '#2c3e50'; ctx.lineWidth = 1; ctx.strokeRect(p.x, p.y, p.width, p.height);
 
-      // --- Briques Vitrées ---
+      // --- Briques Vitrées --- 
       let activeBricks = 0;
       for(let c=0; c<BRICK_COLS; c++) {
           for(let r=0; r<bricks[c].length; r++) { 
@@ -745,9 +747,9 @@
               }
           }
       }
-      if (activeBricks === 0 && (gameState === "playing" || gameState === "waiting")) levelUp();
+      if (activeBricks === 0 && (gameState === "playing" || gameState === "waiting" || gameState === "recovering")) levelUp();
       
-      // --- Dessin Power-Ups Circulaires ---
+      // --- Dessin Power-Ups Circulaires --- 
       for (let pu of powerups) {
           const size = pu.size;
           const radius = size / 2;
@@ -779,7 +781,7 @@
           ctx.closePath();
       }
 
-      // --- Balle avec Traînée ---
+      // --- Balle avec Traînée --- 
       // Dessiner la traînée
       for(let i=0; i<ball.trail.length; i++) {
           let pos = ball.trail[i];
@@ -877,9 +879,12 @@
           }
           if(ball.y - ball.radius < 0) { ball.vy = -ball.vy; sHit(); }
           
-          // NEW: Loss of life condition
+          // Loss of life condition  *** CORRIGÉ : on relance la boucle si ce n'est pas un vrai game over ***
           if(ball.y - ball.radius > GAME_HEIGHT) { 
               loseLife(); 
+              if (gameState !== "gameover") {
+                  animationId = requestAnimationFrame(update);
+              }
               return; 
           }
 
@@ -949,10 +954,13 @@
               inGameTriggerCounter = 0;
           }
 
-      } else if (gameState === "waiting") {
+      // MODIFIED: Added "recovering" state here
+      } else if (gameState === "waiting" || gameState === "recovering") {
+          // Si le jeu est en attente ou en récupération, la balle reste sur la raquette
           ball.x = paddle.x + paddle.width/2;
           ball.y = paddle.y - ball.radius - 2;
           ball.trail = []; 
+          // La raquette bouge toujours en mode "waiting" ou "recovering"
           paddle.x += paddle.dx;
           if(paddle.x < 0) paddle.x = 0;
           if(paddle.x + paddle.width > GAME_WIDTH) paddle.x = GAME_WIDTH - paddle.width;
@@ -961,18 +969,27 @@
       
       draw(); 
       updateUI();
+      // Le loop ne s'arrête que si gameState est "paused" ou "gameover"
       if (gameState !== "paused") animationId = requestAnimationFrame(update);
   }
   
   function launchBall() {
-      if(gameState === "waiting") {
+      // MODIFIED: Allows launch from "waiting" (manual start/level up) or "recovering" (auto-resume)
+      if(gameState === "waiting" || gameState === "recovering") {
+          
+          // Safety: Clear the recovery timeout if we were in recovery mode
+          if (gameState === "recovering" && resumeTimeout) {
+             clearTimeout(resumeTimeout); 
+             resumeTimeout = null;
+          }
+          
           initAudioContext(); 
           ball.onPaddle = false;
           ball.vy = -ballSpeed;
           let initialVx = (Math.random() - 0.5) * ballSpeed;
           if (Math.abs(initialVx) < 1.0) initialVx = (initialVx >= 0 ? 1 : -1) * 1.0;
           ball.vx = initialVx; 
-          gameState = "playing";
+          gameState = "playing"; // Transition to playing
           messageCenter.textContent = "";
           sStart();
           hideCharacters(); 
@@ -984,7 +1001,8 @@
       defaultBallSpeed += 0.5; 
       ballSpeed = defaultBallSpeed; 
       initBricks(); 
-      resetBall(); // Sets gameState to waiting, stops paddle
+      // MODIFIED: Sets gameState to waiting (manual launch needed)
+      resetBall(false); 
       
       // La montée de niveau nécessite toujours un clic pour relancer.
       messageCenter.innerHTML = `NIVEAU ${level} !!<br>CLIQUEZ POUR LANCER.`; 
@@ -992,28 +1010,33 @@
       triggerCharacter('levelUp'); 
   }
   
-  // NOUVEAU: Automatisation de la reprise après la perte d'une vie
+  // CORRIGÉ : Automatisation de la reprise après la perte d'une vie
+  let resumeTimeout = null;
+
   function loseLife() {
+      // 1. Annuler la reprise automatique précédente s'il y en avait une
+      if (resumeTimeout) clearTimeout(resumeTimeout); 
+      
       lives--;
       sDie(); 
       
       if (lives <= 0) {
           realGameOver();
       } else {
-          // 1. Déclenche l'effet visuel
+          // 2. Déclenche l'effet visuel
           gameContainer.classList.add("shake-effect");
           setTimeout(()=>gameContainer.classList.remove("shake-effect"), 500);
           
-          // 2. Réinitialise la balle sur la raquette et passe en état "waiting"
-          resetBall(); 
+          // 3. Réinitialise la balle sur la raquette et passe en état "recovering" (FORCE le blocage du clic)
+          resetBall(true); // TRUE pour forcer l'état "recovering"
           
-          // 3. Affiche le message de reprise automatique
-          messageCenter.innerHTML = `VIE PERDUE ! ${lives} restantes.<br>REPRISE IMMINENTE...`; 
+          // 4. Affiche le message de reprise automatique
+          messageCenter.innerHTML = `VIE PERDUE ! ${lives} restantes.<br>REPRISE AUTOMATIQUE DANS 2 SECONDES...`; 
           
           triggerCharacter('lifeLost'); 
           
-          // 4. Reprise AUTOMATIQUE après 2 secondes
-          setTimeout(launchBall, 2000); 
+          // 5. Reprise AUTOMATIQUE après 2 secondes
+          resumeTimeout = setTimeout(launchBall, 2000); 
       }
       updateUI();
   }
@@ -1022,6 +1045,7 @@
   function realGameOver() {
       gameState = "gameover";
       cancelAnimationFrame(animationId);
+      animationId = null; 
       messageCenter.innerHTML = "GAME OVER<br>Score: " + score;
       pauseOverlay.classList.add('visible'); 
       pauseOverlay.style.display = 'flex';
@@ -1031,15 +1055,21 @@
       checkAndSaveHighscore(score); // Check and save highscore
   }
 
-  function resetBall() {
+  // MODIFIED: Takes a flag to set the appropriate state
+  function resetBall(isRecovery = false) {
       ball.onPaddle = true; ball.vx = 0; ball.vy = 0; ball.trail = [];
       paddle.dx = 0; 
-      gameState = "waiting";
+      // Si c'est une perte de vie (recovery=true), on passe en "recovering" pour bloquer les clics
+      // Sinon (start/level-up), on reste en "waiting" (clics autorisés)
+      gameState = isRecovery ? "recovering" : "waiting"; 
   }
 
   function resetGame() {
       hideCharacters();
       if (animationId) cancelAnimationFrame(animationId); 
+      
+      if (resumeTimeout) clearTimeout(resumeTimeout); // Annuler toute reprise en attente
+      
       pauseOverlay.classList.remove('visible');
       pauseOverlay.style.display = 'none';
       
@@ -1052,22 +1082,31 @@
       if (activePowerup && activePowerup.timer) clearTimeout(activePowerup.timer);
       activePowerup = null;
 
-      resizeCanvas(); initBricks(); resetBall(); updateUI();
+      resizeCanvas(); initBricks(); 
+      // MODIFIED: Sets to 'waiting' for initial manual launch
+      resetBall(false); 
+      updateUI();
       updateHighScores(); // Load highscores
       
       messageCenter.textContent = "CLIQUEZ POUR DÉMARRER"; // Message initial
       setTimeout(() => triggerCharacter('intro'), 500); 
+      // Le loop doit démarrer ici pour que le mode "waiting" s'affiche
       animationId = requestAnimationFrame(update); 
   }
   
   function togglePause() {
-      if (gameState === "playing" || gameState === "waiting") {
+      if (gameState === "playing" || gameState === "waiting" || gameState === "recovering") {
           cancelAnimationFrame(animationId); gameState = "paused"; 
           pauseOverlay.innerHTML = "PAUSE<br><span>Appuyez sur P pour reprendre</span>";
           pauseOverlay.style.display = "flex";
           setTimeout(() => pauseOverlay.classList.add('visible'), 10);
       } else if (gameState === "paused") {
-          gameState = ball.onPaddle ? "waiting" : "playing"; 
+          // NEW: If recovering before pause, resume recovering, otherwise resume playing/waiting
+          if (resumeTimeout) {
+            gameState = "recovering"; // Resume the recovery state to let the timeout finish
+          } else {
+            gameState = ball.onPaddle ? "waiting" : "playing"; 
+          }
           pauseOverlay.classList.remove('visible');
           setTimeout(() => pauseOverlay.style.display = "none", 200);
           animationId = requestAnimationFrame(update); 
@@ -1095,24 +1134,29 @@
 
   canvas.addEventListener("mousemove", (e) => { if(gameState !== "paused") movePaddleByInput(e.clientX); });
   
-  // Les clics lancent la balle uniquement au début et après un level up.
+  // MODIFIED: Le clic ne lance la balle que si l'état est "waiting" (pas "recovering")
   canvas.addEventListener("mousedown", (e) => {
-      // Le lancement après une perte de vie est géré par l'automation de loseLife()
       if(gameState === "waiting") launchBall(); 
       e.preventDefault(); 
   });
   
+  // RETRAIT CRITIQUE: Le clic sur la zone de message est supprimé. 
+  // En mode "recovering", la zone de message ne doit pas être cliquable.
+  /*
   messageCenter.addEventListener("click", () => {
-      // Le lancement après une perte de vie est géré par l'automation de loseLife()
-      if(gameState==="waiting") launchBall();
+      if(gameState === "waiting") {
+          launchBall();
+      }
   });
+  */
 
   document.addEventListener('keydown', e => {
       if(e.code === "ArrowLeft") paddle.dx = -8;
       if(e.code === "ArrowRight") paddle.dx = 8;
       if(e.code === "Space") {
-          if(gameState==="waiting") launchBall();
-          if(gameState==="gameover") resetGame();
+          // MODIFIED: On ne lance la balle que si l'état est "waiting"
+          if(gameState === "waiting") launchBall();
+          if(gameState === "gameover") resetGame();
           e.preventDefault(); 
       }
       if(e.code === "KeyP") togglePause();
@@ -1126,7 +1170,13 @@
   document.getElementById("btn-left").addEventListener("touchend", () => { if(paddle.dx < 0) paddle.dx = 0; });
   document.getElementById("btn-right").addEventListener("touchstart", (e) => { e.preventDefault(); paddle.dx = 8; }, {passive: false});
   document.getElementById("btn-right").addEventListener("touchend", () => { if(paddle.dx > 0) paddle.dx = 0; });
-  document.getElementById("btn-launch").addEventListener("click", launchBall);
+  
+  document.getElementById("btn-launch").addEventListener("click", () => {
+       // MODIFIED: On ne lance la balle que si l'état est "waiting"
+       if(gameState === "waiting") {
+           launchBall();
+       }
+  });
   
   startBtn.addEventListener("click", resetGame);
   
