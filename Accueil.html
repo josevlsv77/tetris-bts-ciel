@@ -110,10 +110,10 @@
     padding: 10px 12px 12px;
     cursor: pointer;
     display: grid;
-    grid-template-columns: minmax(0, 0.42fr) minmax(0, 0.58fr);
-    grid-template-rows: auto auto;  /* 1ère ligne : titre + GIF, 2e ligne : texte */
+    grid-template-columns: minmax(0, 0.45fr) minmax(0, 0.55fr);
+    grid-template-rows: 1fr;  /* tout sur une seule ligne : gauche = texte, droite = GIF */
     gap: 10px 16px;
-    min-height: 300px;             /* plus grand en hauteur */
+    min-height: 340px;        /* plus haut qu’avant */
     position: relative;
     overflow: hidden;
   }
@@ -126,13 +126,14 @@
     transition: box-shadow 0.18s ease-out, transform 0.18s ease-out;
   }
 
-  /* Bloc titre / icône à GAUCHE, hors du cartouche GIF */
+  /* Colonne GAUCHE : titre + texte explicatif + bouton */
   .game-header-block {
     grid-column: 1 / 2;
     grid-row: 1 / 2;
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    justify-content: space-between;
+    gap: 8px;
   }
 
   .game-header {
@@ -196,53 +197,14 @@
 
   .badge span { font-size: 12px; }
 
-  /* CARTOUCHE GIF À DROITE : remplit TOUTE sa case, zoom + aligné */
-  .game-gif {
-    grid-column: 2 / 3;
-    grid-row: 1 / 2;
-    border-radius: 14px;
-    position: relative;
-    overflow: hidden;
-    box-shadow:
-      0 12px 28px rgba(0,0,0,0.35),
-      inset 0 0 0 1px rgba(255,255,255,0.85);
-    min-height: 220px;              /* plus haut aussi */
-    background-repeat: no-repeat;
-    background-size: cover;         /* remplit ENTIEREMENT la case */
-  }
-
-  .game-gif.tetris {
-    background-image: url("CaseTetris.gif");
-    background-position: left bottom;  /* aligné à gauche */
-  }
-
-  .game-gif.arkanoid {
-    background-image: url("CaseArkanoid.gif");
-    background-position: right bottom; /* aligné à droite */
-  }
-
-  .game-row:hover .game-gif {
-    transform: translateY(-2px);
-    box-shadow:
-      0 18px 36px rgba(0,0,0,0.45),
-      inset 0 0 0 1px rgba(255,255,255,0.95);
-    transition: transform 0.18s ease-out, box-shadow 0.18s ease-out;
-  }
-
-  /* Rectangle blanc SOUS le titre et SOUS le GIF (texte + bouton) */
   .game-desc {
-    grid-column: 1 / 3;   /* toute la largeur de la carte */
-    grid-row: 2 / 3;
-    margin-top: 4px;
+    margin-top: 6px;
     padding-top: 6px;
     border-top: 1px solid rgba(0,0,0,0.05);
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
   }
 
   .game-desc-inner {
-    max-width: 60%;
+    max-width: 100%;
   }
 
   .game-text {
@@ -257,11 +219,11 @@
   }
 
   .game-footer {
+    margin-top: 8px;
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 8px;
-    margin-top: 4px;
   }
 
   .play-btn {
@@ -301,6 +263,39 @@
     text-transform: uppercase;
     letter-spacing: 0.9px;
     color: #7f8c8d;
+  }
+
+  /* Colonne DROITE : cartouche GIF plein cadre */
+  .game-gif {
+    grid-column: 2 / 3;
+    grid-row: 1 / 2;
+    border-radius: 14px;
+    position: relative;
+    overflow: hidden;
+    box-shadow:
+      0 12px 28px rgba(0,0,0,0.35),
+      inset 0 0 0 1px rgba(255,255,255,0.85);
+    min-height: 240px;          /* un peu plus haut aussi */
+    background-repeat: no-repeat;
+    background-size: cover;     /* remplit ENTIEREMENT la case */
+  }
+
+  .game-gif.tetris {
+    background-image: url("CaseTetris.gif");
+    background-position: right bottom;   /* haut : aligné à DROITE */
+  }
+
+  .game-gif.arkanoid {
+    background-image: url("CaseArkanoid.gif");
+    background-position: left bottom;    /* bas : aligné à GAUCHE */
+  }
+
+  .game-row:hover .game-gif {
+    transform: translateY(-2px);
+    box-shadow:
+      0 18px 36px rgba(0,0,0,0.45),
+      inset 0 0 0 1px rgba(255,255,255,0.95);
+    transition: transform 0.18s ease-out, box-shadow 0.18s ease-out;
   }
 
   #bottom-info {
@@ -385,7 +380,7 @@
   @media (max-width: 720px) {
     .game-row {
       grid-template-columns: 1fr;
-      grid-template-rows: auto auto auto;
+      grid-template-rows: auto auto;
       min-height: 0;
     }
     .game-header-block {
@@ -397,14 +392,7 @@
       grid-row: 2 / 3;
       min-height: 160px;
     }
-    .game-desc {
-      grid-column: 1 / 2;
-      grid-row: 3 / 4;
-    }
-    .game-desc-inner {
-      max-width: 100%;
-    }
-    #proviseur-box { display: none; }
+    #proviseur-box { display: false; display:none; }
   }
 
   @media (max-width: 480px) {
@@ -430,70 +418,76 @@
     <!-- Jeu 1 : Tetris -->
     <section class="game-row" data-target="tetris.html">
       <div class="game-header-block">
-        <div class="game-header">
-          <div class="game-icon tetris">T</div>
-          <div>
-            <div class="game-title">Tetris – BTS CIEL</div>
-            <div class="game-subtitle">Empilement critique contrôlé</div>
+        <div>
+          <div class="game-header">
+            <div class="game-icon tetris">T</div>
+            <div>
+              <div class="game-title">Tetris – BTS CIEL</div>
+              <div class="game-subtitle">Empilement critique contrôlé</div>
+            </div>
+          </div>
+          <div class="badge">
+            <span>■</span> Puzzle / Réflexes
+          </div>
+
+          <div class="game-desc">
+            <div class="game-desc-inner">
+              <p class="game-text">
+                Dans <strong>Tetris – BTS CIEL</strong>, les pièces tombent comme des tickets d’incidents :
+                si vous ne les gérez pas à temps, la pile déborde. Anticipation, lecture de la grille
+                et gestion de la pression sont au cœur du jeu. Objectif : garder le système fluide le plus
+                longtemps possible en alignant les lignes.
+              </p>
+            </div>
           </div>
         </div>
-        <div class="badge">
-          <span>■</span> Puzzle / Réflexes
+
+        <div class="game-footer">
+          <button class="play-btn" type="button">
+            <span>▶</span> Jouer
+          </button>
+          <div class="shortcut">Raccourcis : T ou 1</div>
         </div>
       </div>
 
       <div class="game-gif tetris"></div>
-
-      <div class="game-desc">
-        <div class="game-desc-inner">
-          <p class="game-text">
-            Dans <strong>Tetris – BTS CIEL</strong>, les pièces tombent comme des tickets d’incidents :
-            si vous ne les gérez pas à temps, la pile déborde. Anticipation, lecture de la grille
-            et gestion de la pression sont au cœur du jeu. Objectif : garder le système fluide le plus
-            longtemps possible en alignant les lignes.
-          </p>
-          <div class="game-footer">
-            <button class="play-btn" type="button">
-              <span>▶</span> Jouer
-            </button>
-            <div class="shortcut">Raccourcis : T ou 1</div>
-          </div>
-        </div>
-      </div>
     </section>
 
     <!-- Jeu 2 : Arkanoid -->
     <section class="game-row" data-target="Arkanoid.html">
       <div class="game-header-block">
-        <div class="game-header">
-          <div class="game-icon arkanoid">A</div>
-          <div>
-            <div class="game-title">Arkanoid – BTS CIEL</div>
-            <div class="game-subtitle">Débogage par rebonds contrôlés</div>
+        <div>
+          <div class="game-header">
+            <div class="game-icon arkanoid">A</div>
+            <div>
+              <div class="game-title">Arkanoid – BTS CIEL</div>
+              <div class="game-subtitle">Débogage par rebonds contrôlés</div>
+            </div>
+          </div>
+          <div class="badge">
+            <span>●</span> Arcade / Réflexes
+          </div>
+
+          <div class="game-desc">
+            <div class="game-desc-inner">
+              <p class="game-text">
+                <strong>Arkanoid – BTS CIEL</strong>, c’est le casse-briques façon debug : la palette
+                représente votre capacité à réagir, la balle vos actions, et chaque brique un bug à éliminer.
+                Plus vous avancez, plus la vitesse augmente et plus la précision devient essentielle.
+              </p>
+            </div>
           </div>
         </div>
-        <div class="badge">
-          <span>●</span> Arcade / Réflexes
+
+        <div class="game-footer">
+          <button class="play-btn" type="button">
+            <span>▶</span> Jouer
+          </button>
+          <div class="shortcut">Raccourcis : A ou 2</div>
         </div>
       </div>
 
       <div class="game-gif arkanoid"></div>
-
-      <div class="game-desc">
-        <div class="game-desc-inner">
-          <p class="game-text">
-            <strong>Arkanoid – BTS CIEL</strong>, c’est le casse-briques façon debug : la palette
-            représente votre capacité à réagir, la balle vos actions, et chaque brique un bug à éliminer.
-            Plus vous avancez, plus la vitesse augmente et plus la précision devient essentielle.
-          </p>
-          <div class="game-footer">
-            <button class="play-btn" type="button">
-              <span>▶</span> Jouer
-            </button>
-            <div class="shortcut">Raccourcis : A ou 2</div>
-          </div>
-        </div>
-      </div>
     </section>
 
   </div>
