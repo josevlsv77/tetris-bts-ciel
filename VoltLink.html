@@ -1,0 +1,1681 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, maximum-scale=1.0, user-scalable=no">
+<title>VoltLink – Lycée Simone Veil</title>
+
+<link rel="icon" type="image/jpeg" href="logo 2.png">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap" rel="stylesheet">
+
+<style>
+  /* --- BASE & MODERNE --- */
+  html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    overscroll-behavior: none;
+  }
+
+  body {
+    /* Fallback couleur + Image de fond */
+    background: url("fond_lycee.jpg") no-repeat center center fixed;
+    background-color: #1e293b; /* Bleu nuit profond style "Slate" */
+    background-size: cover;
+    color: #1e293b;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+  }
+
+  /* Overlay sombre pour améliorer la lisibilité sur l'image de fond */
+  body::before {
+    content: "";
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(15, 23, 42, 0.6); /* Teinte bleu nuit transparente */
+    z-index: 1;
+  }
+
+  /* --- CONTENEUR PRINCIPAL (GLASSMORPHISM PRO) --- */
+  #main {
+    position: relative;
+    z-index: 5;
+    
+    /* Effet Verre */
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4), 
+                inset 0 0 0 1px rgba(255,255,255,0.3);
+    
+    border-radius: 24px;
+    padding: 20px;
+    
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    box-sizing: border-box;
+    
+    width: 95%;
+    height: 95%;
+    max-width: 1100px;
+    justify-content: center;
+  }
+
+  /* --- HEADER --- */
+  #header-group {
+    text-align: center;
+    margin-bottom: 5px;
+  }
+
+  #logo {
+    width: 60px;
+    height: auto;
+    display: block;
+    margin: 0 auto 5px auto;
+    filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));
+  }
+
+  #title {
+    font-size: 24px;
+    font-weight: 900;
+    color: #1e293b;
+    margin: 0;
+    letter-spacing: -0.03em;
+    text-shadow: 0 1px 0 rgba(255,255,255,0.8);
+  }
+
+  #subtitle {
+    font-size: 12px;
+    color: #64748b; /* Slate 500 */
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+
+  #game-container {
+    display: flex;
+    gap: 25px;
+    align-items: flex-start;
+    justify-content: center;
+    height: 70vh;
+    width: 100%;
+    position: relative;
+  }
+
+  /* --- CANVAS (ÉCRAN DE JEU) - STYLE PCB --- */
+  canvas#circuit {
+    background: #125C4D; /* Vert sombre PCB */
+    border-radius: 16px;
+    /* Ombres internes pour la profondeur */
+    box-shadow: inset 0 0 60px rgba(0,0,0,0.6), 
+                0 20px 25px -5px rgba(0, 0, 0, 0.2), 
+                0 8px 10px -6px rgba(0, 0, 0, 0.1);
+    
+    display: block;
+    height: 100%;
+    width: auto;
+    aspect-ratio: 3/4;
+    position: relative;
+    z-index: 5;
+    touch-action: none;
+    cursor: pointer;
+  }
+
+  /* --- SIDEBAR (TABLEAU DE BORD COMPACT) --- */
+  #side-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 10px; /* Espace réduit */
+    background: rgba(255, 255, 255, 0.5);
+    padding: 15px; /* Padding réduit */
+    border-radius: 16px;
+    min-width: 250px;
+    width: 280px; /* Largeur fixe pour la stabilité */
+    border: 1px solid rgba(255,255,255,0.4);
+    box-sizing: border-box;
+    height: 100%;
+    overflow: hidden; /* PAS D'ASCENSEUR GLOBAL */
+  }
+
+  /* Groupe des stats (Score + Niveau) en ligne */
+  .stats-row {
+    display: flex;
+    gap: 8px;
+    width: 100%;
+  }
+
+  .stat-card {
+    flex: 1;
+    background: white;
+    padding: 8px 5px;
+    border-radius: 10px;
+    text-align: center;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  /* Le record prend toute la largeur */
+  #best-box {
+    background: rgba(255,255,255,0.6);
+    padding: 6px;
+    border-radius: 8px;
+    text-align: center;
+    border: 1px dashed rgba(0,0,0,0.1);
+  }
+
+  .label-text {
+    font-size: 10px;
+    text-transform: uppercase;
+    color: #94a3b8;
+    font-weight: 800;
+    margin-bottom: 0;
+    line-height: 1;
+  }
+
+  #score { font-size: 24px; font-weight: 900; color: #0f172a; line-height: 1.1; }
+  #level { font-size: 20px; font-weight: 800; color: #f59e0b; line-height: 1.1; }
+  
+  #rank-name {
+    font-size: 10px;
+    font-weight: 800;
+    color: #dc2626;
+    text-transform: uppercase;
+    margin-top: 2px;
+  }
+
+  #best-score { font-size: 12px; font-weight: 700; color: #334155; }
+
+  /* Zone Info flexible : elle prend la place qui reste */
+  #info-box {
+    flex: 1; 
+    background: white;
+    padding: 12px;
+    border-radius: 12px;
+    font-size: 11px; /* Texte plus petit */
+    color: #475569;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    line-height: 1.3;
+    overflow-y: auto; 
+    min-height: 0; 
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between; /* OPTIMISATION: Espace les blocs */
+  }
+
+  #mission-info p { margin: 4px 0; }
+  #mission-info { margin-bottom: 10px; }
+
+
+  /* NOUVEAU BLOC : Statistiques de progression */
+  #game-stats {
+      padding: 8px; 
+      border-radius: 8px; 
+      background: #f1f5f9; /* Slate 100 */
+      border: 1px solid #e2e8f0; /* Slate 200 */ 
+      margin: 5px 0 10px 0; /* Marge autour pour l'aérer */
+      box-shadow: inset 0 1px 3px rgba(0,0,0,0.05);
+  }
+
+  #game-stats-title {
+    font-size: 10px; 
+    text-transform: uppercase; 
+    font-weight: 800; 
+    color: #334155; 
+    margin-bottom: 4px;
+  }
+
+  .game-stats-row {
+    display: flex; 
+    justify-content: space-between; 
+    font-size: 11px; 
+    font-weight: 700; 
+    color: #1e293b;
+    margin-top: 4px;
+  }
+
+
+  /* Bloc LOI D'OHM */
+  #ohm-info {
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px dashed #cbd5e1;
+    background: rgba(241, 245, 249, 0.5); /* Fond gris très léger */
+    border-radius: 6px;
+    padding: 6px;
+  }
+
+  #ohm-info-title {
+    font-weight: 800; font-size: 10px; text-transform: uppercase;
+    color: #334155; margin-bottom: 4px;
+  }
+  
+  #ohm-Rlist { margin: 2px 0 2px 14px; padding: 0; font-size: 10px; }
+  #ohm-Rlist li { margin-bottom: 1px; }
+
+  /* --- BOUTONS PRO --- */
+  button {
+    padding: 12px;
+    border-radius: 10px;
+    border: 1px solid rgba(255,255,255,0.1);
+    
+    /* Gradient Slate sombre */
+    background: linear-gradient(135deg, #334155 0%, #1e293b 100%);
+    color: white;
+    
+    font-weight: 700;
+    font-family: 'Inter', sans-serif;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 
+                0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  button:hover {
+    background: linear-gradient(135deg, #475569 0%, #334155 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.15);
+  }
+
+  button:active { transform: translateY(0); }
+
+  /* Bouton TESTER en accent (Bleu électrique) */
+  #check-btn, #btn-check {
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    border: 1px solid rgba(255,255,255,0.2);
+  }
+  #check-btn:hover, #btn-check:hover {
+    background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%);
+  }
+
+  /* Grille de boutons pour gagner de la place */
+  .actions-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-top: 10px; 
+  }
+  
+  /* Bouton Tester prend 2 colonnes */
+  #check-btn { 
+      grid-column: span 2; 
+      margin: 0; 
+      font-size: 14px; 
+      padding: 10px;
+  }
+  #newgame-btn, #mute-btn { margin: 0; font-size: 11px; padding: 8px; }
+
+
+  #controls-info {
+    font-size: 10px;
+    text-align: center;
+    color: #94a3b8;
+    background: rgba(255,255,255,0.4);
+    padding: 5px;
+    border-radius: 8px;
+    margin-top: 5px;
+  }
+
+  #message-center {
+    font-size: 16px;
+    font-weight: 800;
+    text-align: center;
+    color: #0369a1; /* Sky 700 */
+    min-height: 24px;
+    margin-top: 15px;
+    text-shadow: 0 1px 0 rgba(255,255,255,0.8);
+  }
+
+  /* --- MOBILE/RESPONSIVE --- */
+  #mobile-header {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    width: 95%;
+    font-weight: bold;
+    font-size: 14px;
+    margin-top: 5px;
+    background: rgba(255,255,255,0.9);
+    padding: 8px;
+    border-radius: 12px;
+    border: 1px solid rgba(0,0,0,0.05);
+  }
+
+  #mobile-header-row {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    font-size: 13px;
+    color: #334155;
+  }
+
+  #mob-rank {
+    color: #dc2626;
+    font-size: 13px;
+    margin-top: 4px;
+    font-weight: 900;
+  }
+
+  #mobile-controls {
+    display: none;
+    width: 100%;
+    justify-content: center;
+    margin-top: 10px;
+    gap: 20px;
+    padding-bottom: 5px;
+    touch-action: none;
+    z-index: 100;
+    position: relative;
+  }
+
+  .pad-group { display: flex; gap: 12px; }
+
+  .mob-btn {
+    width: 80px;
+    height: 80px;
+    font-size: 16px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    /* Style flat propre */
+    background: white;
+    border: none;
+    border-radius: 20px;
+    box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
+    color: #334155;
+    font-weight: 800;
+  }
+  
+  .mob-btn:active {
+    transform: scale(0.95);
+    background: #f1f5f9;
+  }
+
+  /* --- Personnages (Dialogues) --- */
+  @keyframes popIn {
+    from { transform: scale(0) translateY(100px); opacity: 0; }
+    to   { transform: scale(1) translateY(0); opacity: 1; }
+  }
+
+  #proviseur-box, #prof-box {
+    position: fixed;
+    bottom: 0;
+    display: none;
+    cursor: pointer;
+    z-index: 100;
+    transition: transform 0.3s ease-out;
+  }
+
+  #proviseur-box { right: 2%; left: auto; }
+  #prof-box      { left: 2%; right: auto; }
+
+  #proviseur-box.pop-in,
+  #prof-box.pop-in {
+    animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  }
+
+  #proviseur-img, #prof-img {
+    height: auto;
+    max-height: 45vh;
+    filter: drop-shadow(0 10px 20px rgba(0,0,0,0.5));
+    position: relative;
+    z-index: 1;
+  }
+
+  #speech-bubble, #prof-bubble {
+    position: absolute;
+    bottom: calc(100% + 15px);
+    background: #ffffff;
+    border: 2px solid #334155;
+    border-radius: 20px;
+    padding: 20px;
+    font-size: 15px;
+    line-height: 1.4;
+    font-weight: 600;
+    color: #1e293b;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+    min-width: 250px;
+    max-width: 320px;
+    opacity: 0;
+    animation: fadeIn 0.3s 0.2s forwards;
+    z-index: 2;
+  }
+
+  @keyframes fadeIn { to { opacity: 1; } }
+
+  #speech-bubble::after,
+  #prof-bubble::after {
+    content: '';
+    position: absolute;
+    width: 0;
+    height: 0;
+    border-style: solid;
+    border-width: 12px;
+    top: 100%;
+    border-color: #334155 transparent transparent transparent;
+    z-index: 3;
+  }
+
+  #speech-bubble {
+    right: 50%;
+    text-align: right;
+    transform: translateX(50%);
+  }
+  #speech-bubble::after { right: 40px; }
+
+  #prof-bubble {
+    left: 50%;
+    text-align: left;
+    transform: translateX(-50%);
+  }
+  #prof-bubble::after { left: 40px; }
+
+  /* --- RESPONSIVE MOBILE (< 900px) --- */
+  @media (max-width: 900px) {
+    #main {
+      width: 100%; height: 100%;
+      padding: 10px;
+      border-radius: 0;
+      justify-content: flex-start;
+      border: none;
+    }
+    #header-group { display: none; }
+    #game-container {
+      height: 60vh;
+      align-items: center;
+      width: 100%;
+      gap: 5px;
+    }
+    #side-panel { display: none; } /* On cache le panneau de droite */
+    #mobile-header { display: flex; }
+    #mobile-controls { display: flex; }
+    #message-center { font-size: 14px; margin-bottom: 5px; }
+    #proviseur-box, #prof-box { display: none !important; }
+  }
+</style>
+</head>
+<body>
+
+<div id="main">
+  <div id="header-group">
+    <img id="logo" src="Logo.gif" alt="Logo BTS" onerror="this.style.display='none'">
+    <div id="title">VoltLink</div>
+    <div id="subtitle">Relie Vcc à la LED – BTS CIEL</div>
+  </div>
+
+  <div id="mobile-header">
+    <div id="mobile-header-row">
+      <span id="mob-score">Score: 0</span>
+      <span id="mob-level">Niv: 1</span>
+      <span id="mob-time">Dernier: -- s</span>
+    </div>
+    <div id="mob-rank">Nouvelle Recrue</div>
+  </div>
+
+  <div id="game-container">
+    <canvas id="circuit"></canvas>
+
+    <div id="side-panel">
+      
+      <div class="stats-row">
+        <div class="stat-card" id="score-box">
+          <div class="label-text">Score</div>
+          <div id="score">0</div>
+        </div>
+
+        <div class="stat-card" id="level-box">
+          <div class="label-text">Niveau</div>
+          <div id="level">1</div>
+          <div id="rank-name">Nouvelle Recrue</div>
+        </div>
+      </div>
+
+      <div id="best-box">
+        <span class="label-text">Record local : </span>
+        <span id="best-score">0 pts (niv 0)</span>
+      </div>
+
+      <div id="info-box">
+        <div id="mission-info">
+          <p><b>Mission :</b> Relier <span style="color:#f59e0b; font-weight:bold;">Vcc</span> à la LED. Attention à la <b>polarité des Diodes</b> (D).</p>
+          <p>Clic/Toucher pour pivoter les pistes.</p>
+        </div>
+
+        <div id="game-stats">
+            <div id="game-stats-title">Progression & Challenge</div>
+            <div class="game-stats-row">
+                <span>Cases du chemin : <span id="path-length-stat">--</span></span>
+                <span>Résistances (R) : <span id="resistor-count-stat">--</span></span>
+            </div>
+            <div class="game-stats-row">
+                <span>Diodes (D) : <span id="diode-count-stat">--</span></span>
+                <span>Tension Vcc : <span id="vcc-voltage-stat">5 V</span></span>
+            </div>
+            <div style="margin-top: 5px;">
+                <div style="font-size: 10px; color: #94a3b8; font-weight: 600;">Tentatives sur cette grille : <span id="checks-count-stat">0</span></div>
+            </div>
+        </div>
+
+
+        <div id="ohm-info">
+          <div id="ohm-info-title">Analyse (U = <span id="ohm-U">5 V</span>)</div>
+          <p>Type : <span id="ohm-type">Série</span></p>
+          <ul id="ohm-Rlist"></ul>
+          <div style="display:flex; justify-content:space-between; margin-top:2px; font-size: 11px;">
+             <span>R<sub>eq</sub> : <span id="ohm-Req">--</span></span>
+             <span>I : <span id="ohm-I">--</span></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="actions-grid">
+        <button id="check-btn">TESTER LE CIRCUIT</button>
+        <button id="newgame-btn">Nouvelle grille</button>
+        <button id="mute-btn">Son : ON</button>
+      </div>
+
+      <div id="controls-info">
+        Clic : Pivoter &bull; Espace : Tester &bull; N : Nouveau
+      </div>
+    </div>
+    
+  </div>
+
+  <div id="mobile-controls">
+    <div class="pad-group">
+      <button class="mob-btn" id="btn-check">TEST</button>
+      <button class="mob-btn" id="btn-new">NEW</button>
+    </div>
+  </div>
+
+  <div id="message-center">
+    VoltLink : tourne les cases, puis teste le circuit.
+  </div>
+</div>
+
+<div id="proviseur-box">
+  <div id="speech-bubble"></div>
+  <img id="proviseur-img" src="proviseur.png" alt="Proviseur">
+</div>
+
+<div id="prof-box">
+  <div id="prof-bubble"></div>
+  <img id="prof-img" src="Perso1.png" alt="Professeur">
+</div>
+
+<audio id="bg-music" loop>
+  <source src="musique.mp3" type="audio/mpeg">
+</audio>
+
+<script>
+(function() {
+  /* --- Canvas & dimensions --- */
+  const canvas = document.getElementById("circuit");
+  const ctx = canvas.getContext("2d");
+
+  const GAME_WIDTH = 600;
+  const GAME_HEIGHT = 800;
+
+  function resizeCanvas() {
+    const dpr = window.devicePixelRatio || 1;
+    // Ajustement CSS pour le responsive
+    const rect = canvas.getBoundingClientRect();
+    
+    // On fixe la taille interne du canvas
+    canvas.width = GAME_WIDTH * dpr;
+    canvas.height = GAME_HEIGHT * dpr;
+    
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = "high";
+  }
+
+  window.addEventListener("resize", resizeCanvas);
+  resizeCanvas(); // Init
+
+  /* --- UI elements --- */
+  const scoreElem = document.getElementById("score");
+  const levelElem = document.getElementById("level");
+  const rankElem = document.getElementById("rank-name");
+  const bestElem = document.getElementById("best-score");
+  const messageCenter = document.getElementById("message-center");
+
+  const mobScoreElem = document.getElementById("mob-score");
+  const mobLevelElem = document.getElementById("mob-level");
+  const mobTimeElem = document.getElementById("mob-time");
+  const mobRankElem = document.getElementById("mob-rank");
+
+  const checkBtn = document.getElementById("check-btn");
+  const newGameBtn = document.getElementById("newgame-btn");
+  const muteBtn = document.getElementById("mute-btn");
+  const mobileCheckBtn = document.getElementById("btn-check");
+  const mobileNewBtn = document.getElementById("btn-new");
+
+  const ohmU = document.getElementById("ohm-U");
+  const ohmTypeElem = document.getElementById("ohm-type");
+  const ohmRlist = document.getElementById("ohm-Rlist");
+  const ohmReqElem = document.getElementById("ohm-Req");
+  const ohmIElem = document.getElementById("ohm-I");
+  
+  // NOUVEAUX ÉLÉMENTS STATS
+  const pathLengthStat = document.getElementById("path-length-stat");
+  const resistorCountStat = document.getElementById("resistor-count-stat");
+  const diodeCountStat = document.getElementById("diode-count-stat"); // NOUVEAU
+  const checksCountStat = document.getElementById("checks-count-stat");
+
+
+  const bgMusic = document.getElementById("bg-music");
+
+  /* --- Audio --- */
+  let audioCtx = null;
+  let muted = false;
+
+  try {
+    if (localStorage.getItem("voltlink_muted") === "true") {
+      muted = true;
+      muteBtn.textContent = "Son : OFF";
+    }
+  } catch(e) {}
+
+  bgMusic.volume = 0.2; // Volume musique background un peu plus bas
+
+  function initAudioContext() {
+    if (!audioCtx) {
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (AC) audioCtx = new AC();
+    }
+    if (audioCtx && audioCtx.state === "suspended") {
+      audioCtx.resume().catch(() => {});
+    }
+    if (!muted) {
+      bgMusic.play().catch(() => {});
+    }
+  }
+
+  // Synthese sonore simple pour les bruitages
+  function playTone(type, startFreq, endFreq, duration, vol) {
+    if (muted || !audioCtx) return;
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+
+    osc.type = type;
+    osc.frequency.setValueAtTime(startFreq, audioCtx.currentTime);
+    if (endFreq && endFreq !== startFreq) {
+      osc.frequency.exponentialRampToValueAtTime(
+        endFreq,
+        audioCtx.currentTime + duration
+      );
+    }
+
+    gain.gain.setValueAtTime(0, audioCtx.currentTime);
+    gain.gain.linearRampToValueAtTime(vol, audioCtx.currentTime + 0.01);
+    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start();
+    osc.stop(audioCtx.currentTime + duration);
+  }
+
+  // Sons
+  function sRotate() { playTone("sine", 400, 600, 0.1, 0.05); } // Son plus doux (sine)
+  function sCheck()  { playTone("triangle", 440, 660, 0.12, 0.08); }
+  function sFail()   { playTone("sawtooth", 150, 50, 0.4, 0.1); }
+  function sSuccess(){ 
+    // Petit arpège rapide
+    playTone("sine", 523, 523, 0.1, 0.1);
+    setTimeout(() => playTone("sine", 659, 659, 0.1, 0.1), 100);
+    setTimeout(() => playTone("sine", 784, 1200, 0.3, 0.1), 200);
+  }
+
+  /* --- Rangs CIEL --- */
+  const cielRanks = [
+    "Nouvelle Recrue", "Apprenti Câbleur", "Scripteur Bash", 
+    "Décodeur Binaire", "Admin Réseau", "Développeur C++", 
+    "Survivant de l'E4", "Expert Cybersécu", "Chef de Projet E6", 
+    "Major de Promo", "Diplômé CIEL", "Légende du Lycée"
+  ];
+
+  function getRankName(level) {
+    if (level > cielRanks.length) return cielRanks[cielRanks.length - 1];
+    return cielRanks[level - 1];
+  }
+
+  /* --- Personnages (Dialogues) --- */
+  const proviseurBox = document.getElementById("proviseur-box");
+  const profBox = document.getElementById("prof-box");
+  const speechBubble = document.getElementById("speech-bubble");
+  const profBubble = document.getElementById("prof-bubble");
+  const profImg = document.getElementById("prof-img");
+
+  const PROF_CONFIGS = [
+    { filename: "Perso1.png", role: "physics" },
+    { filename: "Perso2.png", role: "general" },
+    { filename: "Perso3.png", role: "physics" },
+    { filename: "Perso4.png", role: "physics" },
+    { filename: "Perso5.png", role: "general" },
+    { filename: "Perso6.png", role: "physics" },
+    { filename: "Perso7.png", role: "physics" }
+  ];
+
+  const CHAR_MESSAGES = {
+    intro: {
+      proviseur: [
+        "Ici, on ne joue pas avec l'électronique : on ferme des circuits propres.",
+        "Relie Vcc à la LED comme en vrai TP, pas de piste oubliée."
+      ],
+      general: [
+        "Tourne les pistes comme un puzzle jusqu'à alimenter la LED.",
+        "N'oublie pas : le courant passe d'une seule manière dans les Diodes (D)."
+      ],
+      physics: [
+        "Le courant part de Vcc, traverse les résistances, puis la LED.",
+        "La Diode (D) est polarisée : vérifie Anode (pointe) vers Cathode (barre)."
+      ]
+    },
+    success: {
+      proviseur: [
+        "Circuit fermé, LED alimentée. Ce schéma est montrable dans un dossier.",
+        "Voilà un câblage qui ne ferait pas rougir le conseil de classe."
+      ],
+      general: [ "Bien vu, ton chemin est cohérent.", "On sent l'esprit BTS CIEL, là." ],
+      physics: [
+        "Ton montage est un bon exemple de résistances en série.",
+        "La polarité des Diodes est respectée : bon travail d'analyse."
+      ]
+    },
+    fail: {
+      proviseur: [
+        "Circuit ouvert : la LED restera éteinte. Analyse les ruptures.",
+        "Vérifie si une Diode bloque le passage : Anode vers Cathode !"
+      ],
+      general: [ "Tu n'as pas encore relié proprement Vcc à la LED.", "Cherche les pistes isolées ou la Diode mal tournée." ],
+      physics: [
+        "Le courant peut-il réellement passer de Vcc à la LED ?",
+        "Une Diode est peut-être montée à l'envers, elle fait office de coupe-circuit."
+      ]
+    }
+  };
+
+  let charTimeout = null;
+
+  function hideCharacters() {
+    if (charTimeout) { clearTimeout(charTimeout); charTimeout = null; }
+    proviseurBox.style.display = "none";
+    profBox.style.display = "none";
+    proviseurBox.classList.remove("pop-in");
+    profBox.classList.remove("pop-in");
+  }
+
+  function showCharacterMessage(type, role) {
+    const set = CHAR_MESSAGES[type];
+    if (!set) return;
+    hideCharacters();
+
+    if (role === "proviseur") {
+      const pool = set.proviseur || [];
+      if (!pool.length) return;
+      speechBubble.textContent = pool[Math.floor(Math.random() * pool.length)];
+      proviseurBox.style.display = "block";
+      void proviseurBox.offsetWidth;
+      proviseurBox.classList.add("pop-in");
+    } else {
+      const candidates = (role === "physics") ? 
+        PROF_CONFIGS.filter(p => p.role === "physics") : PROF_CONFIGS;
+      const pool = (role === "physics" && set.physics) ? set.physics : (set.general || set.physics);
+      
+      if (!pool.length) return;
+
+      const chosenProf = candidates[Math.floor(Math.random() * candidates.length)];
+      profImg.src = chosenProf.filename;
+      profBubble.textContent = pool[Math.floor(Math.random() * pool.length)];
+      profBox.style.display = "block";
+      void profBox.offsetWidth;
+      profBox.classList.add("pop-in");
+    }
+    charTimeout = setTimeout(hideCharacters, 6000);
+  }
+
+  function triggerCharacter(type) {
+    let role;
+    const r = Math.random();
+    if (type === "intro") role = (r < 0.3) ? "proviseur" : "physics";
+    else if (type === "success") role = (r < 0.2) ? "proviseur" : (r < 0.7 ? "physics" : "general");
+    else role = (r < 0.4) ? "proviseur" : "physics";
+    showCharacterMessage(type, role);
+  }
+
+  proviseurBox.addEventListener("click", hideCharacters);
+  profBox.addEventListener("click", hideCharacters);
+
+  /* --- Game state --- */
+  let score = 0;
+  let level = 1;
+  let bestScore = 0;
+  let bestLevel = 0;
+  let gridRows = 6;
+  let gridCols = 7;
+  let grid = [];
+  let sourcePos = { row: 0, col: 0 };
+  let ledPos = { row: 0, col: 0 };
+  let pathCells = [];
+  let lastVisited = null;
+  let puzzleStartTime = performance.now();
+  let lastSolveTime = null;
+  let checksCount = 0;
+  let diodeCount = 0; // NOUVEAU: Compteur de diodes
+  const supplyVoltage = 5;
+  let currentEqR = 0;
+  let resistorList = [];
+  let gridOriginX = 0;
+  let gridOriginY = 0;
+  let tileSize = 0;
+
+  // Animation state
+  let gameState = "idle";
+  let successPath = null;
+  let successAnimStart = 0;
+  const SUCCESS_WAVE_DURATION = 800;
+  const SUCCESS_TOTAL_DURATION = 2000;
+  let pendingNextPuzzle = false;
+  let failAnimStart = 0;
+  const FAIL_ANIM_DURATION = 900;
+  let lastHovered = { r: -1, c: -1 }; // Pour le feedback au survol
+
+  /* --- Tiles & directions --- */
+  const TILE_TYPES = {
+    EMPTY: 0, STRAIGHT: 1, CORNER: 2, TEE: 3, CROSS: 4, SOURCE: 5, LED: 6
+  };
+
+  const BASE_MASK = {};
+  BASE_MASK[TILE_TYPES.EMPTY]    = 0;
+  BASE_MASK[TILE_TYPES.STRAIGHT] = 2 | 8; // R-L
+  BASE_MASK[TILE_TYPES.CORNER]   = 1 | 2; // U-R
+  BASE_MASK[TILE_TYPES.TEE]      = 1 | 2 | 8; // U-R-L
+  BASE_MASK[TILE_TYPES.CROSS]    = 1 | 2 | 4 | 8;
+  BASE_MASK[TILE_TYPES.SOURCE]   = 2; // Exit Right
+  BASE_MASK[TILE_TYPES.LED]      = 8; // Entry Left
+
+  const DIRS = [
+    { dx: 0, dy: -1, bit: 1 }, // up
+    { dx: 1, dy: 0, bit: 2 },  // right
+    { dx: 0, dy: 1, bit: 4 },  // down
+    { dx: -1, dy: 0, bit: 8 }  // left
+  ];
+
+  // Bit du côté ANODE (la pointe) pour une Diode (D) sur une tuile STRAIGHT (2|8 ou 1|4)
+  // [Rot 0: L->R (2), Rot 1: U->D (4), Rot 2: R->L (8), Rot 3: D->U (1)]
+  const DIODE_ALLOWED_EXIT = [2, 4, 8, 1];
+
+
+  function rotateMask(mask, rot) {
+    rot = ((rot % 4) + 4) % 4;
+    if (rot === 0) return mask;
+    let res = 0;
+    const bits = [1, 2, 4, 8];
+    for (let i = 0; i < 4; i++) {
+      if (mask & bits[i]) res |= bits[(i + rot) % 4];
+    }
+    return res;
+  }
+
+  function findRotationForMask(type, mask) {
+    const base = BASE_MASK[type];
+    for (let r = 0; r < 4; r++) {
+      if (rotateMask(base, r) === mask) return r;
+    }
+    return 0;
+  }
+
+  function getGridSizeForLevel(level) {
+    const baseRows = 5, baseCols = 6;
+    // Augmente plus vite la taille de la grille (inc = level - 1)
+    const inc = Math.floor((level - 1) / 1); 
+    return { 
+        rows: Math.min(baseRows + inc, 8), 
+        cols: Math.min(baseCols + inc, 10) 
+    };
+  }
+
+  /* --- Persistence --- */
+  function loadBest() {
+    try {
+      const s = localStorage.getItem("voltlink_best_score");
+      const l = localStorage.getItem("voltlink_best_level");
+      bestScore = s ? parseInt(s, 10) || 0 : 0;
+      bestLevel = l ? parseInt(l, 10) || 0 : 0;
+    } catch(e) {}
+  }
+
+  function saveBest() {
+    try {
+      localStorage.setItem("voltlink_best_score", String(bestScore));
+      localStorage.setItem("voltlink_best_level", String(bestLevel));
+    } catch(e) {}
+  }
+
+  function updateBestIfNeeded() {
+    if (score > bestScore) {
+      bestScore = score; bestLevel = level; saveBest();
+    }
+  }
+
+  /* --- UI UPDATES --- */
+  
+  function updateStats() {
+    pathLengthStat.textContent = pathCells.length;
+    resistorCountStat.textContent = resistorList.length;
+    diodeCountStat.textContent = diodeCount; // MISE À JOUR DIODE
+    checksCountStat.textContent = checksCount;
+  }
+
+  function updateOhmInfo() {
+    ohmTypeElem.textContent = "Série";
+    ohmRlist.innerHTML = "";
+    if (!resistorList.length) {
+      const li = document.createElement("li");
+      li.textContent = "Aucune résistance (câblage direct)";
+      ohmRlist.appendChild(li);
+      ohmReqElem.textContent = "0 Ω";
+      ohmIElem.textContent = "Max (Court-circuit !)";
+      ohmRlist.style.listStyleType = "none";
+      return;
+    }
+    ohmRlist.style.listStyleType = "disc";
+    resistorList.forEach((rObj, idx) => {
+      const li = document.createElement("li");
+      li.textContent = `R${idx + 1} = ${rObj.rValue} Ω`;
+      ohmRlist.appendChild(li);
+    });
+    currentEqR = resistorList.reduce((acc, r) => acc + r.rValue, 0);
+    ohmReqElem.textContent = currentEqR + " Ω";
+    // On ne tient pas compte des Vf des diodes pour le calcul R-eq
+    const I = supplyVoltage / currentEqR;
+    const I_mA = I * 1000;
+    ohmIElem.textContent = (I_mA < 1) ? 
+      `${I.toFixed(4)} A` : 
+      `${I_mA.toFixed(1)} mA`;
+    ohmU.textContent = supplyVoltage + " V";
+  }
+
+  function updateUI() {
+    scoreElem.textContent = score;
+    levelElem.textContent = level;
+    rankElem.textContent = getRankName(level);
+    mobScoreElem.textContent = "Score: " + score;
+    mobLevelElem.textContent = "Niv: " + level;
+    mobRankElem.textContent = getRankName(level);
+    mobTimeElem.textContent = lastSolveTime ? "Dernier: " + lastSolveTime.toFixed(1) + " s" : "Dernier: -- s";
+    bestElem.textContent = bestScore + " pts (niv " + bestLevel + ")";
+    updateOhmInfo();
+    updateStats(); 
+  }
+
+  /* --- GENERATION --- */
+  function generatePuzzle() {
+    const size = getGridSizeForLevel(level);
+    gridRows = size.rows; gridCols = size.cols;
+    grid = [];
+    for (let r = 0; r < gridRows; r++) {
+      const row = [];
+      for (let c = 0; c < gridCols; c++) {
+        row.push({ 
+          type: TILE_TYPES.EMPTY, rotation: 0, visualRotation: 0,
+          fixed: false, component: null, rValue: 0 
+        });
+      }
+      grid.push(row);
+    }
+
+    // Chemin
+    let row = 1 + Math.floor(Math.random() * Math.max(1, gridRows - 2));
+    let col = 0;
+    sourcePos = { row, col };
+    pathCells = [{ row, col }];
+
+    while (col < gridCols - 1) {
+      const options = ["R","R","R","R"];
+      if (row > 0) options.push("U");
+      if (row < gridRows - 1) options.push("D");
+      const dir = options[Math.floor(Math.random() * options.length)];
+      if (dir === "R" && col < gridCols - 1) col++;
+      else if (dir === "U" && row > 0) row--;
+      else if (dir === "D" && row < gridRows - 1) row++;
+      else if (col < gridCols - 1) col++;
+      pathCells.push({ row, col });
+    }
+    ledPos = { row, col };
+
+    // Masques
+    const maskGrid = Array(gridRows).fill(0).map(() => Array(gridCols).fill(0));
+    for (let i = 0; i < pathCells.length - 1; i++) {
+      const a = pathCells[i], b = pathCells[i + 1];
+      const dr = b.row - a.row, dc = b.col - a.col;
+      let bitAB = 0;
+      if (dr === -1) bitAB = 1; else if (dr === 1) bitAB = 4;
+      else if (dc === 1) bitAB = 2; else if (dc === -1) bitAB = 8;
+      if (!bitAB) continue;
+      maskGrid[a.row][a.col] |= bitAB;
+      const opp = (bitAB===1?4 : bitAB===4?1 : bitAB===2?8 : 2);
+      maskGrid[b.row][b.col] |= opp;
+    }
+
+    // Affectation types
+    for (let r = 0; r < gridRows; r++) {
+      for (let c = 0; c < gridCols; c++) {
+        const mask = maskGrid[r][c];
+        if (mask === 0) continue;
+        let type;
+        const count = ((mask&1)?1:0)+((mask&2)?1:0)+((mask&4)?1:0)+((mask&8)?1:0);
+        if (r === sourcePos.row && c === sourcePos.col) type = TILE_TYPES.SOURCE;
+        else if (r === ledPos.row && c === ledPos.col) type = TILE_TYPES.LED;
+        else {
+          if (count === 2) type = (mask === (1|4) || mask === (2|8)) ? TILE_TYPES.STRAIGHT : TILE_TYPES.CORNER;
+          else if (count === 3) type = TILE_TYPES.TEE;
+          else type = TILE_TYPES.CROSS;
+        }
+        const rot = findRotationForMask(type, mask);
+        grid[r][c] = { 
+          type, rotation: rot, visualRotation: rot * (Math.PI/2),
+          fixed: (type === TILE_TYPES.SOURCE || type === TILE_TYPES.LED),
+          component: null, rValue: 0
+        };
+      }
+    }
+
+    // Parasites
+    const distract = [TILE_TYPES.STRAIGHT, TILE_TYPES.CORNER, TILE_TYPES.TEE, TILE_TYPES.CROSS];
+    for (let r = 0; r < gridRows; r++) {
+      for (let c = 0; c < gridCols; c++) {
+        if (maskGrid[r][c] !== 0) continue;
+        const t = distract[Math.floor(Math.random()*distract.length)];
+        const rot = Math.floor(Math.random()*4);
+        grid[r][c] = { type: t, rotation: rot, visualRotation: rot*(Math.PI/2), fixed: false, component: null, rValue: 0 };
+      }
+    }
+
+    // Résistances & Diodes
+    resistorList = [];
+    diodeCount = 0;
+    const rValues = [10, 22, 47, 100, 220, 330, 470];
+    const candidates = pathCells.slice(1, pathCells.length - 1);
+    const nbComponents = Math.max(1, Math.min(candidates.length, Math.ceil(level/2)));
+    const usedIdx = new Set();
+    
+    while (usedIdx.size < nbComponents && usedIdx.size < candidates.length) {
+      const idx = Math.floor(Math.random() * candidates.length);
+      if (usedIdx.has(idx)) continue;
+      
+      const cell = candidates[idx];
+      const tile = grid[cell.row][cell.col];
+      
+      // On ne place les composants à polarité (D) que sur les tuiles STRAIGHT 
+      if (tile.type === TILE_TYPES.STRAIGHT) {
+        
+        let componentType;
+        // 40% Diode, 60% Résistance (pour les niveaux bas)
+        if (level > 2 && Math.random() < 0.4) { 
+             componentType = "D"; // Diode
+        } else {
+             componentType = "R"; // Resistor
+        }
+
+        tile.component = componentType;
+        
+        if (componentType === "R") {
+          tile.rValue = rValues[Math.floor(Math.random()*rValues.length)];
+          resistorList.push({rValue:tile.rValue, row:cell.row, col:cell.col});
+        } else if (componentType === "D") {
+          diodeCount++; // Incrémenter le compteur de diodes
+        }
+
+        usedIdx.add(idx); 
+      }
+    }
+
+    // Mélange
+    for (let r = 0; r < gridRows; r++) {
+      for (let c = 0; c < gridCols; c++) {
+        const tile = grid[r][c];
+        if (!tile || tile.fixed || tile.type === TILE_TYPES.EMPTY) continue;
+        const extra = Math.floor(Math.random()*4);
+        tile.rotation = (tile.rotation + extra) % 4;
+        // On initialise la rotation visuelle à la rotation logique pour éviter un saut au départ
+        tile.visualRotation = tile.rotation * (Math.PI/2);
+      }
+    }
+
+    lastVisited = null; checksCount = 0;
+    puzzleStartTime = performance.now();
+    messageCenter.textContent = "Connecte les pistes, puis teste le circuit.";
+    updateOhmInfo();
+    updateStats(); 
+  }
+
+  function getTileMask(tile) { return rotateMask(BASE_MASK[tile.type], tile.rotation); }
+
+  /* --- LOGIQUE JEU (BFS) --- */
+  function evaluateCircuitPath() {
+    const visited = Array(gridRows).fill(null).map(()=>Array(gridCols).fill(false));
+    const parent = Array(gridRows).fill(null).map(()=>Array(gridCols).fill(null));
+    const queue = [{ row: sourcePos.row, col: sourcePos.col }];
+    visited[sourcePos.row][sourcePos.col] = true;
+
+    while (queue.length > 0) {
+      const cur = queue.shift();
+      const tile = grid[cur.row][cur.col];
+      const mask = getTileMask(tile);
+
+      // 1. VÉRIFICATION DIODE SUR LA CASE DE DÉPART (cur)
+      if (tile.component === "D") {
+          // Si la case de départ (cur) est une diode, le courant ne doit pas
+          // en sortir par la cathode (côté opposé à l'Anode/Exit).
+          const rot = tile.rotation;
+          const diodeExitBit = DIODE_ALLOWED_EXIT[rot]; // Bit de sortie autorisée (Anode)
+          
+          for (const dir of DIRS) {
+             if (!(mask & dir.bit)) continue; // Pas de connexion physique
+             
+             // Si le bit de sortie (dir.bit) n'est pas l'Anode, le courant est bloqué.
+             if (dir.bit !== diodeExitBit) continue;
+             
+             // Si la sortie est l'Anode (diodeExitBit), le courant est OK pour la diode cur.
+             // On vérifie ensuite la connexion à neighbor
+             
+             const nr = cur.row + dir.dy, nc = cur.col + dir.dx;
+             if (nr<0 || nr>=gridRows || nc<0 || nc>=gridCols || visited[nr][nc]) continue;
+             
+             const neighbor = grid[nr][nc];
+             const nMask = getTileMask(neighbor);
+             const opp = (dir.bit===1?4 : dir.bit===4?1 : dir.bit===2?8 : 2);
+             
+             if (!(nMask & opp)) continue; // Pas de connexion physique
+             
+             // 2. VÉRIFICATION DIODE SUR LA CASE D'ARRIVÉE (neighbor)
+             if (neighbor.component === "D") {
+                const nRot = neighbor.rotation;
+                const nDiodeExitBit = DIODE_ALLOWED_EXIT[nRot]; 
+                
+                // Si le courant entre (opp) par le côté ANODE (nDiodeExitBit), il est bloqué (flux inverse)
+                if (opp === nDiodeExitBit) continue; 
+             }
+             
+             // Connexion OK: L'entrée par la cathode est autorisée, l'entrée par l'Anode est bloquée.
+             visited[nr][nc] = true;
+             parent[nr][nc] = cur;
+             queue.push({ row: nr, col: nc });
+          }
+      } 
+      // Si la case de départ (cur) n'est PAS une diode, on vérifie toutes les directions
+      else { 
+          for (const dir of DIRS) {
+              if (!(mask & dir.bit)) continue;
+              const nr = cur.row + dir.dy, nc = cur.col + dir.dx;
+              if (nr<0 || nr>=gridRows || nc<0 || nc>=gridCols || visited[nr][nc]) continue;
+
+              const neighbor = grid[nr][nc];
+              if (!neighbor) continue;
+              const nMask = getTileMask(neighbor);
+              const opp = (dir.bit===1?4 : dir.bit===4?1 : dir.bit===2?8 : 2);
+              
+              if (!(nMask & opp)) continue;
+
+              // VÉRIFICATION DIODE SUR LA CASE D'ARRIVÉE (neighbor)
+              if (neighbor.component === "D") {
+                const nRot = neighbor.rotation;
+                const nDiodeExitBit = DIODE_ALLOWED_EXIT[nRot]; 
+                // Si le courant entre (opp) par le côté ANODE (nDiodeExitBit), il est bloqué (flux inverse)
+                if (opp === nDiodeExitBit) continue; 
+              }
+
+              visited[nr][nc] = true;
+              parent[nr][nc] = cur;
+              queue.push({ row: nr, col: nc });
+          }
+      }
+    } // Fin while(queue)
+
+    lastVisited = visited;
+    if (!visited[ledPos.row][ledPos.col]) return { ok: false, visited };
+
+    const path = [];
+    let cur = { row: ledPos.row, col: ledPos.col };
+    while (cur) {
+      path.push({ row: cur.row, col: cur.col });
+      if (cur.row === sourcePos.row && cur.col === sourcePos.col) break;
+      cur = parent[cur.row][cur.col];
+    }
+    path.reverse();
+    return { ok: true, visited, path };
+  }
+
+  /* --- INPUT --- */
+  function updateHover(x, y) {
+    if (tileSize <= 0) { lastHovered = {r:-1, c:-1}; return; }
+    const gx = x - gridOriginX, gy = y - gridOriginY;
+    if (gx < 0 || gy < 0) { lastHovered = {r:-1, c:-1}; return; }
+    const c = Math.floor(gx / tileSize), r = Math.floor(gy / tileSize);
+    if (r < 0 || r >= gridRows || c < 0 || c >= gridCols) { lastHovered = {r:-1, c:-1}; return; }
+    lastHovered = {r, c};
+  }
+
+  function handleGridClick(x, y) {
+    if (gameState !== "idle" || tileSize <= 0) return;
+    updateHover(x, y); // Assure que lastHovered est correct
+    const r = lastHovered.r, c = lastHovered.c;
+    if (r < 0 || c < 0) return;
+
+    const tile = grid[r][c];
+    if (!tile || tile.fixed) return;
+    initAudioContext();
+    
+    // Changement logique
+    tile.rotation = (tile.rotation + 1) % 4;
+    
+    lastVisited = null;
+    sRotate();
+  }
+
+  function onCanvasClick(evt) {
+    const rect = canvas.getBoundingClientRect();
+    const x = (evt.clientX - rect.left) * (GAME_WIDTH / rect.width);
+    const y = (evt.clientY - rect.top) * (GAME_HEIGHT / rect.height);
+    handleGridClick(x, y);
+  }
+  
+  function onCanvasTouch(e) {
+      e.preventDefault(); // Empêche le scroll
+      const touch = e.changedTouches[0];
+      const rect = canvas.getBoundingClientRect();
+      const x = (touch.clientX - rect.left) * (GAME_WIDTH / rect.width);
+      const y = (touch.clientY - rect.top) * (GAME_HEIGHT / rect.height);
+      handleGridClick(x, y);
+  }
+
+  function onCanvasMove(evt) {
+      const rect = canvas.getBoundingClientRect();
+      const x = (evt.clientX - rect.left) * (GAME_WIDTH / rect.width);
+      const y = (evt.clientY - rect.top) * (GAME_HEIGHT / rect.height);
+      updateHover(x, y);
+  }
+
+  function onCanvasTouchMove(e) {
+      if (e.changedTouches.length > 0) {
+          const touch = e.changedTouches[0];
+          const rect = canvas.getBoundingClientRect();
+          const x = (touch.clientX - rect.left) * (GAME_WIDTH / rect.width);
+          const y = (touch.clientY - rect.top) * (GAME_HEIGHT / rect.height);
+          updateHover(x, y);
+      }
+  }
+
+
+  function onCheckCircuit() {
+    if (gameState !== "idle") return;
+    initAudioContext();
+    sCheck();
+    checksCount++;
+    const now = performance.now();
+    const res = evaluateCircuitPath();
+    const elapsed = (now - puzzleStartTime) / 1000;
+
+    if (res.ok) {
+      sSuccess();
+      lastSolveTime = elapsed;
+      const base = 100 + (level-1)*20;
+      const penalty = Math.min(base*0.5, elapsed*2) + (checksCount-1)*10;
+      const gain = Math.floor(Math.max(20, base - penalty));
+      score += gain;
+      updateBestIfNeeded();
+      
+      successPath = res.path;
+      successAnimStart = now;
+      gameState = "anim_success";
+      pendingNextPuzzle = true;
+      messageCenter.textContent = "Succès ! +" + gain + " pts.";
+      triggerCharacter("success");
+      updateUI();
+    } else {
+      sFail();
+      gameState = "anim_fail";
+      failAnimStart = now;
+      messageCenter.textContent = "Circuit ouvert. (Vérifiez les pistes et la polarité des Diodes !)";
+      triggerCharacter("fail");
+      updateUI();
+    }
+  }
+
+  function resetRun() {
+    score = 0; level = 1; lastSolveTime = null;
+    gameState = "idle"; pendingNextPuzzle = false;
+    generatePuzzle();
+    updateUI();
+    triggerCharacter("intro");
+  }
+
+  /* --- UPDATE --- */
+  function updateAnimations() {
+    const now = performance.now();
+    // Gestion fin animation Succès
+    if (gameState === "anim_success" && pendingNextPuzzle) {
+      if ((now - successAnimStart) > SUCCESS_TOTAL_DURATION) {
+        gameState = "idle"; pendingNextPuzzle = false;
+        level++; generatePuzzle(); updateUI();
+      }
+    } 
+    // Gestion fin animation Fail
+    else if (gameState === "anim_fail") {
+      if ((now - failAnimStart) > FAIL_ANIM_DURATION) gameState = "idle";
+    }
+    return now;
+  }
+
+  // Interpolation de la rotation pour fluidité (Lerp)
+  function updateTileAnimations() {
+    const speed = 0.6; // Vitesse rapide pour la rotation
+    for (let r = 0; r < gridRows; r++) {
+      for (let c = 0; c < gridCols; c++) {
+        const tile = grid[r][c];
+        if (!tile) continue;
+        
+        let target = tile.rotation * (Math.PI / 2);
+        // Gestion du bouclage 270° -> 0°
+        if (target === 0 && tile.visualRotation > 3 * Math.PI / 2 + 0.1) {
+          tile.visualRotation -= 2 * Math.PI;
+        }
+        
+        const diff = target - tile.visualRotation;
+        if (Math.abs(diff) > 0.005) {
+          tile.visualRotation += diff * speed;
+        } else {
+          tile.visualRotation = target;
+        }
+      }
+    }
+  }
+
+  function isTileEnergized(r, c, now) {
+    if (gameState !== "anim_success" || !successPath) return false;
+    const t = Math.min(1, (now - successAnimStart) / SUCCESS_WAVE_DURATION);
+    const idx = Math.floor(t * (successPath.length + 2)); 
+    // +2 pour que l'onde aille jusqu'au bout
+    for(let i=0; i<idx && i<successPath.length; i++) {
+      if (successPath[i].row === r && successPath[i].col === c) return true;
+    }
+    return false;
+  }
+
+  function getFailPulse(now) {
+    if (gameState !== "anim_fail") return 0;
+    const t = (now - failAnimStart) / FAIL_ANIM_DURATION;
+    return Math.max(0, Math.sin(t * Math.PI * 3));
+  }
+
+  /* --- DRAW --- */
+  function draw(now) {
+    ctx.clearRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+
+    // Taille grille
+    const availableW = GAME_WIDTH - 60;
+    const availableH = GAME_HEIGHT - 60;
+    const sizeX = availableW / gridCols;
+    const sizeY = availableH / gridRows;
+    tileSize = Math.min(sizeX, sizeY);
+    const totalW = tileSize * gridCols;
+    const totalH = tileSize * gridRows;
+    gridOriginX = (GAME_WIDTH - totalW) / 2;
+    gridOriginY = (GAME_HEIGHT - totalH) / 2;
+
+    const visited = lastVisited;
+    const failPulse = getFailPulse(now);
+
+    for (let r = 0; r < gridRows; r++) {
+      for (let c = 0; c < gridCols; c++) {
+        const tile = grid[r][c];
+        const x = gridOriginX + c * tileSize;
+        const y = gridOriginY + r * tileSize;
+
+        // Feedback visited / fail
+        if (visited && visited[r] && visited[r].length > c && visited[r][c]) { 
+             if (gameState === "anim_fail") {
+               ctx.fillStyle = `rgba(239, 68, 68, ${0.1 + 0.2*failPulse})`; // Rouge
+             } else {
+               ctx.fillStyle = "rgba(59, 130, 246, 0.1)"; // Bleu léger
+             }
+             ctx.fillRect(x+1, y+1, tileSize-2, tileSize-2);
+        }
+
+        // Bordure case discrète (pour l'effet de grille sur PCB)
+        ctx.strokeStyle = "rgba(255,255,255,0.08)";
+        ctx.lineWidth = 1;
+        ctx.strokeRect(x, y, tileSize, tileSize);
+
+        // Hover Feedback 
+        if (lastHovered.r === r && lastHovered.c === c && tile && !tile.fixed) {
+            ctx.strokeStyle = "#a78bfa"; // Violet doux (Purple 400)
+            ctx.lineWidth = 3;
+            ctx.strokeRect(x+1, y+1, tileSize-2, tileSize-2);
+        }
+
+        if (!tile || tile.type === TILE_TYPES.EMPTY) continue;
+
+        const cx = x + tileSize/2;
+        const cy = y + tileSize/2;
+        const isSource = (r === sourcePos.row && c === sourcePos.col);
+        const isLed = (r === ledPos.row && c === ledPos.col);
+        const baseM = BASE_MASK[tile.type];
+
+        ctx.save();
+        ctx.translate(cx, cy);
+        
+        // ROTATION FLUIDE
+        ctx.rotate(tile.visualRotation);
+
+        // --- DESSIN DES PISTES ---
+        // Style inactif (couleur étain/argent sur le PCB)
+        ctx.strokeStyle = "rgba(200, 200, 200, 0.8)";
+        ctx.lineWidth = Math.max(5, tileSize * 0.14);
+        ctx.lineCap = "round";
+        ctx.lineJoin = "round";
+        ctx.shadowColor = "rgba(0,0,0,0.5)";
+        ctx.shadowBlur = 4;
+        ctx.shadowOffsetY = 2;
+
+        
+        ctx.beginPath();
+        if (baseM & 1) { ctx.moveTo(0,0); ctx.lineTo(0, -tileSize*0.4); }
+        if (baseM & 2) { ctx.moveTo(0,0); ctx.lineTo(tileSize*0.4, 0); }
+        if (baseM & 4) { ctx.moveTo(0,0); ctx.lineTo(0, tileSize*0.4); }
+        if (baseM & 8) { ctx.moveTo(0,0); ctx.lineTo(-tileSize*0.4, 0); }
+        ctx.stroke();
+
+        // --- ENERGIZED (SUCCESS) ---
+        if (gameState === "anim_success" && isTileEnergized(r, c, now)) {
+            ctx.strokeStyle = "#38bdf8"; // Sky 400 (Bleu électrique brillant)
+            ctx.shadowColor = "#0ea5e9";
+            ctx.shadowBlur = 15;
+            ctx.shadowOffsetY = 0;
+            ctx.lineWidth = Math.max(4, tileSize * 0.12); // Un peu plus fin pour effet "coeur"
+            ctx.stroke();
+            
+            // Highlight blanc au centre
+            ctx.strokeStyle = "#ffffff";
+            ctx.lineWidth = 2;
+            ctx.shadowBlur = 0;
+            ctx.stroke();
+        }
+
+        // --- COMPOSANTS SPÉCIFIQUES ---
+        
+        // Source
+        if (isSource) {
+          ctx.shadowBlur = 0; 
+          ctx.fillStyle = "#f59e0b"; // Amber
+          ctx.strokeStyle = "#fff";
+          ctx.lineWidth = 2;
+          ctx.beginPath(); ctx.arc(0,0, tileSize*0.22, 0, Math.PI*2); 
+          ctx.fill(); ctx.stroke();
+          
+          ctx.fillStyle = "#fff";
+          ctx.font = "bold " + (tileSize*0.2) + "px 'Inter', sans-serif";
+          ctx.textAlign = "center"; ctx.textBaseline="middle";
+          ctx.fillText("Vcc", 0, 1);
+        }
+        
+        // LED
+        else if (isLed) {
+          ctx.shadowBlur = 0;
+          const energized = (gameState === "anim_success" && isTileEnergized(r, c, now));
+          
+          // Corps LED
+          ctx.fillStyle = energized ? "#fbbf24" : "#334155";
+          if (energized) {
+             ctx.shadowColor = "#fbbf24"; ctx.shadowBlur = 20;
+          }
+          ctx.strokeStyle = "#fff";
+          ctx.lineWidth = 2;
+          ctx.beginPath(); ctx.arc(0,0, tileSize*0.2, 0, Math.PI*2);
+          ctx.fill(); ctx.stroke();
+          
+          // Symbole diode simplifié (Triangle)
+          ctx.beginPath(); 
+          ctx.moveTo(-5, -5); ctx.lineTo(5, 0); ctx.lineTo(-5, 5); ctx.closePath();
+          ctx.strokeStyle = energized ? "#fff" : "#94a3b8";
+          ctx.lineWidth = 2;
+          ctx.stroke();
+          
+          // Fail cross
+          if (gameState === "anim_fail") {
+             ctx.strokeStyle = `rgba(239, 68, 68, ${0.5 + 0.5*failPulse})`;
+             ctx.lineWidth = 4;
+             ctx.beginPath();
+             ctx.moveTo(-tileSize*0.25, -tileSize*0.25); ctx.lineTo(tileSize*0.25, tileSize*0.25);
+             ctx.moveTo(-tileSize*0.25, tileSize*0.25); ctx.lineTo(tileSize*0.25, -tileSize*0.25);
+             ctx.stroke();
+          }
+        }
+
+        // Résistance (R)
+        if (tile.component === "R") {
+          ctx.shadowBlur = 0;
+          // Rectangle résistance
+          ctx.fillStyle = "#e2e8f0"; // Slate 200
+          ctx.strokeStyle = "#475569";
+          ctx.lineWidth = 2;
+          const rw = tileSize*0.5, rh = tileSize*0.22;
+          ctx.beginPath(); ctx.rect(-rw/2, -rh/2, rw, rh);
+          ctx.fill(); ctx.stroke();
+          
+          // Bandes couleurs (décoratif)
+          ctx.fillStyle = "#ef4444"; ctx.fillRect(-rw/4, -rh/2, rw/8, rh);
+          ctx.fillStyle = "#3b82f6"; ctx.fillRect(0, -rh/2, rw/8, rh);
+          ctx.fillStyle = "#eab308"; ctx.fillRect(rw/4, -rh/2, rw/8, rh);
+          
+          // Valeur texte
+          ctx.rotate(-tile.visualRotation); 
+          ctx.fillStyle = "#fff";
+          ctx.shadowColor="black"; ctx.shadowBlur=4;
+          ctx.font = "bold " + (tileSize*0.22) + "px 'Inter', sans-serif";
+          ctx.textAlign = "center"; ctx.textBaseline = "middle";
+          ctx.fillText(tile.rValue, 0, -tileSize*0.35); // Au dessus
+        }
+        
+        // Diode (D)
+        if (tile.component === "D") {
+          ctx.shadowBlur = 0;
+          ctx.strokeStyle = "#475569";
+          ctx.lineWidth = 2;
+          
+          const triSize = tileSize*0.18;
+          
+          // Triangle (Anode -> Cathode)
+          ctx.fillStyle = "#fff";
+          ctx.beginPath();
+          // Côté Cathode
+          ctx.moveTo(-triSize/1.5, triSize/2); 
+          ctx.lineTo(-triSize/1.5, -triSize/2); 
+          // Pointe Anode
+          ctx.lineTo(triSize/1.5, 0);       
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+
+          // Barre Cathode (plus épaisse et rouge)
+          ctx.beginPath();
+          ctx.moveTo(-triSize/1.5 - 2, triSize/2); 
+          ctx.lineTo(-triSize/1.5 - 2, -triSize/2); 
+          ctx.lineWidth = 3;
+          ctx.strokeStyle = "#dc2626"; // Rouge pour la cathode
+          ctx.stroke();
+          
+          // Texte
+          ctx.rotate(-tile.visualRotation);
+          ctx.fillStyle = "#fff";
+          ctx.shadowColor="black"; ctx.shadowBlur=4;
+          ctx.font = "bold " + (tileSize*0.22) + "px 'Inter', sans-serif";
+          ctx.textAlign = "center"; ctx.textBaseline = "middle";
+          ctx.fillText("D", 0, -tileSize*0.35); // Au dessus
+        }
+
+
+        ctx.restore();
+      }
+    }
+  }
+
+  function loop() {
+    const now = updateAnimations();
+    updateTileAnimations(); // Animation fluide
+    draw(now);
+    requestAnimationFrame(loop);
+  }
+
+  /* --- Event Listeners --- */
+  canvas.addEventListener("click", onCanvasClick);
+  canvas.addEventListener("touchstart", onCanvasTouch, { passive: false });
+  // Mouvement pour le feedback au survol (desktop)
+  canvas.addEventListener("mousemove", onCanvasMove); 
+  // Mouvement pour le feedback au survol (mobile)
+  canvas.addEventListener("touchmove", onCanvasTouchMove, { passive: true }); 
+
+  checkBtn.addEventListener("click", onCheckCircuit);
+  mobileCheckBtn.addEventListener("click", onCheckCircuit);
+  newGameBtn.addEventListener("click", resetRun);
+  mobileNewBtn.addEventListener("click", resetRun);
+
+  muteBtn.addEventListener("click", () => {
+    muted = !muted;
+    if (muted) { bgMusic.pause(); muteBtn.textContent = "Son : OFF"; }
+    else { initAudioContext(); bgMusic.play().catch(()=>{}); muteBtn.textContent = "Son : ON"; }
+    try{localStorage.setItem("voltlink_muted", muted);}catch(e){}
+  });
+
+  document.addEventListener("keydown", (e) => {
+    if (e.code === "Space" || e.code === "Enter") { e.preventDefault(); onCheckCircuit(); }
+    else if (e.code === "KeyN") { e.preventDefault(); resetRun(); }
+  });
+
+  /* --- Init --- */
+  loadBest();
+  resetRun();
+  updateUI();
+  requestAnimationFrame(loop);
+
+})();
+</script>
+</body>
+</html>
