@@ -49,7 +49,8 @@
     z-index: 5;
     
     /* Effet Verre */
-    background: rgba(255, 255, 255, 0.85);
+    /* TRANSPARENCE ACCENTUÉE (0.5) */
+    background: rgba(255, 255, 255, 0.5); 
     backdrop-filter: blur(20px) saturate(180%);
     -webkit-backdrop-filter: blur(20px) saturate(180%);
     
@@ -68,7 +69,7 @@
     
     width: 95%;
     height: 95%;
-    max-width: 1100px;
+    max-width: 1200px; /* ÉLARGI pour plus de confort */
     justify-content: center;
   }
 
@@ -108,7 +109,7 @@
     gap: 25px;
     align-items: flex-start;
     justify-content: center;
-    height: 70vh;
+    height: 80vh; /* AGRANDI de 70vh à 80vh */
     width: 100%;
     position: relative;
   }
@@ -125,7 +126,7 @@
     display: block;
     height: 100%;
     width: auto;
-    aspect-ratio: 3/4;
+    aspect-ratio: 3/4; /* Ratio conservé mais taille interne augmentée */
     position: relative;
     z-index: 5;
     touch-action: none;
@@ -136,16 +137,16 @@
   #side-panel {
     display: flex;
     flex-direction: column;
-    gap: 10px; /* Espace réduit */
+    gap: 10px; 
     background: rgba(255, 255, 255, 0.5);
-    padding: 15px; /* Padding réduit */
+    padding: 15px;
     border-radius: 16px;
-    min-width: 250px;
-    width: 280px; /* Largeur fixe pour la stabilité */
+    min-width: 300px; /* ÉLARGI pour meilleure lisibilité des stats */
+    width: 320px; 
     border: 1px solid rgba(255,255,255,0.4);
     box-sizing: border-box;
     height: 100%;
-    overflow: hidden; /* PAS D'ASCENSEUR GLOBAL */
+    overflow: hidden; 
   }
 
   /* Groupe des stats (Score + Niveau) en ligne */
@@ -198,13 +199,13 @@
 
   #best-score { font-size: 12px; font-weight: 700; color: #334155; }
 
-  /* Zone Info flexible : elle prend la place qui reste */
+  /* Zone Info flexible */
   #info-box {
     flex: 1; 
     background: white;
     padding: 12px;
     border-radius: 12px;
-    font-size: 11px; /* Texte plus petit */
+    font-size: 11px;
     color: #475569;
     box-shadow: 0 1px 2px rgba(0,0,0,0.05);
     line-height: 1.3;
@@ -212,7 +213,7 @@
     min-height: 0; 
     display: flex;
     flex-direction: column;
-    justify-content: space-between; /* OPTIMISATION: Espace les blocs */
+    justify-content: space-between;
   }
 
   #mission-info p { margin: 4px 0; }
@@ -225,7 +226,7 @@
       border-radius: 8px; 
       background: #f1f5f9; /* Slate 100 */
       border: 1px solid #e2e8f0; /* Slate 200 */ 
-      margin: 5px 0 10px 0; /* Marge autour pour l'aérer */
+      margin: 5px 0 10px 0;
       box-shadow: inset 0 1px 3px rgba(0,0,0,0.05);
   }
 
@@ -291,7 +292,11 @@
     box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.15);
   }
 
-  button:active { transform: translateY(0); }
+  /* MODIFICATION : Ajout de l'effet d'enfoncement (scale et ombre interne) */
+  button:active { 
+    transform: translateY(0) scale(0.98); 
+    box-shadow: inset 0 3px 5px rgba(0, 0, 0, 0.2);
+  }
 
   /* Bouton TESTER en accent (Bleu électrique) */
   #check-btn, #btn-check {
@@ -391,7 +396,6 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    /* Style flat propre */
     background: white;
     border: none;
     border-radius: 20px;
@@ -513,7 +517,7 @@
 <div id="main">
   <div id="header-group">
     <img id="logo" src="Logo.gif" alt="Logo BTS" onerror="this.style.display='none'">
-    <div id="title">VoltLink</div>
+    <div id="title">VoltLink 2.0</div>
     <div id="subtitle">Relie Vcc à la LED – BTS CIEL</div>
   </div>
 
@@ -551,8 +555,8 @@
 
       <div id="info-box">
         <div id="mission-info">
-          <p><b>Mission :</b> Relier <span style="color:#f59e0b; font-weight:bold;">Vcc</span> à la LED. Attention à la <b>polarité des Diodes</b> (D).</p>
-          <p>Clic/Toucher pour pivoter les pistes.</p>
+          <p><b>Mission :</b> Calculer I = (Vcc - Vd) / R. Ne grille pas la LED !</p>
+          <p>Clic Gauche : Rotation horaire<br>Clic Droit : Anti-horaire</p>
         </div>
 
         <div id="game-stats">
@@ -589,7 +593,7 @@
       </div>
 
       <div id="controls-info">
-        Clic : Pivoter &bull; Espace : Tester &bull; N : Nouveau
+        Clic G/D : Pivoter &bull; Espace : Tester
       </div>
     </div>
     
@@ -627,8 +631,9 @@
   const canvas = document.getElementById("circuit");
   const ctx = canvas.getContext("2d");
 
-  const GAME_WIDTH = 600;
-  const GAME_HEIGHT = 800;
+  // AGRANDISSEMENT DE LA ZONE LOGIQUE
+  const GAME_WIDTH = 800;
+  const GAME_HEIGHT = 1000;
 
   function resizeCanvas() {
     const dpr = window.devicePixelRatio || 1;
@@ -674,7 +679,7 @@
   // NOUVEAUX ÉLÉMENTS STATS
   const pathLengthStat = document.getElementById("path-length-stat");
   const resistorCountStat = document.getElementById("resistor-count-stat");
-  const diodeCountStat = document.getElementById("diode-count-stat"); // NOUVEAU
+  const diodeCountStat = document.getElementById("diode-count-stat"); 
   const checksCountStat = document.getElementById("checks-count-stat");
 
 
@@ -691,7 +696,7 @@
     }
   } catch(e) {}
 
-  bgMusic.volume = 0.2; // Volume musique background un peu plus bas
+  bgMusic.volume = 0.2; 
 
   function initAudioContext() {
     if (!audioCtx) {
@@ -706,7 +711,6 @@
     }
   }
 
-  // Synthese sonore simple pour les bruitages
   function playTone(type, startFreq, endFreq, duration, vol) {
     if (muted || !audioCtx) return;
     const osc = audioCtx.createOscillator();
@@ -732,11 +736,10 @@
   }
 
   // Sons
-  function sRotate() { playTone("sine", 400, 600, 0.1, 0.05); } // Son plus doux (sine)
+  function sRotate() { playTone("sine", 400, 600, 0.1, 0.05); } 
   function sCheck()  { playTone("triangle", 440, 660, 0.12, 0.08); }
   function sFail()   { playTone("sawtooth", 150, 50, 0.4, 0.1); }
   function sSuccess(){ 
-    // Petit arpège rapide
     playTone("sine", 523, 523, 0.1, 0.1);
     setTimeout(() => playTone("sine", 659, 659, 0.1, 0.1), 100);
     setTimeout(() => playTone("sine", 784, 1200, 0.3, 0.1), 200);
@@ -775,38 +778,38 @@
   const CHAR_MESSAGES = {
     intro: {
       proviseur: [
-        "Ici, on ne joue pas avec l'électronique : on ferme des circuits propres.",
-        "Relie Vcc à la LED comme en vrai TP, pas de piste oubliée."
+        "Attention : un fil sans résistance est un court-circuit !",
+        "Vcc = 5V. Calcule ton courant I = U/R avant de valider."
       ],
       general: [
-        "Tourne les pistes comme un puzzle jusqu'à alimenter la LED.",
-        "N'oublie pas : le courant passe d'une seule manière dans les Diodes (D)."
+        "Les Diodes (D) font chuter la tension de 0.7V environ.",
+        "Il te faut un courant entre 1mA et 30mA pour gagner. Ne grille pas la LED!"
       ],
       physics: [
-        "Le courant part de Vcc, traverse les résistances, puis la LED.",
-        "La Diode (D) est polarisée : vérifie Anode (pointe) vers Cathode (barre)."
+        "Rappel : Loi des mailles. U_res = Vcc - N_diodes * 0.7V.",
+        "Si I > 30mA, la LED grille. Si R=0, c'est l'explosion."
       ]
     },
     success: {
       proviseur: [
-        "Circuit fermé, LED alimentée. Ce schéma est montrable dans un dossier.",
-        "Voilà un câblage qui ne ferait pas rougir le conseil de classe."
+        "Un courant parfait. Ni trop fort, ni trop faible.",
+        "Beau travail d'ingénierie. Le matériel est sauf."
       ],
-      general: [ "Bien vu, ton chemin est cohérent.", "On sent l'esprit BTS CIEL, là." ],
+      general: [ "Bien joué ! La LED brille sans surchauffer.", "C'est validé par le département électronique." ],
       physics: [
-        "Ton montage est un bon exemple de résistances en série.",
-        "La polarité des Diodes est respectée : bon travail d'analyse."
+        "Exactement ! La résistance limite le courant correctement.",
+        "Tu as bien compensé la chute de tension des diodes."
       ]
     },
     fail: {
       proviseur: [
-        "Circuit ouvert : la LED restera éteinte. Analyse les ruptures.",
-        "Vérifie si une Diode bloque le passage : Anode vers Cathode !"
+        "Mon budget matériel n'est pas illimité ! Attention aux courts-circuits !",
+        "Circuit ouvert ou composant grillé. Recommence."
       ],
-      general: [ "Tu n'as pas encore relié proprement Vcc à la LED.", "Cherche les pistes isolées ou la Diode mal tournée." ],
+      general: [ "Tu as peut-être oublié une résistance ? La LED a grillé.", "Ou alors le courant est trop faible pour allumer la LED." ],
       physics: [
-        "Le courant peut-il réellement passer de Vcc à la LED ?",
-        "Une Diode est peut-être montée à l'envers, elle fait office de coupe-circuit."
+        "Analyse : I = U/R. Si R est trop faible, I explose. Vérifie la valeur totale des résistances.",
+        "Si tu mets trop de diodes, la tension résultante est nulle."
       ]
     }
   };
@@ -877,7 +880,7 @@
   let puzzleStartTime = performance.now();
   let lastSolveTime = null;
   let checksCount = 0;
-  let diodeCount = 0; // NOUVEAU: Compteur de diodes
+  let diodeCount = 0; 
   const supplyVoltage = 5;
   let currentEqR = 0;
   let resistorList = [];
@@ -894,7 +897,7 @@
   let pendingNextPuzzle = false;
   let failAnimStart = 0;
   const FAIL_ANIM_DURATION = 900;
-  let lastHovered = { r: -1, c: -1 }; // Pour le feedback au survol
+  let lastHovered = { r: -1, c: -1 }; 
 
   /* --- Tiles & directions --- */
   const TILE_TYPES = {
@@ -917,8 +920,6 @@
     { dx: -1, dy: 0, bit: 8 }  // left
   ];
 
-  // Bit du côté ANODE (la pointe) pour une Diode (D) sur une tuile STRAIGHT (2|8 ou 1|4)
-  // [Rot 0: L->R (2), Rot 1: U->D (4), Rot 2: R->L (8), Rot 3: D->U (1)]
   const DIODE_ALLOWED_EXIT = [2, 4, 8, 1];
 
 
@@ -943,7 +944,6 @@
 
   function getGridSizeForLevel(level) {
     const baseRows = 5, baseCols = 6;
-    // Augmente plus vite la taille de la grille (inc = level - 1)
     const inc = Math.floor((level - 1) / 1); 
     return { 
         rows: Math.min(baseRows + inc, 8), 
@@ -979,36 +979,35 @@
   function updateStats() {
     pathLengthStat.textContent = pathCells.length;
     resistorCountStat.textContent = resistorList.length;
-    diodeCountStat.textContent = diodeCount; // MISE À JOUR DIODE
+    diodeCountStat.textContent = diodeCount; 
     checksCountStat.textContent = checksCount;
   }
 
   function updateOhmInfo() {
     ohmTypeElem.textContent = "Série";
     ohmRlist.innerHTML = "";
-    if (!resistorList.length) {
+    
+    // Calcul de la résistance totale disponible sur le plateau (indicatif)
+    // Le vrai calcul se fait lors du check sur le chemin actif
+    currentEqR = resistorList.reduce((acc, r) => acc + r.rValue, 0);
+    
+    if (resistorList.length === 0) {
       const li = document.createElement("li");
-      li.textContent = "Aucune résistance (câblage direct)";
+      li.textContent = "ATTENTION : Pas de résistance !";
+      li.style.color = "#dc2626"; li.style.fontWeight = "bold";
       ohmRlist.appendChild(li);
       ohmReqElem.textContent = "0 Ω";
-      ohmIElem.textContent = "Max (Court-circuit !)";
-      ohmRlist.style.listStyleType = "none";
-      return;
+    } else {
+      resistorList.forEach((rObj, idx) => {
+        const li = document.createElement("li");
+        li.textContent = `R${idx + 1} = ${rObj.rValue} Ω`;
+        ohmRlist.appendChild(li);
+      });
+      ohmReqElem.textContent = currentEqR + " Ω";
     }
-    ohmRlist.style.listStyleType = "disc";
-    resistorList.forEach((rObj, idx) => {
-      const li = document.createElement("li");
-      li.textContent = `R${idx + 1} = ${rObj.rValue} Ω`;
-      ohmRlist.appendChild(li);
-    });
-    currentEqR = resistorList.reduce((acc, r) => acc + r.rValue, 0);
-    ohmReqElem.textContent = currentEqR + " Ω";
-    // On ne tient pas compte des Vf des diodes pour le calcul R-eq
-    const I = supplyVoltage / currentEqR;
-    const I_mA = I * 1000;
-    ohmIElem.textContent = (I_mA < 1) ? 
-      `${I.toFixed(4)} A` : 
-      `${I_mA.toFixed(1)} mA`;
+    
+    // I est inconnu tant qu'on n'a pas tracé le chemin
+    ohmIElem.textContent = "?";
     ohmU.textContent = supplyVoltage + " V";
   }
 
@@ -1107,61 +1106,109 @@
         grid[r][c] = { type: t, rotation: rot, visualRotation: rot*(Math.PI/2), fixed: false, component: null, rValue: 0 };
       }
     }
-
-    // Résistances & Diodes
+    
+    // --- 1. Placement des composants nécessaires (Chemin Correct) - CORRIGÉ ---
     resistorList = [];
     diodeCount = 0;
-    const rValues = [10, 22, 47, 100, 220, 330, 470];
-    const candidates = pathCells.slice(1, pathCells.length - 1);
-    const nbComponents = Math.max(1, Math.min(candidates.length, Math.ceil(level/2)));
-    const usedIdx = new Set();
+    const rValues = [220, 330, 470, 1000]; 
+    const pathCandidates = pathCells.slice(1, pathCells.length - 1); // Exclut SOURCE/LED
     
-    while (usedIdx.size < nbComponents && usedIdx.size < candidates.length) {
-      const idx = Math.floor(Math.random() * candidates.length);
-      if (usedIdx.has(idx)) continue;
-      
-      const cell = candidates[idx];
-      const tile = grid[cell.row][cell.col];
-      
-      // On ne place les composants à polarité (D) que sur les tuiles STRAIGHT 
-      if (tile.type === TILE_TYPES.STRAIGHT) {
+    // Set des coordonnées du chemin pour exclure les pièges
+    const pathSet = new Set();
+    pathCells.forEach(p => pathSet.add(`${p.row},${p.col}`)); 
+    
+    // 1. Identifier toutes les tuiles DROITES (STRAIGHT) éligibles sur le chemin, et les mélanger
+    let straightCandidates = [];
+    pathCandidates.forEach(cell => {
+        const tile = grid[cell.row][cell.col];
+        if (tile.type === TILE_TYPES.STRAIGHT) {
+            straightCandidates.push(cell); // Stocke l'objet {row, col}
+        }
+    });
+
+    // Simple shuffle (Fisher-Yates) sur les cellules candidates
+    for (let i = straightCandidates.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [straightCandidates[i], straightCandidates[j]] = [straightCandidates[j], straightCandidates[i]];
+    }
+
+    // 2. Déterminer le nombre de composants à placer et les affecter
+    // nbComponents est le nombre d'emplacements que nous allons tenter de remplir.
+    const nbComponents = Math.max(1, Math.min(straightCandidates.length, Math.ceil(level/2)));
+    
+    for (let i = 0; i < nbComponents; i++) {
+        const cell = straightCandidates[i];
+        const tile = grid[cell.row][cell.col];
         
         let componentType;
-        // 40% Diode, 60% Résistance (pour les niveaux bas)
+        // La probabilité de Diode est activée à partir du niveau 3
         if (level > 2 && Math.random() < 0.4) { 
-             componentType = "D"; // Diode
+            componentType = "D"; 
         } else {
-             componentType = "R"; // Resistor
+            componentType = "R"; 
         }
 
         tile.component = componentType;
         
         if (componentType === "R") {
-          tile.rValue = rValues[Math.floor(Math.random()*rValues.length)];
-          resistorList.push({rValue:tile.rValue, row:cell.row, col:cell.col});
+            tile.rValue = rValues[Math.floor(Math.random()*rValues.length)];
+            resistorList.push({rValue:tile.rValue, row:cell.row, col:cell.col});
         } else if (componentType === "D") {
-          diodeCount++; // Incrémenter le compteur de diodes
+            diodeCount++; 
         }
+    }
+    // --- FIN DE CORRECTION ---
 
-        usedIdx.add(idx); 
-      }
+
+    // --- 2. Placement des Résistances Pièges (Chemins Altérnatifs) ---
+    if (level >= 3) {
+        const trapCandidates = [];
+        for (let r = 0; r < gridRows; r++) {
+            for (let c = 0; c < gridCols; c++) {
+                const tile = grid[r][c];
+                // Doit être une tuile droite (STRAIGHT), non fixe, et NE PAS être sur le chemin correct, et NE PAS avoir déjà de composant (R ou D)
+                if (!tile.fixed && tile.type === TILE_TYPES.STRAIGHT && !pathSet.has(`${r},${c}`) && tile.component === null) {
+                    trapCandidates.push({r, c});
+                }
+            }
+        }
+        
+        // Limiter le nombre de pièges
+        const maxTraps = Math.min(2, Math.floor(gridRows * gridCols / 20));
+        let trapsPlaced = 0;
+        
+        // Pièges : 10 Ohm (court-circuit) et 10 kOhm (circuit ouvert)
+        const trapRValues = [10, 10000]; 
+
+        while (trapsPlaced < maxTraps && trapCandidates.length > 0) {
+            const idx = Math.floor(Math.random() * trapCandidates.length);
+            const trapPos = trapCandidates.splice(idx, 1)[0]; 
+            
+            const tile = grid[trapPos.r][trapPos.c];
+            
+            tile.component = "R";
+            tile.rValue = trapRValues[trapsPlaced % trapRValues.length];
+            // Le piège est placé. Il est crucial qu'il ne soit pas dans resistorList.
+            
+            trapsPlaced++;
+        }
     }
 
-    // Mélange
+
+    // --- 3. Mélange des rotations ---
     for (let r = 0; r < gridRows; r++) {
       for (let c = 0; c < gridCols; c++) {
         const tile = grid[r][c];
         if (!tile || tile.fixed || tile.type === TILE_TYPES.EMPTY) continue;
         const extra = Math.floor(Math.random()*4);
         tile.rotation = (tile.rotation + extra) % 4;
-        // On initialise la rotation visuelle à la rotation logique pour éviter un saut au départ
         tile.visualRotation = tile.rotation * (Math.PI/2);
       }
     }
 
     lastVisited = null; checksCount = 0;
     puzzleStartTime = performance.now();
-    messageCenter.textContent = "Connecte les pistes, puis teste le circuit.";
+    messageCenter.textContent = "Connecte les pistes, puis teste le circuit. Attention aux pièges !";
     updateOhmInfo();
     updateStats(); 
   }
@@ -1182,19 +1229,12 @@
 
       // 1. VÉRIFICATION DIODE SUR LA CASE DE DÉPART (cur)
       if (tile.component === "D") {
-          // Si la case de départ (cur) est une diode, le courant ne doit pas
-          // en sortir par la cathode (côté opposé à l'Anode/Exit).
           const rot = tile.rotation;
-          const diodeExitBit = DIODE_ALLOWED_EXIT[rot]; // Bit de sortie autorisée (Anode)
+          const diodeExitBit = DIODE_ALLOWED_EXIT[rot]; 
           
           for (const dir of DIRS) {
-             if (!(mask & dir.bit)) continue; // Pas de connexion physique
-             
-             // Si le bit de sortie (dir.bit) n'est pas l'Anode, le courant est bloqué.
+             if (!(mask & dir.bit)) continue; 
              if (dir.bit !== diodeExitBit) continue;
-             
-             // Si la sortie est l'Anode (diodeExitBit), le courant est OK pour la diode cur.
-             // On vérifie ensuite la connexion à neighbor
              
              const nr = cur.row + dir.dy, nc = cur.col + dir.dx;
              if (nr<0 || nr>=gridRows || nc<0 || nc>=gridCols || visited[nr][nc]) continue;
@@ -1203,24 +1243,20 @@
              const nMask = getTileMask(neighbor);
              const opp = (dir.bit===1?4 : dir.bit===4?1 : dir.bit===2?8 : 2);
              
-             if (!(nMask & opp)) continue; // Pas de connexion physique
+             if (!(nMask & opp)) continue; 
              
              // 2. VÉRIFICATION DIODE SUR LA CASE D'ARRIVÉE (neighbor)
              if (neighbor.component === "D") {
                 const nRot = neighbor.rotation;
                 const nDiodeExitBit = DIODE_ALLOWED_EXIT[nRot]; 
-                
-                // Si le courant entre (opp) par le côté ANODE (nDiodeExitBit), il est bloqué (flux inverse)
                 if (opp === nDiodeExitBit) continue; 
              }
              
-             // Connexion OK: L'entrée par la cathode est autorisée, l'entrée par l'Anode est bloquée.
              visited[nr][nc] = true;
              parent[nr][nc] = cur;
              queue.push({ row: nr, col: nc });
           }
       } 
-      // Si la case de départ (cur) n'est PAS une diode, on vérifie toutes les directions
       else { 
           for (const dir of DIRS) {
               if (!(mask & dir.bit)) continue;
@@ -1234,11 +1270,9 @@
               
               if (!(nMask & opp)) continue;
 
-              // VÉRIFICATION DIODE SUR LA CASE D'ARRIVÉE (neighbor)
               if (neighbor.component === "D") {
                 const nRot = neighbor.rotation;
                 const nDiodeExitBit = DIODE_ALLOWED_EXIT[nRot]; 
-                // Si le courant entre (opp) par le côté ANODE (nDiodeExitBit), il est bloqué (flux inverse)
                 if (opp === nDiodeExitBit) continue; 
               }
 
@@ -1247,7 +1281,7 @@
               queue.push({ row: nr, col: nc });
           }
       }
-    } // Fin while(queue)
+    } 
 
     lastVisited = visited;
     if (!visited[ledPos.row][ledPos.col]) return { ok: false, visited };
@@ -1258,6 +1292,8 @@
       path.push({ row: cur.row, col: cur.col });
       if (cur.row === sourcePos.row && cur.col === sourcePos.col) break;
       cur = parent[cur.row][cur.col];
+      // Sécurité anti-boucle infinie (bien que le BFS doive l'éviter)
+      if (path.length > gridRows * gridCols * 2) { break; } 
     }
     path.reverse();
     return { ok: true, visited, path };
@@ -1273,9 +1309,9 @@
     lastHovered = {r, c};
   }
 
-  function handleGridClick(x, y) {
+  function handleGridClick(x, y, isRightClick) {
     if (gameState !== "idle" || tileSize <= 0) return;
-    updateHover(x, y); // Assure que lastHovered est correct
+    updateHover(x, y); 
     const r = lastHovered.r, c = lastHovered.c;
     if (r < 0 || c < 0) return;
 
@@ -1283,8 +1319,12 @@
     if (!tile || tile.fixed) return;
     initAudioContext();
     
-    // Changement logique
-    tile.rotation = (tile.rotation + 1) % 4;
+    // Rotation : Horaire (Clic Gauche) ou Anti-horaire (Clic Droit)
+    if (isRightClick) {
+        tile.rotation = (tile.rotation + 3) % 4; // -1 modulo 4
+    } else {
+        tile.rotation = (tile.rotation + 1) % 4;
+    }
     
     lastVisited = null;
     sRotate();
@@ -1294,16 +1334,16 @@
     const rect = canvas.getBoundingClientRect();
     const x = (evt.clientX - rect.left) * (GAME_WIDTH / rect.width);
     const y = (evt.clientY - rect.top) * (GAME_HEIGHT / rect.height);
-    handleGridClick(x, y);
+    handleGridClick(x, y, false);
   }
   
   function onCanvasTouch(e) {
-      e.preventDefault(); // Empêche le scroll
+      e.preventDefault(); 
       const touch = e.changedTouches[0];
       const rect = canvas.getBoundingClientRect();
       const x = (touch.clientX - rect.left) * (GAME_WIDTH / rect.width);
       const y = (touch.clientY - rect.top) * (GAME_HEIGHT / rect.height);
-      handleGridClick(x, y);
+      handleGridClick(x, y, false);
   }
 
   function onCanvasMove(evt) {
@@ -1323,7 +1363,21 @@
       }
   }
 
+  // Gestion du Clic Droit pour rotation inverse
+  canvas.addEventListener("contextmenu", (e) => {
+    e.preventDefault(); 
+    
+    if (gameState !== "idle" || tileSize <= 0) return;
+    
+    const rect = canvas.getBoundingClientRect();
+    const x = (e.clientX - rect.left) * (GAME_WIDTH / rect.width);
+    const y = (e.clientY - rect.top) * (GAME_HEIGHT / rect.height);
+    
+    handleGridClick(x, y, true); // true = right click
+  });
 
+
+  // --- NOUVELLE LOGIQUE DE VALIDATION AVEC LOI D'OHM ---
   function onCheckCircuit() {
     if (gameState !== "idle") return;
     initAudioContext();
@@ -1334,6 +1388,83 @@
     const elapsed = (now - puzzleStartTime) / 1000;
 
     if (res.ok) {
+      // 1. Compter les composants sur le chemin ACTIF
+      let pathResistors = 0;
+      let pathDiodes = 0;
+      let rList = [];
+      
+      res.path.forEach(pos => {
+          const tile = grid[pos.row][pos.col];
+          if (tile.component === "R") {
+            pathResistors += tile.rValue;
+            rList.push(tile.rValue);
+          }
+          if (tile.component === "D") pathDiodes += 1;
+      });
+
+      // 2. Calculs Physique
+      const Vf_total = pathDiodes * 0.7;
+      const U_restante = supplyVoltage - Vf_total;
+      
+      let I_amp = 0;
+      let failMessage = "";
+
+      // Scénarios de physique
+      if (U_restante <= 0) {
+          I_amp = 0;
+          failMessage = `Tension insuffisante (${pathDiodes} diodes x 0.7V > 5V). La LED reste éteinte.`;
+      } else if (pathResistors === 0) {
+          I_amp = 999; // Court-circuit
+          failMessage = "COURT-CIRCUIT ! (R=0Ω). La LED a explosé ! Ajoute une résistance.";
+      } else {
+          I_amp = U_restante / pathResistors;
+      }
+
+      // Mise à jour affichage stats physiques
+      ohmIElem.textContent = (I_amp * 1000).toFixed(1) + " mA";
+      ohmReqElem.textContent = pathResistors + " Ω";
+      
+      // Mise à jour de la liste des résistances pour l'affichage (seulement celles du chemin)
+      ohmRlist.innerHTML = "";
+      rList.forEach((rValue, idx) => {
+        const li = document.createElement("li");
+        li.textContent = `R${idx + 1} = ${rValue} Ω`;
+        ohmRlist.appendChild(li);
+      });
+      if (rList.length === 0) {
+          const li = document.createElement("li");
+          li.textContent = "ATTENTION : Pas de résistance !";
+          li.style.color = "#dc2626"; li.style.fontWeight = "bold";
+          ohmRlist.appendChild(li);
+      }
+
+
+      // 3. Win / Lose
+      const maxCurrent = 0.030; // 30 mA max
+      const minCurrent = 0.001; // 1 mA min
+
+      if (I_amp > maxCurrent) {
+          // FAIL : Grillé
+          sFail();
+          gameState = "anim_fail";
+          failAnimStart = now;
+          messageCenter.textContent = failMessage || `Courant trop fort (${(I_amp * 1000).toFixed(1)}mA > 30mA). La LED a grillé !`;
+          triggerCharacter("fail");
+          updateUI();
+          return;
+      } 
+      else if (I_amp < minCurrent && I_amp >= 0) {
+           // FAIL : Pas assez de jus
+           sFail();
+           gameState = "anim_fail";
+           failAnimStart = now;
+           messageCenter.textContent = failMessage || `Courant trop faible (${(I_amp * 1000).toFixed(1)}mA < 1mA), la LED ne s'allume pas.`;
+           triggerCharacter("fail");
+           updateUI();
+           return;
+      }
+
+      // SUCCESS
       sSuccess();
       lastSolveTime = elapsed;
       const base = 100 + (level-1)*20;
@@ -1346,7 +1477,7 @@
       successAnimStart = now;
       gameState = "anim_success";
       pendingNextPuzzle = true;
-      messageCenter.textContent = "Succès ! +" + gain + " pts.";
+      messageCenter.textContent = `Succès ! I = ${(I_amp*1000).toFixed(1)}mA. +${gain} pts.`;
       triggerCharacter("success");
       updateUI();
     } else {
@@ -1393,17 +1524,21 @@
         if (!tile) continue;
         
         let target = tile.rotation * (Math.PI / 2);
-        // Gestion du bouclage 270° -> 0°
-        if (target === 0 && tile.visualRotation > 3 * Math.PI / 2 + 0.1) {
-          tile.visualRotation -= 2 * Math.PI;
-        }
         
-        const diff = target - tile.visualRotation;
-        if (Math.abs(diff) > 0.005) {
-          tile.visualRotation += diff * speed;
-        } else {
-          tile.visualRotation = target;
+        // Gestion du bouclage 270° -> 0° et 0° -> 270° pour rotation fluide dans les 2 sens
+        let current = tile.visualRotation;
+        
+        // Normalisation
+        while(current > Math.PI * 2) current -= Math.PI * 2;
+        while(current < -Math.PI * 2) current += Math.PI * 2;
+        
+        // Si on passe de 0 à 270 (Anti-horaire) ou 270 à 0 (Horaire)
+        if (Math.abs(target - current) > Math.PI * 1.5) {
+            if (target > current) current += Math.PI * 2;
+            else current -= Math.PI * 2;
         }
+
+        tile.visualRotation = current + (target - current) * speed;
       }
     }
   }
@@ -1412,7 +1547,6 @@
     if (gameState !== "anim_success" || !successPath) return false;
     const t = Math.min(1, (now - successAnimStart) / SUCCESS_WAVE_DURATION);
     const idx = Math.floor(t * (successPath.length + 2)); 
-    // +2 pour que l'onde aille jusqu'au bout
     for(let i=0; i<idx && i<successPath.length; i++) {
       if (successPath[i].row === r && successPath[i].col === c) return true;
     }
@@ -1459,14 +1593,14 @@
              ctx.fillRect(x+1, y+1, tileSize-2, tileSize-2);
         }
 
-        // Bordure case discrète (pour l'effet de grille sur PCB)
+        // Bordure case discrète
         ctx.strokeStyle = "rgba(255,255,255,0.08)";
         ctx.lineWidth = 1;
         ctx.strokeRect(x, y, tileSize, tileSize);
 
         // Hover Feedback 
         if (lastHovered.r === r && lastHovered.c === c && tile && !tile.fixed) {
-            ctx.strokeStyle = "#a78bfa"; // Violet doux (Purple 400)
+            ctx.strokeStyle = "#a78bfa"; 
             ctx.lineWidth = 3;
             ctx.strokeRect(x+1, y+1, tileSize-2, tileSize-2);
         }
@@ -1482,11 +1616,9 @@
         ctx.save();
         ctx.translate(cx, cy);
         
-        // ROTATION FLUIDE
         ctx.rotate(tile.visualRotation);
 
         // --- DESSIN DES PISTES ---
-        // Style inactif (couleur étain/argent sur le PCB)
         ctx.strokeStyle = "rgba(200, 200, 200, 0.8)";
         ctx.lineWidth = Math.max(5, tileSize * 0.14);
         ctx.lineCap = "round";
@@ -1495,7 +1627,6 @@
         ctx.shadowBlur = 4;
         ctx.shadowOffsetY = 2;
 
-        
         ctx.beginPath();
         if (baseM & 1) { ctx.moveTo(0,0); ctx.lineTo(0, -tileSize*0.4); }
         if (baseM & 2) { ctx.moveTo(0,0); ctx.lineTo(tileSize*0.4, 0); }
@@ -1505,23 +1636,21 @@
 
         // --- ENERGIZED (SUCCESS) ---
         if (gameState === "anim_success" && isTileEnergized(r, c, now)) {
-            ctx.strokeStyle = "#38bdf8"; // Sky 400 (Bleu électrique brillant)
+            ctx.strokeStyle = "#38bdf8"; 
             ctx.shadowColor = "#0ea5e9";
             ctx.shadowBlur = 15;
             ctx.shadowOffsetY = 0;
-            ctx.lineWidth = Math.max(4, tileSize * 0.12); // Un peu plus fin pour effet "coeur"
+            ctx.lineWidth = Math.max(4, tileSize * 0.12); 
             ctx.stroke();
             
-            // Highlight blanc au centre
             ctx.strokeStyle = "#ffffff";
             ctx.lineWidth = 2;
             ctx.shadowBlur = 0;
             ctx.stroke();
         }
 
-        // --- COMPOSANTS SPÉCIFIQUES ---
+        // --- COMPOSANTS ---
         
-        // Source
         if (isSource) {
           ctx.shadowBlur = 0; 
           ctx.fillStyle = "#f59e0b"; // Amber
@@ -1536,12 +1665,10 @@
           ctx.fillText("Vcc", 0, 1);
         }
         
-        // LED
         else if (isLed) {
           ctx.shadowBlur = 0;
           const energized = (gameState === "anim_success" && isTileEnergized(r, c, now));
           
-          // Corps LED
           ctx.fillStyle = energized ? "#fbbf24" : "#334155";
           if (energized) {
              ctx.shadowColor = "#fbbf24"; ctx.shadowBlur = 20;
@@ -1551,14 +1678,12 @@
           ctx.beginPath(); ctx.arc(0,0, tileSize*0.2, 0, Math.PI*2);
           ctx.fill(); ctx.stroke();
           
-          // Symbole diode simplifié (Triangle)
           ctx.beginPath(); 
           ctx.moveTo(-5, -5); ctx.lineTo(5, 0); ctx.lineTo(-5, 5); ctx.closePath();
           ctx.strokeStyle = energized ? "#fff" : "#94a3b8";
           ctx.lineWidth = 2;
           ctx.stroke();
           
-          // Fail cross
           if (gameState === "anim_fail") {
              ctx.strokeStyle = `rgba(239, 68, 68, ${0.5 + 0.5*failPulse})`;
              ctx.lineWidth = 4;
@@ -1569,32 +1694,27 @@
           }
         }
 
-        // Résistance (R)
         if (tile.component === "R") {
           ctx.shadowBlur = 0;
-          // Rectangle résistance
-          ctx.fillStyle = "#e2e8f0"; // Slate 200
+          ctx.fillStyle = "#e2e8f0"; 
           ctx.strokeStyle = "#475569";
           ctx.lineWidth = 2;
           const rw = tileSize*0.5, rh = tileSize*0.22;
           ctx.beginPath(); ctx.rect(-rw/2, -rh/2, rw, rh);
           ctx.fill(); ctx.stroke();
           
-          // Bandes couleurs (décoratif)
           ctx.fillStyle = "#ef4444"; ctx.fillRect(-rw/4, -rh/2, rw/8, rh);
           ctx.fillStyle = "#3b82f6"; ctx.fillRect(0, -rh/2, rw/8, rh);
           ctx.fillStyle = "#eab308"; ctx.fillRect(rw/4, -rh/2, rw/8, rh);
           
-          // Valeur texte
           ctx.rotate(-tile.visualRotation); 
           ctx.fillStyle = "#fff";
           ctx.shadowColor="black"; ctx.shadowBlur=4;
           ctx.font = "bold " + (tileSize*0.22) + "px 'Inter', sans-serif";
           ctx.textAlign = "center"; ctx.textBaseline = "middle";
-          ctx.fillText(tile.rValue, 0, -tileSize*0.35); // Au dessus
+          ctx.fillText(tile.rValue, 0, -tileSize*0.35); 
         }
         
-        // Diode (D)
         if (tile.component === "D") {
           ctx.shadowBlur = 0;
           ctx.strokeStyle = "#475569";
@@ -1602,35 +1722,29 @@
           
           const triSize = tileSize*0.18;
           
-          // Triangle (Anode -> Cathode)
           ctx.fillStyle = "#fff";
           ctx.beginPath();
-          // Côté Cathode
           ctx.moveTo(-triSize/1.5, triSize/2); 
           ctx.lineTo(-triSize/1.5, -triSize/2); 
-          // Pointe Anode
           ctx.lineTo(triSize/1.5, 0);       
           ctx.closePath();
           ctx.fill();
           ctx.stroke();
 
-          // Barre Cathode (plus épaisse et rouge)
           ctx.beginPath();
           ctx.moveTo(-triSize/1.5 - 2, triSize/2); 
           ctx.lineTo(-triSize/1.5 - 2, -triSize/2); 
           ctx.lineWidth = 3;
-          ctx.strokeStyle = "#dc2626"; // Rouge pour la cathode
+          ctx.strokeStyle = "#dc2626"; 
           ctx.stroke();
           
-          // Texte
           ctx.rotate(-tile.visualRotation);
           ctx.fillStyle = "#fff";
           ctx.shadowColor="black"; ctx.shadowBlur=4;
           ctx.font = "bold " + (tileSize*0.22) + "px 'Inter', sans-serif";
           ctx.textAlign = "center"; ctx.textBaseline = "middle";
-          ctx.fillText("D", 0, -tileSize*0.35); // Au dessus
+          ctx.fillText("D", 0, -tileSize*0.35); 
         }
-
 
         ctx.restore();
       }
@@ -1639,7 +1753,7 @@
 
   function loop() {
     const now = updateAnimations();
-    updateTileAnimations(); // Animation fluide
+    updateTileAnimations(); 
     draw(now);
     requestAnimationFrame(loop);
   }
@@ -1647,9 +1761,7 @@
   /* --- Event Listeners --- */
   canvas.addEventListener("click", onCanvasClick);
   canvas.addEventListener("touchstart", onCanvasTouch, { passive: false });
-  // Mouvement pour le feedback au survol (desktop)
   canvas.addEventListener("mousemove", onCanvasMove); 
-  // Mouvement pour le feedback au survol (mobile)
   canvas.addEventListener("touchmove", onCanvasTouchMove, { passive: true }); 
 
   checkBtn.addEventListener("click", onCheckCircuit);
