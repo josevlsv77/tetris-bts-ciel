@@ -89,14 +89,15 @@
     letter-spacing: 1px;
   }
 
-  /* 2 CARTOUCHES HORIZONTAUX, L'UN EN DESSOUS DE L'AUTRE */
+  /* 3 CARTOUCHES HORIZONTAUX, L'UN EN DESSOUS DE L'AUTRE */
   #hub-container {
     display: flex;
     flex-direction: column;
     flex: 1;
     width: 100%;
     max-width: 900px;
-    gap: 14px;
+    gap: 10px;
+    min-height: 0;
   }
 
   /* Un gros rectangle horizontal par jeu */
@@ -107,13 +108,14 @@
       0 10px 24px rgba(0,0,0,0.25),
       inset 0 0 0 1px rgba(255,255,255,0.9);
     border: 1px solid rgba(0,0,0,0.06);
-    padding: 10px 12px 12px;
+    padding: 8px 10px;
     cursor: pointer;
     display: grid;
     grid-template-columns: minmax(0, 0.45fr) minmax(0, 0.55fr);
     grid-template-rows: 1fr;  /* tout sur une seule ligne : gauche = texte, droite = GIF */
-    gap: 10px 16px;
-    min-height: 340px;        /* plus haut qu’avant */
+    gap: 8px 12px;
+    flex: 1;
+    min-height: 0;
     position: relative;
     overflow: hidden;
   }
@@ -155,13 +157,17 @@
     color: #fff;
   }
 
-  /* Tetris : bleu, Arkanoid : rouge */
+  /* Tetris : bleu, Arkanoid : rouge, VoltLink : jaune */
   .game-icon.tetris {
     background: linear-gradient(135deg, #1f75d6, #6ac3ff);
   }
 
   .game-icon.arkanoid {
     background: linear-gradient(135deg, #e53935, #b71c1c);
+  }
+
+  .game-icon.voltlink {
+    background: linear-gradient(135deg, #f1c40f, #f39c12);
   }
 
   .game-title {
@@ -275,7 +281,7 @@
     box-shadow:
       0 12px 28px rgba(0,0,0,0.35),
       inset 0 0 0 1px rgba(255,255,255,0.85);
-    min-height: 240px;          /* un peu plus haut aussi */
+    aspect-ratio: 4 / 3;
     background-repeat: no-repeat;
     background-size: cover;     /* remplit ENTIEREMENT la case */
   }
@@ -288,6 +294,11 @@
   .game-gif.arkanoid {
     background-image: url("CaseArkanoid.gif");
     background-position: left bottom;    /* bas : aligné à GAUCHE */
+  }
+
+  .game-gif.voltlink {
+    background-image: url("voltLink.gif");
+    background-position: center bottom;
   }
 
   .game-row:hover .game-gif {
@@ -490,6 +501,44 @@
       <div class="game-gif arkanoid"></div>
     </section>
 
+    <!-- Jeu 3 : VoltLink -->
+    <section class="game-row" data-target="VoltLink.html">
+      <div class="game-header-block">
+        <div>
+          <div class="game-header">
+            <div class="game-icon voltlink">V</div>
+            <div>
+              <div class="game-title">VoltLink – BTS CIEL</div>
+              <div class="game-subtitle">Circuits & loi d’Ohm appliquée</div>
+            </div>
+          </div>
+          <div class="badge">
+            <span>⚡</span> Logique / Électronique
+          </div>
+
+          <div class="game-desc">
+            <div class="game-desc-inner">
+              <p class="game-text">
+                Dans <strong>VoltLink – BTS CIEL</strong>, vous faites pivoter des tuiles (fils, connecteurs,
+                résistances) pour relier la source d’alimentation à la LED. Objectif : fermer le circuit
+                <strong>et</strong> respecter la loi d’Ohm en gardant une résistance totale adaptée, sous peine
+                de griller la LED… ou de ne jamais l’allumer.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="game-footer">
+          <button class="play-btn" type="button">
+            <span>▶</span> Jouer
+          </button>
+          <div class="shortcut">Raccourcis : V ou 3</div>
+        </div>
+      </div>
+
+      <div class="game-gif voltlink"></div>
+    </section>
+
   </div>
 
   <div id="bottom-info">
@@ -533,6 +582,8 @@
       goTo("tetris.html");
     } else if (key === "a" || key === "2") {
       goTo("Arkanoid.html");
+    } else if (key === "v" || key === "3") {
+      goTo("VoltLink.html");
     }
   });
 

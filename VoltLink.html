@@ -116,7 +116,11 @@
 
   /* --- CANVAS (ÉCRAN DE JEU) - STYLE PCB --- */
   canvas#circuit {
-    background: #125C4D; /* Vert sombre PCB */
+    /* MODIFICATION ICI : Remplacement du fond uni par l'image PCB avec un overlay */
+    /* On utilise un gradient semi-transparent de la couleur d'origine (#125C4D) par dessus l'image */
+    background: linear-gradient(rgba(18, 92, 77, 0.85), rgba(18, 92, 77, 0.85)), url("image_0.png") no-repeat center center;
+    background-size: cover; /* L'image couvre tout le canvas */
+    
     border-radius: 16px;
     /* Ombres internes pour la profondeur */
     box-shadow: inset 0 0 60px rgba(0,0,0,0.6), 
