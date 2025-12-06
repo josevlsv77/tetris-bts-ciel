@@ -150,6 +150,9 @@
     box-shadow:
       0 0 0 2px rgba(255,255,255,0.4),
       0 18px 40px rgba(0,0,0,0.6);
+    /* Empêche tout étirement → bulles bien rondes */
+    width: 560px;
+    height: 720px;
   }
 
   #center-message {
@@ -613,11 +616,9 @@
   const GRID_COLS = 12;
   const BUBBLE_RADIUS = 18;
   const BUBBLE_DIAM = BUBBLE_RADIUS * 2;
-  // espacement vertical pour hex : R * sqrt(3)
-  const SPACING_Y = BUBBLE_RADIUS * Math.sqrt(3);
+  const SPACING_Y = BUBBLE_RADIUS * Math.sqrt(3); // espacement hex vertical
 
   const GRID_TOP = 40;
-  // largeur avec décalage d’une demi-bulle sur les lignes impaires
   const GRID_WIDTH = GRID_COLS * BUBBLE_DIAM + BUBBLE_RADIUS;
   const GRID_LEFT = (GAME_WIDTH - GRID_WIDTH) / 2;
 
@@ -640,7 +641,6 @@
     "#e67e22"
   ];
 
-  // Association couleur -> visage
   const COLOR_FACE_MAP = {
     "#e74c3c": "visage1.jpg",
     "#f1c40f": "visage2.jpg",
@@ -651,11 +651,23 @@
   };
 
   const faceImages = {};
+  const bubbleSprites = {}; // cache sprites bulles (par couleur)
+
+  function invalidateBubbleSprite(color) {
+    delete bubbleSprites[color];
+  }
+
   for (const [color, file] of Object.entries(COLOR_FACE_MAP)) {
     const img = new Image();
     faceImages[color] = { img, loaded: false, error: false };
-    img.onload = () => { faceImages[color].loaded = true; };
-    img.onerror = () => { faceImages[color].error = true; };
+    img.onload = () => {
+      faceImages[color].loaded = true;
+      invalidateBubbleSprite(color); // on reconstruit le sprite avec le visage
+    };
+    img.onerror = () => {
+      faceImages[color].error = true;
+      invalidateBubbleSprite(color);
+    };
     img.src = file;
   }
 
@@ -675,13 +687,12 @@
 
   let gameState = "intro"; // intro | playing | betweenLevels | paused | gameover
   let lastTime = 0;
-  let elapsed = 0; // pour animations (pulse, laser)
+  let elapsed = 0; // pour animations
 
   let highScores = [];
   const MAX_HIGHSCORES = 10;
   const HIGHSCORES_KEY = "puzzlebobble_highscores_ciel";
 
-  // effets
   let popEffects = [];       // {x,y,color,life}
   let fallingBubbles = [];   // {x,y,color,vy}
 
@@ -692,7 +703,6 @@
   const rankName = document.getElementById("rank-name");
   const highscoresList = document.getElementById("highscores-list");
   const centerMessageInner = document.getElementById("center-message-inner");
-
   const musicEl = document.getElementById("music");
 
   // --- Characters DOM ---
@@ -784,7 +794,6 @@
     return arr[Math.floor(Math.random() * arr.length)];
   }
 
-  // position centre d’une bulle (hex : lignes impaires décalées)
   function gridToPixel(row, col) {
     const xOffset = (row % 2 === 1) ? BUBBLE_RADIUS : 0;
     const x = GRID_LEFT + xOffset + col * BUBBLE_DIAM + BUBBLE_RADIUS;
@@ -792,7 +801,6 @@
     return { x, y };
   }
 
-  // approx inverse pour projeter un tir dans la grille
   function pixelToGridApprox(x, y) {
     const rowFloat = (y - GRID_TOP) / SPACING_Y;
     let row = Math.round(rowFloat);
@@ -848,7 +856,6 @@
     return "rgba(" + r + "," + g + "," + b + "," + alpha + ")";
   }
 
-  // voisins hex (6 voisins, dépend de la parité de la ligne)
   function getNeighbors(row, col) {
     const neighbors = [];
     const isOdd = (row % 2 === 1);
@@ -1049,153 +1056,134 @@
     }
   }
 
-  // --- Dessin de la bille (plateau) ---
+  // --- Sprites de bulles haute résolution (pré-calculés) ---
 
-  function drawBubble(x, y, color, scale = 1) {
-    const r = BUBBLE_RADIUS * scale;
+  function buildBubbleSprite(color) {
+    const oversample = 2;
+    const baseR = BUBBLE_RADIUS;
+    const r = baseR * oversample;
+    const size = r * 2;
+
+    const off = document.createElement("canvas");
+    off.width = size;
+    off.height = size;
+    const octx = off.getContext("2d");
+    octx.imageSmoothingEnabled = true;
+    octx.imageSmoothingQuality = "high";
+
+    const cx = size / 2;
+    const cy = size / 2;
+
     const entry = faceImages[color];
     const hasFace = entry && entry.loaded && !entry.error;
     const img = hasFace ? entry.img : null;
 
-    ctx.save();
-    ctx.beginPath();
-    ctx.arc(x, y, r, 0, Math.PI * 2);
-    ctx.clip();
+    // cercle + clip
+    octx.save();
+    octx.beginPath();
+    octx.arc(cx, cy, r, 0, Math.PI * 2);
+    octx.clip();
 
-    ctx.fillStyle = "#000000";
-    ctx.fillRect(x - r, y - r, 2 * r, 2 * r);
+    // fond noir
+    octx.fillStyle = "#000000";
+    octx.fillRect(cx - r, cy - r, size, size);
 
+    // visage
     if (img && img.width > 0 && img.height > 0) {
       const minSide = Math.min(img.width, img.height);
       const sx = (img.width - minSide) / 2;
       const sy = (img.height - minSide) / 2;
       const sSize = minSide;
-
       const drawSize = r * 2 * 1.3;
-      ctx.drawImage(
+
+      octx.drawImage(
         img,
         sx, sy, sSize, sSize,
-        x - drawSize / 2,
-        y - drawSize / 2,
+        cx - drawSize / 2,
+        cy - drawSize / 2,
         drawSize,
         drawSize
       );
     }
 
-    ctx.beginPath();
-    ctx.arc(x, y, r, 0, Math.PI * 2);
-    const tintGrad = ctx.createRadialGradient(
-      x - r * 0.4, y - r * 0.4, r * 0.1,
-      x, y, r
+    // teinte colorée
+    octx.beginPath();
+    octx.arc(cx, cy, r, 0, Math.PI * 2);
+    const tintGrad = octx.createRadialGradient(
+      cx - r * 0.4, cy - r * 0.4, r * 0.1,
+      cx, cy, r
     );
     tintGrad.addColorStop(0, colorToRgba(color, 0.35));
     tintGrad.addColorStop(0.5, colorToRgba(color, 0.55));
     tintGrad.addColorStop(1, colorToRgba(color, 0.8));
-    ctx.fillStyle = tintGrad;
-    ctx.fill();
+    octx.fillStyle = tintGrad;
+    octx.fill();
 
-    ctx.beginPath();
-    ctx.arc(x - r * 0.4, y - r * 0.4, r * 0.4, 0, Math.PI * 2);
-    const highlight = ctx.createRadialGradient(
-      x - r * 0.45, y - r * 0.45, 0,
-      x - r * 0.4, y - r * 0.4, r * 0.4
+    // reflet
+    octx.beginPath();
+    octx.arc(cx - r * 0.4, cy - r * 0.4, r * 0.4, 0, Math.PI * 2);
+    const highlight = octx.createRadialGradient(
+      cx - r * 0.45, cy - r * 0.45, 0,
+      cx - r * 0.4, cy - r * 0.4, r * 0.4
     );
     highlight.addColorStop(0, "rgba(255,255,255,0.9)");
     highlight.addColorStop(1, "rgba(255,255,255,0)");
-    ctx.fillStyle = highlight;
-    ctx.fill();
+    octx.fillStyle = highlight;
+    octx.fill();
+    octx.restore();
 
-    ctx.restore();
+    // contour + glow
+    octx.save();
+    octx.shadowColor = color;
+    octx.shadowBlur = 16 * oversample;
+    octx.beginPath();
+    octx.arc(cx, cy, r, 0, Math.PI * 2);
+    octx.strokeStyle = "rgba(255,255,255,0.95)";
+    octx.lineWidth = 2 * oversample;
+    octx.stroke();
+    octx.restore();
 
-    ctx.save();
-    ctx.shadowColor = color;
-    ctx.shadowBlur = 16 * scale;
-    ctx.beginPath();
-    ctx.arc(x, y, r, 0, Math.PI * 2);
-    ctx.strokeStyle = "rgba(255,255,255,0.95)";
-    ctx.lineWidth = 2;
-    ctx.stroke();
-    ctx.shadowBlur = 0;
-    ctx.restore();
+    bubbleSprites[color] = { canvas: off, radius: baseR };
+    return bubbleSprites[color];
   }
 
-  // --- Dessin de la prochaine bille (aperçu, même style) ---
+  function drawBubble(x, y, color, scale = 1) {
+    let sprite = bubbleSprites[color];
+    if (!sprite) {
+      sprite = buildBubbleSprite(color);
+    }
+    const r = sprite.radius;
+
+    ctx.save();
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = "high";
+    ctx.translate(x, y);
+    ctx.scale(scale, scale); // uniforme → toujours cercle
+    ctx.drawImage(sprite.canvas, -r, -r, r * 2, r * 2);
+    ctx.restore();
+  }
 
   function drawNextBubblePreview() {
     nextCtx.clearRect(0, 0, nextCanvas.width, nextCanvas.height);
     if (!nextBubbleColor) return;
 
+    let sprite = bubbleSprites[nextBubbleColor];
+    if (!sprite) {
+      sprite = buildBubbleSprite(nextBubbleColor);
+    }
+    const r = sprite.radius;
     const x = nextCanvas.width / 2;
     const y = nextCanvas.height / 2;
-    const r = 18;
-
-    const entry = faceImages[nextBubbleColor];
-    const hasFace = entry && entry.loaded && !entry.error;
-    const img = hasFace ? entry.img : null;
 
     nextCtx.save();
-    nextCtx.beginPath();
-    nextCtx.arc(x, y, r, 0, Math.PI * 2);
-    nextCtx.clip();
-
-    nextCtx.fillStyle = "#000000";
-    nextCtx.fillRect(x - r, y - r, 2 * r, 2 * r);
-
-    if (img && img.width > 0 && img.height > 0) {
-      const minSide = Math.min(img.width, img.height);
-      const sx = (img.width - minSide) / 2;
-      const sy = (img.height - minSide) / 2;
-      const sSize = minSide;
-      const drawSize = r * 2 * 1.3;
-
-      nextCtx.drawImage(
-        img,
-        sx, sy, sSize, sSize,
-        x - drawSize / 2,
-        y - drawSize / 2,
-        drawSize,
-        drawSize
-      );
-    }
-
-    nextCtx.beginPath();
-    nextCtx.arc(x, y, r, 0, Math.PI * 2);
-    const tintGrad = nextCtx.createRadialGradient(
-      x - r * 0.4, y - r * 0.4, r * 0.1,
-      x, y, r
-    );
-    tintGrad.addColorStop(0, colorToRgba(nextBubbleColor, 0.35));
-    tintGrad.addColorStop(0.5, colorToRgba(nextBubbleColor, 0.55));
-    tintGrad.addColorStop(1, colorToRgba(nextBubbleColor, 0.8));
-    nextCtx.fillStyle = tintGrad;
-    nextCtx.fill();
-
-    nextCtx.beginPath();
-    nextCtx.arc(x - r * 0.4, y - r * 0.4, r * 0.4, 0, Math.PI * 2);
-    const highlight = nextCtx.createRadialGradient(
-      x - r * 0.45, y - r * 0.45, 0,
-      x - r * 0.4, y - r * 0.4, r * 0.4
-    );
-    highlight.addColorStop(0, "rgba(255,255,255,0.9)");
-    highlight.addColorStop(1, "rgba(255,255,255,0)");
-    nextCtx.fillStyle = highlight;
-    nextCtx.fill();
-
-    nextCtx.restore();
-
-    nextCtx.save();
-    nextCtx.shadowColor = nextBubbleColor;
-    nextCtx.shadowBlur = 14;
-    nextCtx.beginPath();
-    nextCtx.arc(x, y, r, 0, Math.PI * 2);
-    nextCtx.strokeStyle = "rgba(255,255,255,0.95)";
-    nextCtx.lineWidth = 2;
-    nextCtx.stroke();
-    nextCtx.shadowBlur = 0;
+    nextCtx.imageSmoothingEnabled = true;
+    nextCtx.imageSmoothingQuality = "high";
+    nextCtx.translate(x, y);
+    nextCtx.drawImage(sprite.canvas, -r, -r, r * 2, r * 2);
     nextCtx.restore();
   }
 
-  // --- Initialisation des billes pour un niveau (courante + suivante) ---
+  // --- Initialisation bulles niveau ---
 
   function initBubblesForLevel() {
     const pool = getColorPool();
@@ -1295,7 +1283,7 @@
     updateRank();
   }
 
-  // --- Shooting & collisions ---
+  // --- Tir & collisions ---
 
   function fire() {
     if (gameState === "intro") {
@@ -1316,7 +1304,6 @@
       color: currentBubble.color
     };
 
-    // Bille suivante passe immédiatement dans le lanceur
     const pool = getColorPool();
     const nextColorInLauncher =
       nextBubbleColor && pool.includes(nextBubbleColor)
@@ -1342,7 +1329,6 @@
     const leftLimit = GRID_LEFT + BUBBLE_RADIUS;
     const rightLimit = GRID_LEFT + GRID_WIDTH - BUBBLE_RADIUS;
 
-    // Rebond sur parois
     if (shot.x <= leftLimit) {
       shot.x = leftLimit;
       shot.vx *= -1;
@@ -1351,14 +1337,15 @@
       shot.vx *= -1;
     }
 
-    // Contact plafond
+    // collision plafond
     if (shot.y - BUBBLE_RADIUS <= GRID_TOP) {
       attachShotToGrid(shot.x, shot.y);
       return;
     }
 
-    // Collision avec une bulle existante
+    // collision avec les bulles existantes
     let collided = false;
+    const collisionDist2 = Math.pow(BUBBLE_DIAM * 0.93, 2); // seuil un peu réduit → plus facile de se glisser dans les trous
     for (let r = 0; r < GRID_ROWS && !collided; r++) {
       for (let c = 0; c < GRID_COLS; c++) {
         if (!grid[r][c]) continue;
@@ -1366,7 +1353,7 @@
         const dx = pos.x - shot.x;
         const dy = pos.y - shot.y;
         const dist2 = dx * dx + dy * dy;
-        if (dist2 <= (BUBBLE_DIAM - 2) * (BUBBLE_DIAM - 2)) {
+        if (dist2 <= collisionDist2) {
           collided = true;
           break;
         }
@@ -1375,52 +1362,34 @@
 
     if (collided) {
       attachShotToGrid(shot.x, shot.y);
-      return;
-    }
-
-    // Bille sortie de l'écran (raté)
-    if (shot.y - BUBBLE_RADIUS > GAME_HEIGHT) {
+    } else if (shot.y - BUBBLE_RADIUS > GAME_HEIGHT) {
       shot = null;
     }
   }
 
-  // Choix de la case libre la plus pertinente autour du point d’impact
+  // nouveau placement : on parcourt TOUTES les cases vides
   function findBestCellForShot(x, y) {
-    const approx = pixelToGridApprox(x, y);
-    let row = clamp(approx.row, 0, GRID_ROWS - 1);
-    let col = clamp(approx.col, 0, GRID_COLS - 1);
-
-    if (!grid[row][col]) {
-      if (row === 0) {
-        return { row, col };
-      }
-      const neighbors = getNeighbors(row, col);
-      if (neighbors.some(n => grid[n.row][n.col])) {
-        return { row, col };
-      }
-    }
-
-    // Recherche locale
     let best = null;
     let bestDist2 = Infinity;
-    const rMin = Math.max(0, row - 2);
-    const rMax = Math.min(GRID_ROWS - 1, row + 2);
-    const cMin = Math.max(0, col - 2);
-    const cMax = Math.min(GRID_COLS - 1, col + 2);
 
-    for (let r = rMin; r <= rMax; r++) {
-      for (let c = cMin; c <= cMax; c++) {
-        if (grid[r][c]) continue;
+    for (let r = 0; r < GRID_ROWS; r++) {
+      for (let c = 0; c < GRID_COLS; c++) {
+        if (grid[r][c]) continue; // déjà occupé
 
+        // condition de flottement : la case doit être reliée
+        // soit au plafond (r === 0), soit avoir au moins un voisin
         if (r > 0) {
           const neighbors = getNeighbors(r, c);
-          if (!neighbors.some(n => grid[n.row][n.col])) continue;
+          if (!neighbors.some(n => grid[n.row][n.col])) {
+            continue; // pas de voisin → on évite les bulles "en l'air"
+          }
         }
 
         const pos = gridToPixel(r, c);
         const dx = pos.x - x;
         const dy = pos.y - y;
         const dist2 = dx * dx + dy * dy;
+
         if (dist2 < bestDist2) {
           bestDist2 = dist2;
           best = { row: r, col: c };
@@ -1428,26 +1397,16 @@
       }
     }
 
-    if (best) return best;
-
-    // Fallback : sur le plafond
-    let bestTopCol = null;
-    let bestTopDist2 = Infinity;
-    for (let c = 0; c < GRID_COLS; c++) {
-      if (grid[0][c]) continue;
-      const pos = gridToPixel(0, c);
-      const dx = pos.x - x;
-      const dist2 = dx * dx;
-      if (dist2 < bestTopDist2) {
-        bestTopDist2 = dist2;
-        bestTopCol = c;
-      }
-    }
-    if (bestTopCol !== null) {
-      return { row: 0, col: bestTopCol };
+    // fallback au cas où (très improbable)
+    if (!best) {
+      const approx = pixelToGridApprox(x, y);
+      best = {
+        row: clamp(approx.row, 0, GRID_ROWS - 1),
+        col: clamp(approx.col, 0, GRID_COLS - 1)
+      };
     }
 
-    return { row, col };
+    return best;
   }
 
   function attachShotToGrid(x, y) {
@@ -1618,7 +1577,7 @@
     checkGridHeight();
   }
 
-  // --- Effets visuels (pop + chute) ---
+  // --- Effets visuels ---
 
   function updateEffects(dt) {
     for (let i = popEffects.length - 1; i >= 0; i--) {
@@ -1676,7 +1635,7 @@
     ctx.restore();
   }
 
-  // --- Laser (ligne de visée avec rebonds) ---
+  // --- Laser bleu ---
 
   function computeLaserSegments() {
     const segments = [];
@@ -1740,20 +1699,22 @@
 
     ctx.save();
     for (const seg of segments) {
+      // halo bleu
       ctx.beginPath();
       ctx.moveTo(seg.x0, seg.y0);
       ctx.lineTo(seg.x1, seg.y1);
-      ctx.strokeStyle = "rgba(241,196,15,0.25)";
+      ctx.strokeStyle = "rgba(52,152,219,0.30)";
       ctx.lineWidth = 6;
-      ctx.shadowColor = "rgba(241,196,15,0.9)";
-      ctx.shadowBlur = 14;
+      ctx.shadowColor = "rgba(52,152,219,0.95)";
+      ctx.shadowBlur = 16;
       ctx.stroke();
 
+      // noyau blanc/bleuté en pointillé
       ctx.setLineDash([10, 6]);
       ctx.lineDashOffset = -(elapsed * 0.08);
       ctx.shadowBlur = 0;
       ctx.lineWidth = 2;
-      ctx.strokeStyle = "rgba(255,255,255,0.95)";
+      ctx.strokeStyle = "rgba(235,245,255,0.95)";
       ctx.beginPath();
       ctx.moveTo(seg.x0, seg.y0);
       ctx.lineTo(seg.x1, seg.y1);
@@ -1764,10 +1725,13 @@
     ctx.restore();
   }
 
+  // --- Lanceur bleu ---
+
   function drawLauncher() {
     ctx.save();
     ctx.translate(LAUNCHER_X, LAUNCHER_Y);
 
+    // Ombre
     ctx.fillStyle = "rgba(0,0,0,0.55)";
     ctx.beginPath();
     ctx.ellipse(0, 20, 42, 14, 0, 0, Math.PI * 2);
@@ -1776,13 +1740,15 @@
     ctx.rotate(angle);
 
     const baseR = 18;
+
+    // Corps circulaire métal bleu
     const emitterGrad = ctx.createRadialGradient(
       -4, -6, 4,
       0, 0, baseR
     );
-    emitterGrad.addColorStop(0, "#f5f7fa");
-    emitterGrad.addColorStop(0.4, "#bdc3c7");
-    emitterGrad.addColorStop(1, "#555a60");
+    emitterGrad.addColorStop(0, "#edf5ff");
+    emitterGrad.addColorStop(0.4, "#a9cce3");
+    emitterGrad.addColorStop(1, "#2e4053");
     ctx.fillStyle = emitterGrad;
     ctx.beginPath();
     ctx.arc(0, 0, baseR, 0, Math.PI * 2);
@@ -1791,33 +1757,37 @@
     ctx.strokeStyle = "rgba(255,255,255,0.9)";
     ctx.stroke();
 
+    // Anneau bleu lumineux
     ctx.beginPath();
     ctx.arc(0, 0, baseR - 6, 0, Math.PI * 2);
-    ctx.strokeStyle = "rgba(241,196,15,0.9)";
+    ctx.strokeStyle = "rgba(52,152,219,0.95)";
     ctx.lineWidth = 2;
-    ctx.shadowColor = "rgba(241,196,15,0.7)";
-    ctx.shadowBlur = 10;
+    ctx.shadowColor = "rgba(52,152,219,0.85)";
+    ctx.shadowBlur = 12;
     ctx.stroke();
     ctx.shadowBlur = 0;
 
-    ctx.fillStyle = "#f1c40f";
+    // LED bleues
+    ctx.fillStyle = "#5dade2";
     ctx.beginPath();
     ctx.arc(-6, -7, 2.2, 0, Math.PI * 2);
     ctx.arc(7, 4, 2.2, 0, Math.PI * 2);
     ctx.fill();
 
+    // Tube du lanceur
     const tubeLen = 52;
     ctx.beginPath();
     ctx.roundRect(0, -7, tubeLen, 14, 6);
     const tubeGrad = ctx.createLinearGradient(0, -7, tubeLen, 7);
-    tubeGrad.addColorStop(0, "#d5d8dc");
-    tubeGrad.addColorStop(1, "#7f8c8d");
+    tubeGrad.addColorStop(0, "#d6eaf8");
+    tubeGrad.addColorStop(1, "#5d6d7e");
     ctx.fillStyle = tubeGrad;
     ctx.fill();
     ctx.lineWidth = 2;
     ctx.strokeStyle = "rgba(255,255,255,0.9)";
     ctx.stroke();
 
+    // Flèche bleue
     const arrowBaseX = tubeLen;
     const arrowTipX = tubeLen + 20;
 
@@ -1827,14 +1797,15 @@
     ctx.lineTo(arrowBaseX, 9);
     ctx.closePath();
     const arrowGrad = ctx.createLinearGradient(arrowBaseX, -9, arrowTipX, 9);
-    arrowGrad.addColorStop(0, "#fff9c4");
-    arrowGrad.addColorStop(1, "#f1c40f");
+    arrowGrad.addColorStop(0, "#eaf6ff");
+    arrowGrad.addColorStop(1, "#3498db");
     ctx.fillStyle = arrowGrad;
     ctx.fill();
-    ctx.strokeStyle = "#fef9e7";
+    ctx.strokeStyle = "#f4fdff";
     ctx.lineWidth = 2;
     ctx.stroke();
 
+    // Reflet interne sur la flèche
     ctx.beginPath();
     ctx.moveTo(arrowBaseX + 3, -5);
     ctx.lineTo(arrowBaseX + 10, 0);
@@ -1845,6 +1816,8 @@
 
     ctx.restore();
   }
+
+  // --- Rendu principal ---
 
   function render() {
     ctx.clearRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
@@ -1887,8 +1860,9 @@
     drawLauncher();
 
     if (currentBubble) {
+      // on garde une petite pulsation mais uniforme
       const t = elapsed / 1000;
-      const pulse = 1 + 0.04 * Math.sin(t * 4);
+      const pulse = 1 + 0.02 * Math.sin(t * 4);
       drawBubble(currentBubble.x, currentBubble.y, currentBubble.color, pulse);
     }
 
@@ -1918,6 +1892,8 @@
     render();
     requestAnimationFrame(step);
   }
+
+  // --- Input ---
 
   canvas.addEventListener("mousemove", function (e) {
     const rect = canvas.getBoundingClientRect();
@@ -1975,6 +1951,8 @@
     }
   });
 
+  // --- Musique ---
+
   let musicStarted = false;
   function tryStartMusic() {
     if (musicStarted) return;
@@ -1986,6 +1964,8 @@
   }
   canvas.addEventListener("click", tryStartMusic);
   document.addEventListener("keydown", tryStartMusic);
+
+  // --- Init ---
 
   loadHighScores();
   updateHighScoresDisplay();
