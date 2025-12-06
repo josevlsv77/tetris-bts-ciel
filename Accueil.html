@@ -28,8 +28,9 @@
     position: relative;
   }
 
+  /* PANEL PRINCIPAL : glassmorphism */
   #main {
-    background: rgba(255, 255, 255, 0.70);
+    background: rgba(255,255,255,0.6);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
     border-radius: 16px;
@@ -51,34 +52,29 @@
 
   #header-group {
     text-align: center;
-    margin-bottom: 4px;
   }
 
   #logo {
-    width: 70px;
-    height: auto;
-    display: block;
-    margin: 0 auto 4px auto;
-    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+    height: 64px;
+    margin-bottom: 4px;
+    image-rendering: auto;
   }
 
   #title {
     font-size: 22px;
     font-weight: 900;
-    color: #222;
-    margin: 0;
-    letter-spacing: -0.5px;
-    text-shadow: 0 1px 0 rgba(255,255,255,0.9);
-    text-transform: uppercase;
+    color: #2c3e50;
+    letter-spacing: 1px;
+    text-shadow: 0 1px 0 rgba(255,255,255,0.7);
   }
 
   #subtitle {
-    font-size: 11px;
-    color: #444;
-    font-weight: 700;
+    font-size: 13px;
+    color: #34495e;
+    font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 1px;
-    margin-top: 4px;
+    margin-top: 2px;
   }
 
   #hint {
@@ -89,7 +85,7 @@
     letter-spacing: 1px;
   }
 
-  /* 3 CARTOUCHES HORIZONTAUX, L'UN EN DESSOUS DE L'AUTRE */
+  /* CONTENEUR DES 4 JEUX */
   #hub-container {
     display: flex;
     flex-direction: column;
@@ -100,9 +96,11 @@
     min-height: 0;
   }
 
-  /* Un gros rectangle horizontal par jeu */
+  /* GROS RECTANGLES DE JEUX : glassmorphism léger */
   .game-row {
-    background: rgba(255,255,255,0.96);
+    background: rgba(255,255,255,0.9);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
     border-radius: 16px;
     box-shadow:
       0 10px 24px rgba(0,0,0,0.25),
@@ -112,7 +110,7 @@
     cursor: pointer;
     display: grid;
     grid-template-columns: minmax(0, 0.45fr) minmax(0, 0.55fr);
-    grid-template-rows: 1fr;  /* tout sur une seule ligne : gauche = texte, droite = GIF */
+    grid-template-rows: 1fr;
     gap: 8px 12px;
     flex: 1;
     min-height: 0;
@@ -128,7 +126,7 @@
     transition: box-shadow 0.18s ease-out, transform 0.18s ease-out;
   }
 
-  /* Colonne GAUCHE : titre + texte explicatif + bouton */
+  /* Colonne GAUCHE : titre + texte + bouton */
   .game-header-block {
     grid-column: 1 / 2;
     grid-row: 1 / 2;
@@ -145,19 +143,21 @@
   }
 
   .game-icon {
-    width: 44px;
-    height: 44px;
+    width: 34px;
+    height: 34px;
     border-radius: 12px;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.25);
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 22px;
-    font-weight: 900;
     color: #fff;
+    font-weight: 900;
+    font-size: 18px;
+    box-shadow:
+      0 6px 12px rgba(0,0,0,0.35),
+      0 0 0 2px rgba(255,255,255,0.9);
+    text-shadow: 0 1px 2px rgba(0,0,0,0.6);
   }
 
-  /* Tetris : bleu, Arkanoid : rouge, VoltLink : jaune */
   .game-icon.tetris {
     background: linear-gradient(135deg, #1f75d6, #6ac3ff);
   }
@@ -168,6 +168,10 @@
 
   .game-icon.voltlink {
     background: linear-gradient(135deg, #f1c40f, #f39c12);
+  }
+
+  .game-icon.bubble {
+    background: linear-gradient(135deg, #8e44ad, #3498db);
   }
 
   .game-title {
@@ -201,7 +205,9 @@
     border: 1px solid rgba(44,62,80,0.12);
   }
 
-  .badge span { font-size: 12px; }
+  .badge span {
+    font-size: 12px;
+  }
 
   .game-desc {
     margin-top: 6px;
@@ -210,22 +216,19 @@
   }
 
   .game-desc-inner {
-    max-width: 100%;
+    max-height: 90px;
+    overflow: hidden;
   }
 
   .game-text {
-    margin: 0;
     font-size: 12px;
-    line-height: 1.5;
-    color: #4a4a4a;
-  }
-
-  .game-text strong {
+    line-height: 1.45;
+    margin: 0;
     color: #2c3e50;
   }
 
   .game-footer {
-    margin-top: 8px;
+    margin-top: 6px;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -233,34 +236,45 @@
   }
 
   .play-btn {
-    padding: 9px 16px;
-    border-radius: 999px;
     border: none;
-    background: #34495e;
+    outline: none;
+    padding: 8px 16px;
+    border-radius: 999px;
+    background: linear-gradient(135deg, #27ae60, #2ecc71);
     color: #fff;
-    font-weight: 800;
     font-size: 12px;
-    cursor: pointer;
+    font-weight: 800;
+    letter-spacing: 0.5px;
     text-transform: uppercase;
-    letter-spacing: 0.9px;
-    box-shadow: 0 4px 0 #2c3e50;
-    transition: all 0.16s ease-out;
+    cursor: pointer;
+    box-shadow:
+      0 6px 0 #1e8449,
+      0 10px 18px rgba(0,0,0,0.35);
     display: inline-flex;
     align-items: center;
     gap: 6px;
+    transition:
+      transform 0.12s ease-out,
+      box-shadow 0.12s ease-out,
+      background 0.12s ease-out;
   }
 
-  .play-btn span { font-size: 14px; }
+  .play-btn span {
+    font-size: 12px;
+    transform: translateY(0.5px);
+  }
 
   .game-row:hover .play-btn {
-    background: #415b76;
-    box-shadow: 0 5px 0 #2c3e50;
+    background: linear-gradient(135deg, #2ecc71, #58d68d);
     transform: translateY(-1px);
+    box-shadow:
+      0 7px 0 #1e8449,
+      0 12px 20px rgba(0,0,0,0.4);
   }
 
-  .game-row:active .play-btn {
+  .play-btn:active {
     transform: translateY(2px);
-    box-shadow: 0 2px 0 #2c3e50;
+    box-shadow: 0 2px 0 #1e8449;
   }
 
   .shortcut {
@@ -271,7 +285,7 @@
     color: #7f8c8d;
   }
 
-  /* Colonne DROITE : cartouche GIF plein cadre */
+  /* Colonne DROITE : GIF */
   .game-gif {
     grid-column: 2 / 3;
     grid-row: 1 / 2;
@@ -283,21 +297,26 @@
       inset 0 0 0 1px rgba(255,255,255,0.85);
     aspect-ratio: 4 / 3;
     background-repeat: no-repeat;
-    background-size: cover;     /* remplit ENTIEREMENT la case */
+    background-size: cover;
   }
 
   .game-gif.tetris {
     background-image: url("CaseTetris.gif");
-    background-position: right bottom;   /* haut : aligné à DROITE */
+    background-position: right bottom;
   }
 
   .game-gif.arkanoid {
     background-image: url("CaseArkanoid.gif");
-    background-position: left bottom;    /* bas : aligné à GAUCHE */
+    background-position: left bottom;
   }
 
   .game-gif.voltlink {
     background-image: url("VoltLink.gif");
+    background-position: center bottom;
+  }
+
+  .game-gif.bubble {
+    background-image: url("CaseBubble.gif");
     background-position: center bottom;
   }
 
@@ -320,7 +339,7 @@
 
   #bottom-info strong { color: #2c3e50; }
 
-  /* Proviseur un peu plus grand, bas de l’image aligné au bas de page */
+  /* PROVISEUR : même taille / position que ta version précédente */
   #proviseur-box {
     position: fixed;
     right: 2%;
@@ -389,31 +408,41 @@
   }
 
   @media (max-width: 720px) {
+    #main {
+      padding: 10px;
+      border-radius: 0;
+      width: 100%;
+      height: 100%;
+      max-width: none;
+      box-shadow: none;
+    }
+
+    #hub-container {
+      max-width: 100%;
+    }
+
     .game-row {
       grid-template-columns: 1fr;
       grid-template-rows: auto auto;
-      min-height: 0;
     }
+
     .game-header-block {
-      grid-column: 1 / 2;
-      grid-row: 1 / 2;
+      order: 1;
     }
+
     .game-gif {
       grid-column: 1 / 2;
       grid-row: 2 / 3;
       min-height: 160px;
     }
-    #proviseur-box { display: false; display:none; }
-  }
 
-  @media (max-width: 480px) {
-    #title { font-size: 18px; }
-    #subtitle { font-size: 10px; }
-    .game-title { font-size: 15px; }
-    .play-btn { padding: 8px 12px; font-size: 11px; }
+    #proviseur-box {
+      display: none;
+    }
   }
 </style>
 </head>
+
 <body>
 
 <div id="main">
@@ -539,6 +568,44 @@
       <div class="game-gif voltlink"></div>
     </section>
 
+    <!-- Jeu 4 : Puzzle Bobble -->
+    <section class="game-row" data-target="Bobble.html">
+      <div class="game-header-block">
+        <div>
+          <div class="game-header">
+            <div class="game-icon bubble">B</div>
+            <div>
+              <div class="game-title">Puzzle Bobble – BTS CIEL</div>
+              <div class="game-subtitle">Bulles, grappes et cascades</div>
+            </div>
+          </div>
+          <div class="badge">
+            <span>◆</span> Puzzle / Tir de précision
+          </div>
+
+          <div class="game-desc">
+            <div class="game-desc-inner">
+              <p class="game-text">
+                Dans <strong>Puzzle Bobble – BTS CIEL</strong>, chaque tir modifie la topologie du réseau
+                de bulles. Visez pour former des grappes de même couleur&nbsp;: elles éclatent, et toutes les
+                bulles non reliées au plafond chutent à leur tour. Trajectoires, rebonds et anticipation des
+                cascades sont au cœur du jeu.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="game-footer">
+          <button class="play-btn" type="button">
+            <span>▶</span> Jouer
+          </button>
+          <div class="shortcut">Raccourcis : B ou 4</div>
+        </div>
+      </div>
+
+      <div class="game-gif bubble"></div>
+    </section>
+
   </div>
 
   <div id="bottom-info">
@@ -584,6 +651,8 @@
       goTo("Arkanoid.html");
     } else if (key === "v" || key === "3") {
       goTo("VoltLink.html");
+    } else if (key === "b" || key === "4") {
+      goTo("Bobble.html");
     }
   });
 
@@ -593,8 +662,8 @@
     "Tetris : gestion de flux, optimisation.\nArkanoid : gestion de crise, rebond maîtrisé.\nÀ vous de voir ce qui vous ressemble.",
     "Rappel réglementaire :\nles pauses Arcade sont autorisées…\nsi les devoirs sont faits.",
     "Vous hésitez ?\nCommencez par Tetris pour chauffer le cerveau,\npuis Arkanoid pour tester vos nerfs.",
-    "Ici, pas de conseil de classe,\njuste un conseil de jeu :\ntestez les deux et revenez avec un highscore.",
-    "Arkanoid pour les bourrins précis,\nTetris pour les stratèges patients.\nJe prends des notes.",
+    "Ici, pas de conseil de classe,\njuste un conseil de jeu :\ntestez les quatre et revenez avec un highscore.",
+    "Arkanoid pour les bourrins précis,\nTetris pour les stratèges patients.\nVoltLink et Bubble pour les câblés.",
     "Je surveille les résultats.\nLes meilleurs scores ne sont pas encore\nau bulletin, mais ça peut s’arranger."
   ];
 
