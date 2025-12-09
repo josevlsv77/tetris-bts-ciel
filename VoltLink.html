@@ -22,9 +22,8 @@
   }
 
   body {
-    /* Fallback couleur + Image de fond */
     background: url("fond_lycee.jpg") no-repeat center center fixed;
-    background-color: #1e293b; /* Bleu nuit profond style "Slate" */
+    background-color: #1e293b;
     background-size: cover;
     color: #1e293b;
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
@@ -32,112 +31,77 @@
     justify-content: center;
     align-items: center;
     position: relative;
+    user-select: none; /* Empêche la sélection de texte accidentelle */
   }
 
-  /* Overlay sombre pour améliorer la lisibilité sur l'image de fond */
   body::before {
     content: "";
     position: absolute;
     top: 0; left: 0; right: 0; bottom: 0;
-    background: rgba(15, 23, 42, 0.6); /* Teinte bleu nuit transparente */
+    background: rgba(15, 23, 42, 0.6);
     z-index: 1;
   }
 
-  /* --- CONTENEUR PRINCIPAL (GLASSMORPHISM PRO) --- */
+  /* --- MAIN CONTAINER --- */
   #main {
     position: relative;
     z-index: 5;
-    
-    /* Effet Verre */
-    /* TRANSPARENCE ACCENTUÉE (0.5) */
     background: rgba(255, 255, 255, 0.5); 
     backdrop-filter: blur(20px) saturate(180%);
     -webkit-backdrop-filter: blur(20px) saturate(180%);
-    
     border: 1px solid rgba(255, 255, 255, 0.6);
     box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4), 
                 inset 0 0 0 1px rgba(255,255,255,0.3);
-    
     border-radius: 24px;
     padding: 20px;
-    
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: 10px;
     box-sizing: border-box;
-    
     width: 95%;
     height: 95%;
-    max-width: 1200px; /* ÉLARGI pour plus de confort */
+    max-width: 1200px;
     justify-content: center;
+    outline: none; /* Pour le focus clavier */
   }
 
   /* --- HEADER --- */
-  #header-group {
-    text-align: center;
-    margin-bottom: 5px;
-  }
-
-  #logo {
-    width: 60px;
-    height: auto;
-    display: block;
-    margin: 0 auto 5px auto;
-    filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));
-  }
-
-  #title {
-    font-size: 24px;
-    font-weight: 900;
-    color: #1e293b;
-    margin: 0;
-    letter-spacing: -0.03em;
-    text-shadow: 0 1px 0 rgba(255,255,255,0.8);
-  }
-
-  #subtitle {
-    font-size: 12px;
-    color: #64748b; /* Slate 500 */
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-  }
+  #header-group { text-align: center; margin-bottom: 5px; }
+  #logo { width: 60px; height: auto; display: block; margin: 0 auto 5px auto; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1)); }
+  #title { font-size: 24px; font-weight: 900; color: #1e293b; margin: 0; letter-spacing: -0.03em; text-shadow: 0 1px 0 rgba(255,255,255,0.8); }
+  #subtitle { font-size: 12px; color: #64748b; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; }
 
   #game-container {
     display: flex;
     gap: 25px;
     align-items: flex-start;
     justify-content: center;
-    height: 80vh; /* AGRANDI de 70vh à 80vh */
+    height: 80vh;
     width: 100%;
     position: relative;
   }
 
-  /* --- CANVAS (ÉCRAN DE JEU) - STYLE PCB --- */
+  /* --- CANVAS --- */
   canvas#circuit {
-    /* MODIFICATION ICI : Remplacement du fond uni par l'image PCB avec un overlay */
-    /* On utilise un gradient semi-transparent de la couleur d'origine (#125C4D) par dessus l'image */
     background: linear-gradient(rgba(18, 92, 77, 0.85), rgba(18, 92, 77, 0.85)), url("image_0.png") no-repeat center center;
-    background-size: cover; /* L'image couvre tout le canvas */
-    
+    background-size: cover;
     border-radius: 16px;
-    /* Ombres internes pour la profondeur */
     box-shadow: inset 0 0 60px rgba(0,0,0,0.6), 
                 0 20px 25px -5px rgba(0, 0, 0, 0.2), 
                 0 8px 10px -6px rgba(0, 0, 0, 0.1);
-    
     display: block;
     height: 100%;
     width: auto;
-    aspect-ratio: 3/4; /* Ratio conservé mais taille interne augmentée */
+    aspect-ratio: 3/4;
     position: relative;
     z-index: 5;
     touch-action: none;
     cursor: pointer;
+    transition: transform 0.1s;
   }
 
-  /* --- SIDEBAR (TABLEAU DE BORD COMPACT) --- */
+  /* --- SIDEBAR --- */
   #side-panel {
     display: flex;
     flex-direction: column;
@@ -145,7 +109,7 @@
     background: rgba(255, 255, 255, 0.5);
     padding: 15px;
     border-radius: 16px;
-    min-width: 300px; /* ÉLARGI pour meilleure lisibilité des stats */
+    min-width: 300px;
     width: 320px; 
     border: 1px solid rgba(255,255,255,0.4);
     box-sizing: border-box;
@@ -153,362 +117,141 @@
     overflow: hidden; 
   }
 
-  /* Groupe des stats (Score + Niveau) en ligne */
-  .stats-row {
-    display: flex;
-    gap: 8px;
-    width: 100%;
-  }
-
+  .stats-row { display: flex; gap: 8px; width: 100%; }
   .stat-card {
-    flex: 1;
-    background: white;
-    padding: 8px 5px;
-    border-radius: 10px;
-    text-align: center;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
+    flex: 1; background: white; padding: 8px 5px; border-radius: 10px;
+    text-align: center; box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    display: flex; flex-direction: column; justify-content: center;
   }
 
-  /* Le record prend toute la largeur */
   #best-box {
-    background: rgba(255,255,255,0.6);
-    padding: 6px;
-    border-radius: 8px;
-    text-align: center;
-    border: 1px dashed rgba(0,0,0,0.1);
+    background: rgba(255,255,255,0.6); padding: 6px; border-radius: 8px;
+    text-align: center; border: 1px dashed rgba(0,0,0,0.1);
   }
 
-  .label-text {
-    font-size: 10px;
-    text-transform: uppercase;
-    color: #94a3b8;
-    font-weight: 800;
-    margin-bottom: 0;
-    line-height: 1;
-  }
-
+  .label-text { font-size: 10px; text-transform: uppercase; color: #94a3b8; font-weight: 800; margin-bottom: 0; line-height: 1; }
   #score { font-size: 24px; font-weight: 900; color: #0f172a; line-height: 1.1; }
   #level { font-size: 20px; font-weight: 800; color: #f59e0b; line-height: 1.1; }
-  
-  #rank-name {
-    font-size: 10px;
-    font-weight: 800;
-    color: #dc2626;
-    text-transform: uppercase;
-    margin-top: 2px;
-  }
-
+  #rank-name { font-size: 10px; font-weight: 800; color: #dc2626; text-transform: uppercase; margin-top: 2px; }
   #best-score { font-size: 12px; font-weight: 700; color: #334155; }
 
-  /* Zone Info flexible */
   #info-box {
-    flex: 1; 
-    background: white;
-    padding: 12px;
-    border-radius: 12px;
-    font-size: 11px;
-    color: #475569;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
-    line-height: 1.3;
-    overflow-y: auto; 
-    min-height: 0; 
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
+    flex: 1; background: white; padding: 12px; border-radius: 12px;
+    font-size: 11px; color: #475569; box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    line-height: 1.3; overflow-y: auto; display: flex; flex-direction: column; justify-content: space-between;
   }
-
   #mission-info p { margin: 4px 0; }
   #mission-info { margin-bottom: 10px; }
 
-
-  /* NOUVEAU BLOC : Statistiques de progression */
   #game-stats {
-      padding: 8px; 
-      border-radius: 8px; 
-      background: #f1f5f9; /* Slate 100 */
-      border: 1px solid #e2e8f0; /* Slate 200 */ 
-      margin: 5px 0 10px 0;
+      padding: 8px; border-radius: 8px; background: #f1f5f9;
+      border: 1px solid #e2e8f0; margin: 5px 0 10px 0;
       box-shadow: inset 0 1px 3px rgba(0,0,0,0.05);
   }
+  #game-stats-title { font-size: 10px; text-transform: uppercase; font-weight: 800; color: #334155; margin-bottom: 4px; }
+  .game-stats-row { display: flex; justify-content: space-between; font-size: 11px; font-weight: 700; color: #1e293b; margin-top: 4px; }
 
-  #game-stats-title {
-    font-size: 10px; 
-    text-transform: uppercase; 
-    font-weight: 800; 
-    color: #334155; 
-    margin-bottom: 4px;
-  }
-
-  .game-stats-row {
-    display: flex; 
-    justify-content: space-between; 
-    font-size: 11px; 
-    font-weight: 700; 
-    color: #1e293b;
-    margin-top: 4px;
-  }
-
-
-  /* Bloc LOI D'OHM */
   #ohm-info {
-    margin-top: 8px;
-    padding-top: 8px;
-    border-top: 1px dashed #cbd5e1;
-    background: rgba(241, 245, 249, 0.5); /* Fond gris très léger */
-    border-radius: 6px;
-    padding: 6px;
+    margin-top: 8px; padding-top: 8px; border-top: 1px dashed #cbd5e1;
+    background: rgba(241, 245, 249, 0.5); border-radius: 6px; padding: 6px;
   }
-
-  #ohm-info-title {
-    font-weight: 800; font-size: 10px; text-transform: uppercase;
-    color: #334155; margin-bottom: 4px;
-  }
-  
+  #ohm-info-title { font-weight: 800; font-size: 10px; text-transform: uppercase; color: #334155; margin-bottom: 4px; }
   #ohm-Rlist { margin: 2px 0 2px 14px; padding: 0; font-size: 10px; }
   #ohm-Rlist li { margin-bottom: 1px; }
 
-  /* --- BOUTONS PRO --- */
+  /* --- BUTTONS --- */
   button {
-    padding: 12px;
-    border-radius: 10px;
-    border: 1px solid rgba(255,255,255,0.1);
-    
-    /* Gradient Slate sombre */
+    padding: 12px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.1);
     background: linear-gradient(135deg, #334155 0%, #1e293b 100%);
-    color: white;
-    
-    font-weight: 700;
-    font-family: 'Inter', sans-serif;
-    cursor: pointer;
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 
-                0 2px 4px -1px rgba(0, 0, 0, 0.06);
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
+    color: white; font-weight: 700; font-family: 'Inter', sans-serif;
+    cursor: pointer; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    text-transform: uppercase; letter-spacing: 0.05em;
   }
-
   button:hover {
     background: linear-gradient(135deg, #475569 0%, #334155 100%);
     transform: translateY(-2px);
     box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.15);
   }
+  button:active { transform: translateY(0) scale(0.98); box-shadow: inset 0 3px 5px rgba(0, 0, 0, 0.2); }
 
-  /* MODIFICATION : Ajout de l'effet d'enfoncement (scale et ombre interne) */
-  button:active { 
-    transform: translateY(0) scale(0.98); 
-    box-shadow: inset 0 3px 5px rgba(0, 0, 0, 0.2);
-  }
-
-  /* Bouton TESTER en accent (Bleu électrique) */
   #check-btn, #btn-check {
     background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
     border: 1px solid rgba(255,255,255,0.2);
   }
-  #check-btn:hover, #btn-check:hover {
-    background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%);
-  }
+  #check-btn:hover, #btn-check:hover { background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%); }
 
-  /* Grille de boutons pour gagner de la place */
-  .actions-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 8px;
-    margin-top: 10px; 
-  }
-  
-  /* Bouton Tester prend 2 colonnes */
-  #check-btn { 
-      grid-column: span 2; 
-      margin: 0; 
-      font-size: 14px; 
-      padding: 10px;
-  }
+  .actions-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
+  #check-btn { grid-column: span 2; margin: 0; font-size: 14px; padding: 10px; }
   #newgame-btn, #mute-btn { margin: 0; font-size: 11px; padding: 8px; }
 
-
   #controls-info {
-    font-size: 10px;
-    text-align: center;
-    color: #94a3b8;
-    background: rgba(255,255,255,0.4);
-    padding: 5px;
-    border-radius: 8px;
-    margin-top: 5px;
+    font-size: 10px; text-align: center; color: #94a3b8;
+    background: rgba(255,255,255,0.4); padding: 5px; border-radius: 8px; margin-top: 5px;
+  }
+  /* Indicateur de raccourcis clavier */
+  .key-badge {
+    display: inline-block; padding: 2px 5px; background: rgba(0,0,0,0.1); 
+    border-radius: 4px; font-weight: 800; color: #475569; margin: 0 2px;
   }
 
   #message-center {
-    font-size: 16px;
-    font-weight: 800;
-    text-align: center;
-    color: #0369a1; /* Sky 700 */
-    min-height: 24px;
-    margin-top: 15px;
-    text-shadow: 0 1px 0 rgba(255,255,255,0.8);
+    font-size: 16px; font-weight: 800; text-align: center; color: #0369a1;
+    min-height: 24px; margin-top: 15px; text-shadow: 0 1px 0 rgba(255,255,255,0.8);
   }
 
-  /* --- MOBILE/RESPONSIVE --- */
+  /* --- MOBILE --- */
   #mobile-header {
-    display: none;
-    flex-direction: column;
-    align-items: center;
-    width: 95%;
-    font-weight: bold;
-    font-size: 14px;
-    margin-top: 5px;
-    background: rgba(255,255,255,0.9);
-    padding: 8px;
-    border-radius: 12px;
+    display: none; flex-direction: column; align-items: center; width: 95%;
+    font-weight: bold; font-size: 14px; margin-top: 5px;
+    background: rgba(255,255,255,0.9); padding: 8px; border-radius: 12px;
     border: 1px solid rgba(0,0,0,0.05);
   }
-
-  #mobile-header-row {
-    display: flex;
-    justify-content: space-between;
-    width: 100%;
-    font-size: 13px;
-    color: #334155;
-  }
-
-  #mob-rank {
-    color: #dc2626;
-    font-size: 13px;
-    margin-top: 4px;
-    font-weight: 900;
-  }
-
+  #mobile-header-row { display: flex; justify-content: space-between; width: 100%; font-size: 13px; color: #334155; }
+  #mob-rank { color: #dc2626; font-size: 13px; margin-top: 4px; font-weight: 900; }
   #mobile-controls {
-    display: none;
-    width: 100%;
-    justify-content: center;
-    margin-top: 10px;
-    gap: 20px;
-    padding-bottom: 5px;
-    touch-action: none;
-    z-index: 100;
-    position: relative;
+    display: none; width: 100%; justify-content: center; margin-top: 10px; gap: 20px;
+    padding-bottom: 5px; touch-action: none; z-index: 100; position: relative;
   }
-
   .pad-group { display: flex; gap: 12px; }
-
   .mob-btn {
-    width: 80px;
-    height: 80px;
-    font-size: 16px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    background: white;
-    border: none;
-    border-radius: 20px;
-    box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
-    color: #334155;
-    font-weight: 800;
+    width: 80px; height: 80px; font-size: 16px; display: flex; justify-content: center; align-items: center;
+    background: white; border: none; border-radius: 20px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
+    color: #334155; font-weight: 800;
   }
-  
-  .mob-btn:active {
-    transform: scale(0.95);
-    background: #f1f5f9;
-  }
+  .mob-btn:active { transform: scale(0.95); background: #f1f5f9; }
 
-  /* --- Personnages (Dialogues) --- */
-  @keyframes popIn {
-    from { transform: scale(0) translateY(100px); opacity: 0; }
-    to   { transform: scale(1) translateY(0); opacity: 1; }
-  }
-
+  /* --- Dialogues --- */
+  @keyframes popIn { from { transform: scale(0) translateY(100px); opacity: 0; } to { transform: scale(1) translateY(0); opacity: 1; } }
   #proviseur-box, #prof-box {
-    position: fixed;
-    bottom: 0;
-    display: none;
-    cursor: pointer;
-    z-index: 100;
-    transition: transform 0.3s ease-out;
+    position: fixed; bottom: 0; display: none; cursor: pointer; z-index: 100; transition: transform 0.3s ease-out;
   }
-
   #proviseur-box { right: 2%; left: auto; }
-  #prof-box      { left: 2%; right: auto; }
-
-  #proviseur-box.pop-in,
-  #prof-box.pop-in {
-    animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  }
-
-  #proviseur-img, #prof-img {
-    height: auto;
-    max-height: 45vh;
-    filter: drop-shadow(0 10px 20px rgba(0,0,0,0.5));
-    position: relative;
-    z-index: 1;
-  }
-
+  #prof-box { left: 2%; right: auto; }
+  #proviseur-box.pop-in, #prof-box.pop-in { animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+  #proviseur-img, #prof-img { height: auto; max-height: 45vh; filter: drop-shadow(0 10px 20px rgba(0,0,0,0.5)); position: relative; z-index: 1; }
   #speech-bubble, #prof-bubble {
-    position: absolute;
-    bottom: calc(100% + 15px);
-    background: #ffffff;
-    border: 2px solid #334155;
-    border-radius: 20px;
-    padding: 20px;
-    font-size: 15px;
-    line-height: 1.4;
-    font-weight: 600;
-    color: #1e293b;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.15);
-    min-width: 250px;
-    max-width: 320px;
-    opacity: 0;
-    animation: fadeIn 0.3s 0.2s forwards;
-    z-index: 2;
+    position: absolute; bottom: calc(100% + 15px); background: #ffffff;
+    border: 2px solid #334155; border-radius: 20px; padding: 20px;
+    font-size: 15px; line-height: 1.4; font-weight: 600; color: #1e293b;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.15); min-width: 250px; max-width: 320px;
+    opacity: 0; animation: fadeIn 0.3s 0.2s forwards; z-index: 2;
   }
-
   @keyframes fadeIn { to { opacity: 1; } }
-
-  #speech-bubble::after,
-  #prof-bubble::after {
-    content: '';
-    position: absolute;
-    width: 0;
-    height: 0;
-    border-style: solid;
-    border-width: 12px;
-    top: 100%;
-    border-color: #334155 transparent transparent transparent;
-    z-index: 3;
+  #speech-bubble::after, #prof-bubble::after {
+    content: ''; position: absolute; width: 0; height: 0; border-style: solid; border-width: 12px;
+    top: 100%; border-color: #334155 transparent transparent transparent; z-index: 3;
   }
-
-  #speech-bubble {
-    right: 50%;
-    text-align: right;
-    transform: translateX(50%);
-  }
+  #speech-bubble { right: 50%; text-align: right; transform: translateX(50%); }
   #speech-bubble::after { right: 40px; }
-
-  #prof-bubble {
-    left: 50%;
-    text-align: left;
-    transform: translateX(-50%);
-  }
+  #prof-bubble { left: 50%; text-align: left; transform: translateX(-50%); }
   #prof-bubble::after { left: 40px; }
 
-  /* --- RESPONSIVE MOBILE (< 900px) --- */
   @media (max-width: 900px) {
-    #main {
-      width: 100%; height: 100%;
-      padding: 10px;
-      border-radius: 0;
-      justify-content: flex-start;
-      border: none;
-    }
+    #main { width: 100%; height: 100%; padding: 10px; border-radius: 0; justify-content: flex-start; border: none; }
     #header-group { display: none; }
-    #game-container {
-      height: 60vh;
-      align-items: center;
-      width: 100%;
-      gap: 5px;
-    }
-    #side-panel { display: none; } /* On cache le panneau de droite */
+    #game-container { height: 60vh; align-items: center; width: 100%; gap: 5px; }
+    #side-panel { display: none; }
     #mobile-header { display: flex; }
     #mobile-controls { display: flex; }
     #message-center { font-size: 14px; margin-bottom: 5px; }
@@ -518,8 +261,7 @@
 </head>
 <body>
 
-<div id="main">
-  <div id="header-group">
+<div id="main" tabindex="0"> <div id="header-group">
     <img id="logo" src="Logo.gif" alt="Logo BTS" onerror="this.style.display='none'">
     <div id="title">VoltLink 2.0</div>
     <div id="subtitle">Relie Vcc à la LED – BTS CIEL</div>
@@ -559,8 +301,11 @@
 
       <div id="info-box">
         <div id="mission-info">
-          <p><b>Mission :</b> Calculer I = (Vcc - Vd) / R. Ne grille pas la LED !</p>
-          <p>Clic Gauche : Rotation horaire<br>Clic Droit : Anti-horaire</p>
+          <p><b>Mission :</b> Calculer I = (Vcc - Vd) / R.</p>
+          <p style="font-size:10px; color:#64748b;">
+            <span class="key-badge">Souris</span> Clic G/D<br>
+            <span class="key-badge">Clavier</span> Flèches + Espace
+          </p>
         </div>
 
         <div id="game-stats">
@@ -577,7 +322,6 @@
                 <div style="font-size: 10px; color: #94a3b8; font-weight: 600;">Tentatives sur cette grille : <span id="checks-count-stat">0</span></div>
             </div>
         </div>
-
 
         <div id="ohm-info">
           <div id="ohm-info-title">Analyse (U = <span id="ohm-U">5 V</span>)</div>
@@ -597,7 +341,7 @@
       </div>
 
       <div id="controls-info">
-        Clic G/D : Pivoter &bull; Espace : Tester
+        VoltLink v2.0 &bull; Pro Simulation
       </div>
     </div>
     
@@ -634,27 +378,23 @@
   /* --- Canvas & dimensions --- */
   const canvas = document.getElementById("circuit");
   const ctx = canvas.getContext("2d");
+  const mainDiv = document.getElementById("main");
 
-  // AGRANDISSEMENT DE LA ZONE LOGIQUE
   const GAME_WIDTH = 800;
   const GAME_HEIGHT = 1000;
 
   function resizeCanvas() {
     const dpr = window.devicePixelRatio || 1;
-    // Ajustement CSS pour le responsive
     const rect = canvas.getBoundingClientRect();
-    
-    // On fixe la taille interne du canvas
     canvas.width = GAME_WIDTH * dpr;
     canvas.height = GAME_HEIGHT * dpr;
-    
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.imageSmoothingEnabled = true;
     ctx.imageSmoothingQuality = "high";
   }
 
   window.addEventListener("resize", resizeCanvas);
-  resizeCanvas(); // Init
+  resizeCanvas(); 
 
   /* --- UI elements --- */
   const scoreElem = document.getElementById("score");
@@ -680,12 +420,10 @@
   const ohmReqElem = document.getElementById("ohm-Req");
   const ohmIElem = document.getElementById("ohm-I");
   
-  // NOUVEAUX ÉLÉMENTS STATS
   const pathLengthStat = document.getElementById("path-length-stat");
   const resistorCountStat = document.getElementById("resistor-count-stat");
   const diodeCountStat = document.getElementById("diode-count-stat"); 
   const checksCountStat = document.getElementById("checks-count-stat");
-
 
   const bgMusic = document.getElementById("bg-music");
 
@@ -723,12 +461,8 @@
     osc.type = type;
     osc.frequency.setValueAtTime(startFreq, audioCtx.currentTime);
     if (endFreq && endFreq !== startFreq) {
-      osc.frequency.exponentialRampToValueAtTime(
-        endFreq,
-        audioCtx.currentTime + duration
-      );
+      osc.frequency.exponentialRampToValueAtTime(endFreq, audioCtx.currentTime + duration);
     }
-
     gain.gain.setValueAtTime(0, audioCtx.currentTime);
     gain.gain.linearRampToValueAtTime(vol, audioCtx.currentTime + 0.01);
     gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
@@ -739,8 +473,8 @@
     osc.stop(audioCtx.currentTime + duration);
   }
 
-  // Sons
-  function sRotate() { playTone("sine", 400, 600, 0.1, 0.05); } 
+  function sRotate() { playTone("sine", 300, 500, 0.08, 0.03); } 
+  function sMove()   { playTone("triangle", 200, 200, 0.02, 0.01); } // Petit son de déplacement clavier
   function sCheck()  { playTone("triangle", 440, 660, 0.12, 0.08); }
   function sFail()   { playTone("sawtooth", 150, 50, 0.4, 0.1); }
   function sSuccess(){ 
@@ -749,20 +483,19 @@
     setTimeout(() => playTone("sine", 784, 1200, 0.3, 0.1), 200);
   }
 
-  /* --- Rangs CIEL --- */
+  /* --- Rangs --- */
   const cielRanks = [
     "Nouvelle Recrue", "Apprenti Câbleur", "Scripteur Bash", 
     "Décodeur Binaire", "Admin Réseau", "Développeur C++", 
     "Survivant de l'E4", "Expert Cybersécu", "Chef de Projet E6", 
     "Major de Promo", "Diplômé CIEL", "Légende du Lycée"
   ];
-
   function getRankName(level) {
     if (level > cielRanks.length) return cielRanks[cielRanks.length - 1];
     return cielRanks[level - 1];
   }
 
-  /* --- Personnages (Dialogues) --- */
+  /* --- Dialogues --- */
   const proviseurBox = document.getElementById("proviseur-box");
   const profBox = document.getElementById("prof-box");
   const speechBubble = document.getElementById("speech-bubble");
@@ -787,7 +520,7 @@
       ],
       general: [
         "Les Diodes (D) font chuter la tension de 0.7V environ.",
-        "Il te faut un courant entre 1mA et 30mA pour gagner. Ne grille pas la LED!"
+        "Il te faut un courant entre 1mA et 30mA pour gagner."
       ],
       physics: [
         "Rappel : Loi des mailles. U_res = Vcc - N_diodes * 0.7V.",
@@ -795,79 +528,50 @@
       ]
     },
     success: {
-      proviseur: [
-        "Un courant parfait. Ni trop fort, ni trop faible.",
-        "Beau travail d'ingénierie. Le matériel est sauf."
-      ],
-      general: [ "Bien joué ! La LED brille sans surchauffer.", "C'est validé par le département électronique." ],
-      physics: [
-        "Exactement ! La résistance limite le courant correctement.",
-        "Tu as bien compensé la chute de tension des diodes."
-      ]
+      proviseur: [ "Un courant parfait.", "Beau travail d'ingénierie." ],
+      general: [ "Bien joué ! La LED brille sans surchauffer.", "Validé par le département." ],
+      physics: [ "Exactement ! La résistance limite le courant.", "Tu as bien compensé la chute de tension." ]
     },
     fail: {
-      proviseur: [
-        "Mon budget matériel n'est pas illimité ! Attention aux courts-circuits !",
-        "Circuit ouvert ou composant grillé. Recommence."
-      ],
-      general: [ "Tu as peut-être oublié une résistance ? La LED a grillé.", "Ou alors le courant est trop faible pour allumer la LED." ],
-      physics: [
-        "Analyse : I = U/R. Si R est trop faible, I explose. Vérifie la valeur totale des résistances.",
-        "Si tu mets trop de diodes, la tension résultante est nulle."
-      ]
+      proviseur: [ "Mon budget matériel ! Attention aux courts-circuits !", "Circuit ouvert ou composant grillé." ],
+      general: [ "Tu as peut-être oublié une résistance ?", "Courant trop faible ou trop fort." ],
+      physics: [ "Analyse : I = U/R. Si R est trop faible, I explose.", "Vérifie tes connexions. Le courant ne passe pas." ]
     }
   };
 
   let charTimeout = null;
-
   function hideCharacters() {
     if (charTimeout) { clearTimeout(charTimeout); charTimeout = null; }
-    proviseurBox.style.display = "none";
-    profBox.style.display = "none";
-    proviseurBox.classList.remove("pop-in");
-    profBox.classList.remove("pop-in");
+    proviseurBox.style.display = "none"; profBox.style.display = "none";
+    proviseurBox.classList.remove("pop-in"); profBox.classList.remove("pop-in");
   }
-
   function showCharacterMessage(type, role) {
     const set = CHAR_MESSAGES[type];
     if (!set) return;
     hideCharacters();
-
     if (role === "proviseur") {
       const pool = set.proviseur || [];
       if (!pool.length) return;
       speechBubble.textContent = pool[Math.floor(Math.random() * pool.length)];
-      proviseurBox.style.display = "block";
-      void proviseurBox.offsetWidth;
-      proviseurBox.classList.add("pop-in");
+      proviseurBox.style.display = "block"; void proviseurBox.offsetWidth; proviseurBox.classList.add("pop-in");
     } else {
-      const candidates = (role === "physics") ? 
-        PROF_CONFIGS.filter(p => p.role === "physics") : PROF_CONFIGS;
+      const candidates = (role === "physics") ? PROF_CONFIGS.filter(p => p.role === "physics") : PROF_CONFIGS;
       const pool = (role === "physics" && set.physics) ? set.physics : (set.general || set.physics);
-      
       if (!pool.length) return;
-
       const chosenProf = candidates[Math.floor(Math.random() * candidates.length)];
       profImg.src = chosenProf.filename;
       profBubble.textContent = pool[Math.floor(Math.random() * pool.length)];
-      profBox.style.display = "block";
-      void profBox.offsetWidth;
-      profBox.classList.add("pop-in");
+      profBox.style.display = "block"; void profBox.offsetWidth; profBox.classList.add("pop-in");
     }
     charTimeout = setTimeout(hideCharacters, 6000);
   }
-
   function triggerCharacter(type) {
-    let role;
-    const r = Math.random();
+    let role; const r = Math.random();
     if (type === "intro") role = (r < 0.3) ? "proviseur" : "physics";
     else if (type === "success") role = (r < 0.2) ? "proviseur" : (r < 0.7 ? "physics" : "general");
     else role = (r < 0.4) ? "proviseur" : "physics";
     showCharacterMessage(type, role);
   }
-
-  proviseurBox.addEventListener("click", hideCharacters);
-  profBox.addEventListener("click", hideCharacters);
 
   /* --- Game state --- */
   let score = 0;
@@ -880,79 +584,61 @@
   let sourcePos = { row: 0, col: 0 };
   let ledPos = { row: 0, col: 0 };
   let pathCells = [];
-  let lastVisited = null;
   let puzzleStartTime = performance.now();
   let lastSolveTime = null;
   let checksCount = 0;
   let diodeCount = 0; 
   const supplyVoltage = 5;
-  let currentEqR = 0;
   let resistorList = [];
   let gridOriginX = 0;
   let gridOriginY = 0;
   let tileSize = 0;
 
-  // Animation state
+  // Animation & Visuals
   let gameState = "idle";
-  let successPath = null;
-  let successAnimStart = 0;
+  let activePath = null; // Used for both success (full) and fail (partial)
+  let animStartTime = 0;
   const SUCCESS_WAVE_DURATION = 800;
-  const SUCCESS_TOTAL_DURATION = 2000;
-  let pendingNextPuzzle = false;
-  let failAnimStart = 0;
-  const FAIL_ANIM_DURATION = 900;
+  const FAIL_ANIM_DURATION = 1500;
+  
+  // Selection / Inputs
   let lastHovered = { r: -1, c: -1 }; 
+  let keyboardCursor = { r: 0, c: 0 }; // Position curseur clavier
+  let inputMode = 'mouse'; // 'mouse' or 'keyboard'
 
-  /* --- Tiles & directions --- */
-  const TILE_TYPES = {
-    EMPTY: 0, STRAIGHT: 1, CORNER: 2, TEE: 3, CROSS: 4, SOURCE: 5, LED: 6
-  };
-
+  /* --- Tiles --- */
+  const TILE_TYPES = { EMPTY: 0, STRAIGHT: 1, CORNER: 2, TEE: 3, CROSS: 4, SOURCE: 5, LED: 6 };
   const BASE_MASK = {};
-  BASE_MASK[TILE_TYPES.EMPTY]    = 0;
-  BASE_MASK[TILE_TYPES.STRAIGHT] = 2 | 8; // R-L
-  BASE_MASK[TILE_TYPES.CORNER]   = 1 | 2; // U-R
-  BASE_MASK[TILE_TYPES.TEE]      = 1 | 2 | 8; // U-R-L
-  BASE_MASK[TILE_TYPES.CROSS]    = 1 | 2 | 4 | 8;
-  BASE_MASK[TILE_TYPES.SOURCE]   = 2; // Exit Right
-  BASE_MASK[TILE_TYPES.LED]      = 8; // Entry Left
+  BASE_MASK[TILE_TYPES.EMPTY] = 0;
+  BASE_MASK[TILE_TYPES.STRAIGHT] = 2 | 8; 
+  BASE_MASK[TILE_TYPES.CORNER] = 1 | 2; 
+  BASE_MASK[TILE_TYPES.TEE] = 1 | 2 | 8; 
+  BASE_MASK[TILE_TYPES.CROSS] = 1 | 2 | 4 | 8;
+  BASE_MASK[TILE_TYPES.SOURCE] = 2; 
+  BASE_MASK[TILE_TYPES.LED] = 8; 
 
-  const DIRS = [
-    { dx: 0, dy: -1, bit: 1 }, // up
-    { dx: 1, dy: 0, bit: 2 },  // right
-    { dx: 0, dy: 1, bit: 4 },  // down
-    { dx: -1, dy: 0, bit: 8 }  // left
-  ];
-
+  const DIRS = [ { dx: 0, dy: -1, bit: 1 }, { dx: 1, dy: 0, bit: 2 }, { dx: 0, dy: 1, bit: 4 }, { dx: -1, dy: 0, bit: 8 } ];
   const DIODE_ALLOWED_EXIT = [2, 4, 8, 1];
-
 
   function rotateMask(mask, rot) {
     rot = ((rot % 4) + 4) % 4;
     if (rot === 0) return mask;
     let res = 0;
     const bits = [1, 2, 4, 8];
-    for (let i = 0; i < 4; i++) {
-      if (mask & bits[i]) res |= bits[(i + rot) % 4];
-    }
+    for (let i = 0; i < 4; i++) { if (mask & bits[i]) res |= bits[(i + rot) % 4]; }
     return res;
   }
 
   function findRotationForMask(type, mask) {
     const base = BASE_MASK[type];
-    for (let r = 0; r < 4; r++) {
-      if (rotateMask(base, r) === mask) return r;
-    }
+    for (let r = 0; r < 4; r++) { if (rotateMask(base, r) === mask) return r; }
     return 0;
   }
 
   function getGridSizeForLevel(level) {
     const baseRows = 5, baseCols = 6;
     const inc = Math.floor((level - 1) / 1); 
-    return { 
-        rows: Math.min(baseRows + inc, 8), 
-        cols: Math.min(baseCols + inc, 10) 
-    };
+    return { rows: Math.min(baseRows + inc, 8), cols: Math.min(baseCols + inc, 10) };
   }
 
   /* --- Persistence --- */
@@ -964,22 +650,17 @@
       bestLevel = l ? parseInt(l, 10) || 0 : 0;
     } catch(e) {}
   }
-
   function saveBest() {
     try {
       localStorage.setItem("voltlink_best_score", String(bestScore));
       localStorage.setItem("voltlink_best_level", String(bestLevel));
     } catch(e) {}
   }
-
   function updateBestIfNeeded() {
-    if (score > bestScore) {
-      bestScore = score; bestLevel = level; saveBest();
-    }
+    if (score > bestScore) { bestScore = score; bestLevel = level; saveBest(); }
   }
 
   /* --- UI UPDATES --- */
-  
   function updateStats() {
     pathLengthStat.textContent = pathCells.length;
     resistorCountStat.textContent = resistorList.length;
@@ -990,11 +671,7 @@
   function updateOhmInfo() {
     ohmTypeElem.textContent = "Série";
     ohmRlist.innerHTML = "";
-    
-    // Calcul de la résistance totale disponible sur le plateau (indicatif)
-    // Le vrai calcul se fait lors du check sur le chemin actif
-    currentEqR = resistorList.reduce((acc, r) => acc + r.rValue, 0);
-    
+    let currentEqR = resistorList.reduce((acc, r) => acc + r.rValue, 0);
     if (resistorList.length === 0) {
       const li = document.createElement("li");
       li.textContent = "ATTENTION : Pas de résistance !";
@@ -1009,23 +686,16 @@
       });
       ohmReqElem.textContent = currentEqR + " Ω";
     }
-    
-    // I est inconnu tant qu'on n'a pas tracé le chemin
     ohmIElem.textContent = "?";
     ohmU.textContent = supplyVoltage + " V";
   }
 
   function updateUI() {
-    scoreElem.textContent = score;
-    levelElem.textContent = level;
-    rankElem.textContent = getRankName(level);
-    mobScoreElem.textContent = "Score: " + score;
-    mobLevelElem.textContent = "Niv: " + level;
-    mobRankElem.textContent = getRankName(level);
+    scoreElem.textContent = score; levelElem.textContent = level; rankElem.textContent = getRankName(level);
+    mobScoreElem.textContent = "Score: " + score; mobLevelElem.textContent = "Niv: " + level; mobRankElem.textContent = getRankName(level);
     mobTimeElem.textContent = lastSolveTime ? "Dernier: " + lastSolveTime.toFixed(1) + " s" : "Dernier: -- s";
     bestElem.textContent = bestScore + " pts (niv " + bestLevel + ")";
-    updateOhmInfo();
-    updateStats(); 
+    updateOhmInfo(); updateStats(); 
   }
 
   /* --- GENERATION --- */
@@ -1044,7 +714,6 @@
       grid.push(row);
     }
 
-    // Chemin
     let row = 1 + Math.floor(Math.random() * Math.max(1, gridRows - 2));
     let col = 0;
     sourcePos = { row, col };
@@ -1062,8 +731,8 @@
       pathCells.push({ row, col });
     }
     ledPos = { row, col };
+    keyboardCursor = { ...sourcePos };
 
-    // Masques
     const maskGrid = Array(gridRows).fill(0).map(() => Array(gridCols).fill(0));
     for (let i = 0; i < pathCells.length - 1; i++) {
       const a = pathCells[i], b = pathCells[i + 1];
@@ -1077,7 +746,6 @@
       maskGrid[b.row][b.col] |= opp;
     }
 
-    // Affectation types
     for (let r = 0; r < gridRows; r++) {
       for (let c = 0; c < gridCols; c++) {
         const mask = maskGrid[r][c];
@@ -1100,7 +768,6 @@
       }
     }
 
-    // Parasites
     const distract = [TILE_TYPES.STRAIGHT, TILE_TYPES.CORNER, TILE_TYPES.TEE, TILE_TYPES.CROSS];
     for (let r = 0; r < gridRows; r++) {
       for (let c = 0; c < gridCols; c++) {
@@ -1111,49 +778,30 @@
       }
     }
     
-    // --- 1. Placement des composants nécessaires (Chemin Correct) - CORRIGÉ ---
     resistorList = [];
     diodeCount = 0;
     const rValues = [220, 330, 470, 1000]; 
-    const pathCandidates = pathCells.slice(1, pathCells.length - 1); // Exclut SOURCE/LED
-    
-    // Set des coordonnées du chemin pour exclure les pièges
+    const pathCandidates = pathCells.slice(1, pathCells.length - 1); 
     const pathSet = new Set();
     pathCells.forEach(p => pathSet.add(`${p.row},${p.col}`)); 
     
-    // 1. Identifier toutes les tuiles DROITES (STRAIGHT) éligibles sur le chemin, et les mélanger
     let straightCandidates = [];
     pathCandidates.forEach(cell => {
         const tile = grid[cell.row][cell.col];
-        if (tile.type === TILE_TYPES.STRAIGHT) {
-            straightCandidates.push(cell); // Stocke l'objet {row, col}
-        }
+        if (tile.type === TILE_TYPES.STRAIGHT) straightCandidates.push(cell);
     });
 
-    // Simple shuffle (Fisher-Yates) sur les cellules candidates
     for (let i = straightCandidates.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         [straightCandidates[i], straightCandidates[j]] = [straightCandidates[j], straightCandidates[i]];
     }
 
-    // 2. Déterminer le nombre de composants à placer et les affecter
-    // nbComponents est le nombre d'emplacements que nous allons tenter de remplir.
     const nbComponents = Math.max(1, Math.min(straightCandidates.length, Math.ceil(level/2)));
-    
     for (let i = 0; i < nbComponents; i++) {
         const cell = straightCandidates[i];
         const tile = grid[cell.row][cell.col];
-        
-        let componentType;
-        // La probabilité de Diode est activée à partir du niveau 3
-        if (level > 2 && Math.random() < 0.4) { 
-            componentType = "D"; 
-        } else {
-            componentType = "R"; 
-        }
-
+        let componentType = (level > 2 && Math.random() < 0.4) ? "D" : "R";
         tile.component = componentType;
-        
         if (componentType === "R") {
             tile.rValue = rValues[Math.floor(Math.random()*rValues.length)];
             resistorList.push({rValue:tile.rValue, row:cell.row, col:cell.col});
@@ -1161,45 +809,30 @@
             diodeCount++; 
         }
     }
-    // --- FIN DE CORRECTION ---
 
-
-    // --- 2. Placement des Résistances Pièges (Chemins Altérnatifs) ---
     if (level >= 3) {
         const trapCandidates = [];
         for (let r = 0; r < gridRows; r++) {
             for (let c = 0; c < gridCols; c++) {
                 const tile = grid[r][c];
-                // Doit être une tuile droite (STRAIGHT), non fixe, et NE PAS être sur le chemin correct, et NE PAS avoir déjà de composant (R ou D)
                 if (!tile.fixed && tile.type === TILE_TYPES.STRAIGHT && !pathSet.has(`${r},${c}`) && tile.component === null) {
                     trapCandidates.push({r, c});
                 }
             }
         }
-        
-        // Limiter le nombre de pièges
         const maxTraps = Math.min(2, Math.floor(gridRows * gridCols / 20));
         let trapsPlaced = 0;
-        
-        // Pièges : 10 Ohm (court-circuit) et 10 kOhm (circuit ouvert)
         const trapRValues = [10, 10000]; 
-
         while (trapsPlaced < maxTraps && trapCandidates.length > 0) {
             const idx = Math.floor(Math.random() * trapCandidates.length);
             const trapPos = trapCandidates.splice(idx, 1)[0]; 
-            
             const tile = grid[trapPos.r][trapPos.c];
-            
             tile.component = "R";
             tile.rValue = trapRValues[trapsPlaced % trapRValues.length];
-            // Le piège est placé. Il est crucial qu'il ne soit pas dans resistorList.
-            
             trapsPlaced++;
         }
     }
 
-
-    // --- 3. Mélange des rotations ---
     for (let r = 0; r < gridRows; r++) {
       for (let c = 0; c < gridCols; c++) {
         const tile = grid[r][c];
@@ -1210,85 +843,65 @@
       }
     }
 
-    lastVisited = null; checksCount = 0;
+    checksCount = 0;
     puzzleStartTime = performance.now();
     messageCenter.textContent = "Connecte les pistes, puis teste le circuit. Attention aux pièges !";
-    updateOhmInfo();
-    updateStats(); 
+    updateOhmInfo(); updateStats(); 
   }
 
   function getTileMask(tile) { return rotateMask(BASE_MASK[tile.type], tile.rotation); }
 
-  /* --- LOGIQUE JEU (BFS) --- */
+  /* --- CIRCUIT LOGIC --- */
   function evaluateCircuitPath() {
+    // Return: { ok: bool, path: Array, failPoint: {row, col} }
     const visited = Array(gridRows).fill(null).map(()=>Array(gridCols).fill(false));
     const parent = Array(gridRows).fill(null).map(()=>Array(gridCols).fill(null));
     const queue = [{ row: sourcePos.row, col: sourcePos.col }];
     visited[sourcePos.row][sourcePos.col] = true;
+    
+    // Pour visualiser le "fail trace", on garde l'ordre de visite
+    let traversalOrder = [{ row: sourcePos.row, col: sourcePos.col }];
 
     while (queue.length > 0) {
       const cur = queue.shift();
       const tile = grid[cur.row][cur.col];
       const mask = getTileMask(tile);
 
-      // 1. VÉRIFICATION DIODE SUR LA CASE DE DÉPART (cur)
+      let dirsToCheck = DIRS;
       if (tile.component === "D") {
-          const rot = tile.rotation;
-          const diodeExitBit = DIODE_ALLOWED_EXIT[rot]; 
-          
-          for (const dir of DIRS) {
-             if (!(mask & dir.bit)) continue; 
-             if (dir.bit !== diodeExitBit) continue;
-             
-             const nr = cur.row + dir.dy, nc = cur.col + dir.dx;
-             if (nr<0 || nr>=gridRows || nc<0 || nc>=gridCols || visited[nr][nc]) continue;
-             
-             const neighbor = grid[nr][nc];
-             const nMask = getTileMask(neighbor);
-             const opp = (dir.bit===1?4 : dir.bit===4?1 : dir.bit===2?8 : 2);
-             
-             if (!(nMask & opp)) continue; 
-             
-             // 2. VÉRIFICATION DIODE SUR LA CASE D'ARRIVÉE (neighbor)
-             if (neighbor.component === "D") {
-                const nRot = neighbor.rotation;
-                const nDiodeExitBit = DIODE_ALLOWED_EXIT[nRot]; 
-                if (opp === nDiodeExitBit) continue; 
-             }
-             
-             visited[nr][nc] = true;
-             parent[nr][nc] = cur;
-             queue.push({ row: nr, col: nc });
-          }
-      } 
-      else { 
-          for (const dir of DIRS) {
-              if (!(mask & dir.bit)) continue;
-              const nr = cur.row + dir.dy, nc = cur.col + dir.dx;
-              if (nr<0 || nr>=gridRows || nc<0 || nc>=gridCols || visited[nr][nc]) continue;
-
-              const neighbor = grid[nr][nc];
-              if (!neighbor) continue;
-              const nMask = getTileMask(neighbor);
-              const opp = (dir.bit===1?4 : dir.bit===4?1 : dir.bit===2?8 : 2);
-              
-              if (!(nMask & opp)) continue;
-
-              if (neighbor.component === "D") {
-                const nRot = neighbor.rotation;
-                const nDiodeExitBit = DIODE_ALLOWED_EXIT[nRot]; 
-                if (opp === nDiodeExitBit) continue; 
-              }
-
-              visited[nr][nc] = true;
-              parent[nr][nc] = cur;
-              queue.push({ row: nr, col: nc });
-          }
+         const allowed = DIODE_ALLOWED_EXIT[tile.rotation];
+         dirsToCheck = DIRS.filter(d => d.bit === allowed);
       }
-    } 
 
-    lastVisited = visited;
-    if (!visited[ledPos.row][ledPos.col]) return { ok: false, visited };
+      for (const dir of dirsToCheck) {
+          if (!(mask & dir.bit)) continue;
+          
+          const nr = cur.row + dir.dy, nc = cur.col + dir.dx;
+          if (nr<0 || nr>=gridRows || nc<0 || nc>=gridCols || visited[nr][nc]) continue;
+
+          const neighbor = grid[nr][nc];
+          if (!neighbor) continue;
+          const nMask = getTileMask(neighbor);
+          const opp = (dir.bit===1?4 : dir.bit===4?1 : dir.bit===2?8 : 2);
+          
+          if (!(nMask & opp)) continue;
+          if (neighbor.component === "D") {
+            const nAllowed = DIODE_ALLOWED_EXIT[neighbor.rotation];
+            if (opp === nAllowed) continue; // Blocked by diode direction
+          }
+
+          visited[nr][nc] = true;
+          parent[nr][nc] = cur;
+          queue.push({ row: nr, col: nc });
+          traversalOrder.push({ row: nr, col: nc });
+      }
+    }
+
+    if (!visited[ledPos.row][ledPos.col]) {
+        // En cas d'échec, on reconstruit le chemin le plus long depuis la source
+        // C'est une approximation pour l'effet visuel "debug"
+        return { ok: false, path: traversalOrder }; 
+    }
 
     const path = [];
     let cur = { row: ledPos.row, col: ledPos.col };
@@ -1296,92 +909,93 @@
       path.push({ row: cur.row, col: cur.col });
       if (cur.row === sourcePos.row && cur.col === sourcePos.col) break;
       cur = parent[cur.row][cur.col];
-      // Sécurité anti-boucle infinie (bien que le BFS doive l'éviter)
-      if (path.length > gridRows * gridCols * 2) { break; } 
+      if (path.length > gridRows * gridCols * 2) break; 
     }
     path.reverse();
-    return { ok: true, visited, path };
+    return { ok: true, path };
   }
 
   /* --- INPUT --- */
-  function updateHover(x, y) {
-    if (tileSize <= 0) { lastHovered = {r:-1, c:-1}; return; }
-    const gx = x - gridOriginX, gy = y - gridOriginY;
-    if (gx < 0 || gy < 0) { lastHovered = {r:-1, c:-1}; return; }
-    const c = Math.floor(gx / tileSize), r = Math.floor(gy / tileSize);
-    if (r < 0 || r >= gridRows || c < 0 || c >= gridCols) { lastHovered = {r:-1, c:-1}; return; }
-    lastHovered = {r, c};
+  function rotateTile(r, c, clockwise) {
+      const tile = grid[r][c];
+      if (!tile || tile.fixed) return;
+      
+      initAudioContext();
+      // Rotation logic
+      if (!clockwise) tile.rotation = (tile.rotation + 3) % 4;
+      else tile.rotation = (tile.rotation + 1) % 4;
+      
+      // Animation "Overshoot" (Elastic physics)
+      // On "triche" en ajoutant une valeur cible éloignée visuellement
+      // Le loop d'animation gérera le lissage vers la vraie valeur
+      
+      sRotate();
   }
 
-  function handleGridClick(x, y, isRightClick) {
+  function handleInteraction(x, y, isRightClick) {
     if (gameState !== "idle" || tileSize <= 0) return;
-    updateHover(x, y); 
-    const r = lastHovered.r, c = lastHovered.c;
-    if (r < 0 || c < 0) return;
+    const gx = x - gridOriginX, gy = y - gridOriginY;
+    if (gx < 0 || gy < 0) return;
+    const c = Math.floor(gx / tileSize), r = Math.floor(gy / tileSize);
+    if (r < 0 || r >= gridRows || c < 0 || c >= gridCols) return;
 
-    const tile = grid[r][c];
-    if (!tile || tile.fixed) return;
-    initAudioContext();
-    
-    // Rotation : Horaire (Clic Gauche) ou Anti-horaire (Clic Droit)
-    if (isRightClick) {
-        tile.rotation = (tile.rotation + 3) % 4; // -1 modulo 4
-    } else {
-        tile.rotation = (tile.rotation + 1) % 4;
-    }
-    
-    lastVisited = null;
-    sRotate();
+    inputMode = 'mouse';
+    keyboardCursor = {r, c}; // Sync cursor
+    rotateTile(r, c, !isRightClick);
   }
 
   function onCanvasClick(evt) {
     const rect = canvas.getBoundingClientRect();
     const x = (evt.clientX - rect.left) * (GAME_WIDTH / rect.width);
     const y = (evt.clientY - rect.top) * (GAME_HEIGHT / rect.height);
-    handleGridClick(x, y, false);
+    handleInteraction(x, y, false);
   }
   
-  function onCanvasTouch(e) {
-      e.preventDefault(); 
-      const touch = e.changedTouches[0];
-      const rect = canvas.getBoundingClientRect();
-      const x = (touch.clientX - rect.left) * (GAME_WIDTH / rect.width);
-      const y = (touch.clientY - rect.top) * (GAME_HEIGHT / rect.height);
-      handleGridClick(x, y, false);
-  }
-
-  function onCanvasMove(evt) {
-      const rect = canvas.getBoundingClientRect();
-      const x = (evt.clientX - rect.left) * (GAME_WIDTH / rect.width);
-      const y = (evt.clientY - rect.top) * (GAME_HEIGHT / rect.height);
-      updateHover(x, y);
-  }
-
-  function onCanvasTouchMove(e) {
-      if (e.changedTouches.length > 0) {
-          const touch = e.changedTouches[0];
-          const rect = canvas.getBoundingClientRect();
-          const x = (touch.clientX - rect.left) * (GAME_WIDTH / rect.width);
-          const y = (touch.clientY - rect.top) * (GAME_HEIGHT / rect.height);
-          updateHover(x, y);
-      }
-  }
-
-  // Gestion du Clic Droit pour rotation inverse
   canvas.addEventListener("contextmenu", (e) => {
     e.preventDefault(); 
-    
-    if (gameState !== "idle" || tileSize <= 0) return;
-    
     const rect = canvas.getBoundingClientRect();
     const x = (e.clientX - rect.left) * (GAME_WIDTH / rect.width);
     const y = (e.clientY - rect.top) * (GAME_HEIGHT / rect.height);
-    
-    handleGridClick(x, y, true); // true = right click
+    handleInteraction(x, y, true);
+  });
+  
+  // KEYBOARD CONTROLS (Pro Feature)
+  document.addEventListener("keydown", (e) => {
+      // Ignorer si on n'est pas focus sur le jeu
+      // if (document.activeElement !== mainDiv && document.activeElement !== document.body) return;
+
+      if (e.code === "Space" || e.code === "Enter") { 
+          e.preventDefault();
+          if (gameState === "idle") {
+             inputMode = 'keyboard';
+             rotateTile(keyboardCursor.r, keyboardCursor.c, true);
+          }
+      }
+      else if (e.key.startsWith("Arrow") || ["KeyW","KeyA","KeyS","KeyD"].includes(e.code)) {
+          e.preventDefault();
+          if (gameState !== "idle") return;
+          inputMode = 'keyboard';
+          let nr = keyboardCursor.r, nc = keyboardCursor.c;
+          if (e.code === "ArrowUp" || e.code === "KeyW") nr--;
+          if (e.code === "ArrowDown" || e.code === "KeyS") nr++;
+          if (e.code === "ArrowLeft" || e.code === "KeyA") nc--;
+          if (e.code === "ArrowRight" || e.code === "KeyD") nc++;
+          
+          if (nr >= 0 && nr < gridRows && nc >= 0 && nc < gridCols) {
+              keyboardCursor = {r: nr, c: nc};
+              sMove();
+          }
+      }
+      else if (e.code === "KeyT") {
+          e.preventDefault(); onCheckCircuit();
+      }
+      else if (e.code === "KeyN") {
+          e.preventDefault(); resetRun();
+      }
   });
 
 
-  // --- NOUVELLE LOGIQUE DE VALIDATION AVEC LOI D'OHM ---
+  /* --- VALIDATION --- */
   function onCheckCircuit() {
     if (gameState !== "idle") return;
     initAudioContext();
@@ -1390,105 +1004,76 @@
     const now = performance.now();
     const res = evaluateCircuitPath();
     const elapsed = (now - puzzleStartTime) / 1000;
+    
+    // On stocke le chemin (complet si succès, partiel si échec)
+    activePath = res.path; 
 
     if (res.ok) {
-      // 1. Compter les composants sur le chemin ACTIF
       let pathResistors = 0;
       let pathDiodes = 0;
       let rList = [];
       
       res.path.forEach(pos => {
           const tile = grid[pos.row][pos.col];
-          if (tile.component === "R") {
-            pathResistors += tile.rValue;
-            rList.push(tile.rValue);
-          }
+          if (tile.component === "R") { pathResistors += tile.rValue; rList.push(tile.rValue); }
           if (tile.component === "D") pathDiodes += 1;
       });
 
-      // 2. Calculs Physique
       const Vf_total = pathDiodes * 0.7;
       const U_restante = supplyVoltage - Vf_total;
-      
       let I_amp = 0;
       let failMessage = "";
 
-      // Scénarios de physique
       if (U_restante <= 0) {
           I_amp = 0;
-          failMessage = `Tension insuffisante (${pathDiodes} diodes x 0.7V > 5V). La LED reste éteinte.`;
+          failMessage = `Tension insuffisante (${pathDiodes} diodes).`;
       } else if (pathResistors === 0) {
-          I_amp = 999; // Court-circuit
-          failMessage = "COURT-CIRCUIT ! (R=0Ω). La LED a explosé ! Ajoute une résistance.";
+          I_amp = 999; 
+          failMessage = "COURT-CIRCUIT (R=0Ω) !";
       } else {
           I_amp = U_restante / pathResistors;
       }
 
-      // Mise à jour affichage stats physiques
       ohmIElem.textContent = (I_amp * 1000).toFixed(1) + " mA";
       ohmReqElem.textContent = pathResistors + " Ω";
-      
-      // Mise à jour de la liste des résistances pour l'affichage (seulement celles du chemin)
       ohmRlist.innerHTML = "";
       rList.forEach((rValue, idx) => {
-        const li = document.createElement("li");
-        li.textContent = `R${idx + 1} = ${rValue} Ω`;
-        ohmRlist.appendChild(li);
+        const li = document.createElement("li"); li.textContent = `R${idx + 1} = ${rValue} Ω`; ohmRlist.appendChild(li);
       });
       if (rList.length === 0) {
-          const li = document.createElement("li");
-          li.textContent = "ATTENTION : Pas de résistance !";
-          li.style.color = "#dc2626"; li.style.fontWeight = "bold";
-          ohmRlist.appendChild(li);
+          const li = document.createElement("li"); li.textContent = "ATTENTION : R=0 !";
+          li.style.color = "#dc2626"; li.style.fontWeight = "bold"; ohmRlist.appendChild(li);
       }
 
-
-      // 3. Win / Lose
-      const maxCurrent = 0.030; // 30 mA max
-      const minCurrent = 0.001; // 1 mA min
-
-      if (I_amp > maxCurrent) {
-          // FAIL : Grillé
+      if (I_amp > 0.030 || (I_amp < 0.001 && I_amp >= 0)) {
           sFail();
           gameState = "anim_fail";
-          failAnimStart = now;
-          messageCenter.textContent = failMessage || `Courant trop fort (${(I_amp * 1000).toFixed(1)}mA > 30mA). La LED a grillé !`;
+          animStartTime = now;
+          if(I_amp > 0.030) messageCenter.textContent = failMessage || `I=${(I_amp * 1000).toFixed(1)}mA > 30mA. Surchauffe !`;
+          else messageCenter.textContent = failMessage || `I=${(I_amp * 1000).toFixed(1)}mA < 1mA. Trop faible.`;
           triggerCharacter("fail");
-          updateUI();
-          return;
-      } 
-      else if (I_amp < minCurrent && I_amp >= 0) {
-           // FAIL : Pas assez de jus
-           sFail();
-           gameState = "anim_fail";
-           failAnimStart = now;
-           messageCenter.textContent = failMessage || `Courant trop faible (${(I_amp * 1000).toFixed(1)}mA < 1mA), la LED ne s'allume pas.`;
-           triggerCharacter("fail");
-           updateUI();
-           return;
+      } else {
+          // SUCCESS
+          sSuccess();
+          lastSolveTime = elapsed;
+          const base = 100 + (level-1)*20;
+          const penalty = Math.min(base*0.5, elapsed*2) + (checksCount-1)*10;
+          const gain = Math.floor(Math.max(20, base - penalty));
+          score += gain;
+          updateBestIfNeeded();
+          
+          gameState = "anim_success";
+          animStartTime = now;
+          messageCenter.textContent = `Succès ! I = ${(I_amp*1000).toFixed(1)}mA. +${gain} pts.`;
+          triggerCharacter("success");
       }
-
-      // SUCCESS
-      sSuccess();
-      lastSolveTime = elapsed;
-      const base = 100 + (level-1)*20;
-      const penalty = Math.min(base*0.5, elapsed*2) + (checksCount-1)*10;
-      const gain = Math.floor(Math.max(20, base - penalty));
-      score += gain;
-      updateBestIfNeeded();
-      
-      successPath = res.path;
-      successAnimStart = now;
-      gameState = "anim_success";
-      pendingNextPuzzle = true;
-      messageCenter.textContent = `Succès ! I = ${(I_amp*1000).toFixed(1)}mA. +${gain} pts.`;
-      triggerCharacter("success");
       updateUI();
     } else {
+      // Circuit Ouvert
       sFail();
       gameState = "anim_fail";
-      failAnimStart = now;
-      messageCenter.textContent = "Circuit ouvert. (Vérifiez les pistes et la polarité des Diodes !)";
+      animStartTime = now;
+      messageCenter.textContent = "Circuit ouvert. Regarde le tracé rouge !";
       triggerCharacter("fail");
       updateUI();
     }
@@ -1496,90 +1081,90 @@
 
   function resetRun() {
     score = 0; level = 1; lastSolveTime = null;
-    gameState = "idle"; pendingNextPuzzle = false;
+    gameState = "idle";
     generatePuzzle();
     updateUI();
     triggerCharacter("intro");
   }
 
-  /* --- UPDATE --- */
+  /* --- ANIMATION LOOP --- */
   function updateAnimations() {
     const now = performance.now();
-    // Gestion fin animation Succès
-    if (gameState === "anim_success" && pendingNextPuzzle) {
-      if ((now - successAnimStart) > SUCCESS_TOTAL_DURATION) {
-        gameState = "idle"; pendingNextPuzzle = false;
-        level++; generatePuzzle(); updateUI();
+    if (gameState === "anim_success") {
+      if ((now - animStartTime) > SUCCESS_WAVE_DURATION + 1000) {
+        gameState = "idle"; level++; generatePuzzle(); updateUI();
       }
-    } 
-    // Gestion fin animation Fail
-    else if (gameState === "anim_fail") {
-      if ((now - failAnimStart) > FAIL_ANIM_DURATION) gameState = "idle";
+    } else if (gameState === "anim_fail") {
+      if ((now - animStartTime) > FAIL_ANIM_DURATION) gameState = "idle";
     }
     return now;
   }
 
-  // Interpolation de la rotation pour fluidité (Lerp)
+  // Elastic Rotation Physics
   function updateTileAnimations() {
-    const speed = 0.6; // Vitesse rapide pour la rotation
+    const tension = 0.2; // Spring tension
+    const damping = 0.75; // Friction
+    
     for (let r = 0; r < gridRows; r++) {
       for (let c = 0; c < gridCols; c++) {
         const tile = grid[r][c];
         if (!tile) continue;
         
         let target = tile.rotation * (Math.PI / 2);
-        
-        // Gestion du bouclage 270° -> 0° et 0° -> 270° pour rotation fluide dans les 2 sens
         let current = tile.visualRotation;
-        
-        // Normalisation
+
+        // Wrap around logic to find shortest path
         while(current > Math.PI * 2) current -= Math.PI * 2;
         while(current < -Math.PI * 2) current += Math.PI * 2;
-        
-        // Si on passe de 0 à 270 (Anti-horaire) ou 270 à 0 (Horaire)
         if (Math.abs(target - current) > Math.PI * 1.5) {
-            if (target > current) current += Math.PI * 2;
-            else current -= Math.PI * 2;
+            if (target > current) current += Math.PI * 2; else current -= Math.PI * 2;
         }
 
-        tile.visualRotation = current + (target - current) * speed;
+        // Simple Lerp is boring. Let's make it snappy.
+        // Actually for simplicity within this strict constraint, let's stick to a fast Lerp with snap
+        // To do real spring physics requires velocity tracking per tile.
+        // Let's use a very fast asymptotic slide.
+        const diff = target - current;
+        if (Math.abs(diff) < 0.001) {
+            tile.visualRotation = target;
+        } else {
+            tile.visualRotation = current + diff * 0.25; 
+        }
       }
     }
   }
 
   function isTileEnergized(r, c, now) {
-    if (gameState !== "anim_success" || !successPath) return false;
-    const t = Math.min(1, (now - successAnimStart) / SUCCESS_WAVE_DURATION);
-    const idx = Math.floor(t * (successPath.length + 2)); 
-    for(let i=0; i<idx && i<successPath.length; i++) {
-      if (successPath[i].row === r && successPath[i].col === c) return true;
+    if (!activePath) return false;
+    const duration = (gameState === "anim_success") ? SUCCESS_WAVE_DURATION : FAIL_ANIM_DURATION*0.6;
+    const t = Math.min(1, (now - animStartTime) / duration);
+    const idx = Math.floor(t * (activePath.length + 1)); 
+    
+    // Check if tile is in the active portion of the path
+    for(let i=0; i<idx && i<activePath.length; i++) {
+      if (activePath[i].row === r && activePath[i].col === c) return true;
     }
     return false;
   }
-
-  function getFailPulse(now) {
-    if (gameState !== "anim_fail") return 0;
-    const t = (now - failAnimStart) / FAIL_ANIM_DURATION;
-    return Math.max(0, Math.sin(t * Math.PI * 3));
+  
+  // Highlight cursor logic
+  function drawCursor(ctx, x, y, size) {
+      const time = performance.now();
+      const pulse = 0.5 + 0.5 * Math.sin(time * 0.008);
+      ctx.strokeStyle = `rgba(255, 255, 255, ${0.4 + 0.4*pulse})`;
+      ctx.lineWidth = 4;
+      ctx.strokeRect(x, y, size, size);
   }
 
   /* --- DRAW --- */
   function draw(now) {
     ctx.clearRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
 
-    // Taille grille
     const availableW = GAME_WIDTH - 60;
     const availableH = GAME_HEIGHT - 60;
-    const sizeX = availableW / gridCols;
-    const sizeY = availableH / gridRows;
-    tileSize = Math.min(sizeX, sizeY);
-    const totalW = tileSize * gridCols;
-    const totalH = tileSize * gridRows;
-    gridOriginX = (GAME_WIDTH - totalW) / 2;
-    gridOriginY = (GAME_HEIGHT - totalH) / 2;
-
-    const visited = lastVisited;
-    const failPulse = getFailPulse(now);
+    tileSize = Math.min(availableW / gridCols, availableH / gridRows);
+    gridOriginX = (GAME_WIDTH - (tileSize * gridCols)) / 2;
+    gridOriginY = (GAME_HEIGHT - (tileSize * gridRows)) / 2;
 
     for (let r = 0; r < gridRows; r++) {
       for (let c = 0; c < gridCols; c++) {
@@ -1587,50 +1172,36 @@
         const x = gridOriginX + c * tileSize;
         const y = gridOriginY + r * tileSize;
 
-        // Feedback visited / fail
-        if (visited && visited[r] && visited[r].length > c && visited[r][c]) { 
-             if (gameState === "anim_fail") {
-               ctx.fillStyle = `rgba(239, 68, 68, ${0.1 + 0.2*failPulse})`; // Rouge
-             } else {
-               ctx.fillStyle = "rgba(59, 130, 246, 0.1)"; // Bleu léger
-             }
-             ctx.fillRect(x+1, y+1, tileSize-2, tileSize-2);
-        }
-
-        // Bordure case discrète
         ctx.strokeStyle = "rgba(255,255,255,0.08)";
         ctx.lineWidth = 1;
         ctx.strokeRect(x, y, tileSize, tileSize);
 
-        // Hover Feedback 
-        if (lastHovered.r === r && lastHovered.c === c && tile && !tile.fixed) {
-            ctx.strokeStyle = "#a78bfa"; 
-            ctx.lineWidth = 3;
-            ctx.strokeRect(x+1, y+1, tileSize-2, tileSize-2);
+        // Highlight Keyboard Cursor
+        if (inputMode === 'keyboard' && keyboardCursor.r === r && keyboardCursor.c === c) {
+             drawCursor(ctx, x, y, tileSize);
+        }
+        // Hover Mouse
+        else if (inputMode === 'mouse' && lastHovered.r === r && lastHovered.c === c && !tile.fixed) {
+            ctx.fillStyle = "rgba(255, 255, 255, 0.05)";
+            ctx.fillRect(x, y, tileSize, tileSize);
         }
 
         if (!tile || tile.type === TILE_TYPES.EMPTY) continue;
 
         const cx = x + tileSize/2;
         const cy = y + tileSize/2;
-        const isSource = (r === sourcePos.row && c === sourcePos.col);
-        const isLed = (r === ledPos.row && c === ledPos.col);
-        const baseM = BASE_MASK[tile.type];
-
+        
         ctx.save();
         ctx.translate(cx, cy);
-        
         ctx.rotate(tile.visualRotation);
 
-        // --- DESSIN DES PISTES ---
+        // TRACKS
         ctx.strokeStyle = "rgba(200, 200, 200, 0.8)";
         ctx.lineWidth = Math.max(5, tileSize * 0.14);
-        ctx.lineCap = "round";
-        ctx.lineJoin = "round";
-        ctx.shadowColor = "rgba(0,0,0,0.5)";
-        ctx.shadowBlur = 4;
-        ctx.shadowOffsetY = 2;
-
+        ctx.lineCap = "round"; ctx.lineJoin = "round";
+        ctx.shadowColor = "rgba(0,0,0,0.5)"; ctx.shadowBlur = 4; ctx.shadowOffsetY = 2;
+        
+        const baseM = BASE_MASK[tile.type];
         ctx.beginPath();
         if (baseM & 1) { ctx.moveTo(0,0); ctx.lineTo(0, -tileSize*0.4); }
         if (baseM & 2) { ctx.moveTo(0,0); ctx.lineTo(tileSize*0.4, 0); }
@@ -1638,118 +1209,74 @@
         if (baseM & 8) { ctx.moveTo(0,0); ctx.lineTo(-tileSize*0.4, 0); }
         ctx.stroke();
 
-        // --- ENERGIZED (SUCCESS) ---
-        if (gameState === "anim_success" && isTileEnergized(r, c, now)) {
-            ctx.strokeStyle = "#38bdf8"; 
-            ctx.shadowColor = "#0ea5e9";
-            ctx.shadowBlur = 15;
+        // ENERGY TRACE (Success OR Fail)
+        if ((gameState === "anim_success" || gameState === "anim_fail") && isTileEnergized(r, c, now)) {
+            const isFail = (gameState === "anim_fail");
+            ctx.strokeStyle = isFail ? "#ef4444" : "#38bdf8"; 
+            ctx.shadowColor = isFail ? "#b91c1c" : "#0ea5e9";
+            ctx.shadowBlur = isFail ? 10 : 15;
             ctx.shadowOffsetY = 0;
             ctx.lineWidth = Math.max(4, tileSize * 0.12); 
             ctx.stroke();
             
             ctx.strokeStyle = "#ffffff";
-            ctx.lineWidth = 2;
-            ctx.shadowBlur = 0;
+            ctx.lineWidth = 2; ctx.shadowBlur = 0;
             ctx.stroke();
+            
+            // Spark at the end of fail path
+            if (isFail && activePath && activePath.length > 0) {
+                const last = activePath[activePath.length-1];
+                if (last.row === r && last.col === c) {
+                     // Draw fail cross
+                     ctx.rotate(-tile.visualRotation);
+                     ctx.fillStyle = "#ef4444";
+                     ctx.font = "bold "+(tileSize*0.5)+"px Arial";
+                     ctx.textAlign="center"; ctx.textBaseline="middle";
+                     ctx.fillText("✕", 0, 0);
+                     ctx.rotate(tile.visualRotation);
+                }
+            }
         }
 
-        // --- COMPOSANTS ---
-        
-        if (isSource) {
-          ctx.shadowBlur = 0; 
-          ctx.fillStyle = "#f59e0b"; // Amber
-          ctx.strokeStyle = "#fff";
-          ctx.lineWidth = 2;
-          ctx.beginPath(); ctx.arc(0,0, tileSize*0.22, 0, Math.PI*2); 
-          ctx.fill(); ctx.stroke();
-          
-          ctx.fillStyle = "#fff";
-          ctx.font = "bold " + (tileSize*0.2) + "px 'Inter', sans-serif";
-          ctx.textAlign = "center"; ctx.textBaseline="middle";
-          ctx.fillText("Vcc", 0, 1);
+        // COMPONENTS
+        ctx.shadowBlur = 0;
+        if (tile.type === TILE_TYPES.SOURCE) {
+          ctx.fillStyle = "#f59e0b"; ctx.strokeStyle = "#fff"; ctx.lineWidth = 2;
+          ctx.beginPath(); ctx.arc(0,0, tileSize*0.22, 0, Math.PI*2); ctx.fill(); ctx.stroke();
+          ctx.fillStyle = "#fff"; ctx.font = "bold " + (tileSize*0.2) + "px 'Inter', sans-serif";
+          ctx.textAlign = "center"; ctx.textBaseline="middle"; ctx.fillText("Vcc", 0, 1);
         }
-        
-        else if (isLed) {
-          ctx.shadowBlur = 0;
+        else if (tile.type === TILE_TYPES.LED) {
           const energized = (gameState === "anim_success" && isTileEnergized(r, c, now));
-          
           ctx.fillStyle = energized ? "#fbbf24" : "#334155";
-          if (energized) {
-             ctx.shadowColor = "#fbbf24"; ctx.shadowBlur = 20;
-          }
-          ctx.strokeStyle = "#fff";
-          ctx.lineWidth = 2;
-          ctx.beginPath(); ctx.arc(0,0, tileSize*0.2, 0, Math.PI*2);
-          ctx.fill(); ctx.stroke();
-          
-          ctx.beginPath(); 
-          ctx.moveTo(-5, -5); ctx.lineTo(5, 0); ctx.lineTo(-5, 5); ctx.closePath();
-          ctx.strokeStyle = energized ? "#fff" : "#94a3b8";
-          ctx.lineWidth = 2;
-          ctx.stroke();
-          
-          if (gameState === "anim_fail") {
-             ctx.strokeStyle = `rgba(239, 68, 68, ${0.5 + 0.5*failPulse})`;
-             ctx.lineWidth = 4;
-             ctx.beginPath();
-             ctx.moveTo(-tileSize*0.25, -tileSize*0.25); ctx.lineTo(tileSize*0.25, tileSize*0.25);
-             ctx.moveTo(-tileSize*0.25, tileSize*0.25); ctx.lineTo(tileSize*0.25, -tileSize*0.25);
-             ctx.stroke();
-          }
+          if (energized) { ctx.shadowColor = "#fbbf24"; ctx.shadowBlur = 20; }
+          ctx.strokeStyle = "#fff"; ctx.lineWidth = 2;
+          ctx.beginPath(); ctx.arc(0,0, tileSize*0.2, 0, Math.PI*2); ctx.fill(); ctx.stroke();
         }
-
-        if (tile.component === "R") {
-          ctx.shadowBlur = 0;
-          ctx.fillStyle = "#e2e8f0"; 
-          ctx.strokeStyle = "#475569";
-          ctx.lineWidth = 2;
+        else if (tile.component === "R") {
+          ctx.fillStyle = "#e2e8f0"; ctx.strokeStyle = "#475569"; ctx.lineWidth = 2;
           const rw = tileSize*0.5, rh = tileSize*0.22;
-          ctx.beginPath(); ctx.rect(-rw/2, -rh/2, rw, rh);
-          ctx.fill(); ctx.stroke();
-          
+          ctx.beginPath(); ctx.rect(-rw/2, -rh/2, rw, rh); ctx.fill(); ctx.stroke();
           ctx.fillStyle = "#ef4444"; ctx.fillRect(-rw/4, -rh/2, rw/8, rh);
           ctx.fillStyle = "#3b82f6"; ctx.fillRect(0, -rh/2, rw/8, rh);
           ctx.fillStyle = "#eab308"; ctx.fillRect(rw/4, -rh/2, rw/8, rh);
-          
           ctx.rotate(-tile.visualRotation); 
-          ctx.fillStyle = "#fff";
-          ctx.shadowColor="black"; ctx.shadowBlur=4;
+          ctx.fillStyle = "#fff"; ctx.shadowColor="black"; ctx.shadowBlur=4;
           ctx.font = "bold " + (tileSize*0.22) + "px 'Inter', sans-serif";
           ctx.textAlign = "center"; ctx.textBaseline = "middle";
           ctx.fillText(tile.rValue, 0, -tileSize*0.35); 
         }
-        
-        if (tile.component === "D") {
-          ctx.shadowBlur = 0;
-          ctx.strokeStyle = "#475569";
-          ctx.lineWidth = 2;
-          
+        else if (tile.component === "D") {
           const triSize = tileSize*0.18;
-          
-          ctx.fillStyle = "#fff";
-          ctx.beginPath();
-          ctx.moveTo(-triSize/1.5, triSize/2); 
-          ctx.lineTo(-triSize/1.5, -triSize/2); 
-          ctx.lineTo(triSize/1.5, 0);       
-          ctx.closePath();
-          ctx.fill();
-          ctx.stroke();
-
-          ctx.beginPath();
-          ctx.moveTo(-triSize/1.5 - 2, triSize/2); 
-          ctx.lineTo(-triSize/1.5 - 2, -triSize/2); 
-          ctx.lineWidth = 3;
-          ctx.strokeStyle = "#dc2626"; 
-          ctx.stroke();
-          
+          ctx.strokeStyle = "#475569"; ctx.lineWidth = 2; ctx.fillStyle = "#fff";
+          ctx.beginPath(); ctx.moveTo(-triSize/1.5, triSize/2); ctx.lineTo(-triSize/1.5, -triSize/2); ctx.lineTo(triSize/1.5, 0); ctx.closePath(); ctx.fill(); ctx.stroke();
+          ctx.beginPath(); ctx.moveTo(-triSize/1.5 - 2, triSize/2); ctx.lineTo(-triSize/1.5 - 2, -triSize/2); ctx.lineWidth = 3; ctx.strokeStyle = "#dc2626"; ctx.stroke();
           ctx.rotate(-tile.visualRotation);
-          ctx.fillStyle = "#fff";
-          ctx.shadowColor="black"; ctx.shadowBlur=4;
+          ctx.fillStyle = "#fff"; ctx.shadowColor="black"; ctx.shadowBlur=4;
           ctx.font = "bold " + (tileSize*0.22) + "px 'Inter', sans-serif";
           ctx.textAlign = "center"; ctx.textBaseline = "middle";
           ctx.fillText("D", 0, -tileSize*0.35); 
         }
-
         ctx.restore();
       }
     }
@@ -1764,9 +1291,19 @@
 
   /* --- Event Listeners --- */
   canvas.addEventListener("click", onCanvasClick);
-  canvas.addEventListener("touchstart", onCanvasTouch, { passive: false });
-  canvas.addEventListener("mousemove", onCanvasMove); 
-  canvas.addEventListener("touchmove", onCanvasTouchMove, { passive: true }); 
+  canvas.addEventListener("mousemove", (e) => {
+      const rect = canvas.getBoundingClientRect();
+      const x = (e.clientX - rect.left) * (GAME_WIDTH / rect.width);
+      const y = (e.clientY - rect.top) * (GAME_HEIGHT / rect.height);
+      if (gameState === "idle" && tileSize > 0) {
+          const gx = x - gridOriginX, gy = y - gridOriginY;
+          const c = Math.floor(gx / tileSize), r = Math.floor(gy / tileSize);
+          if (r>=0 && c>=0 && r<gridRows && c<gridCols) {
+              lastHovered = {r,c};
+              if (inputMode === 'keyboard') inputMode = 'mouse';
+          } else { lastHovered = {r:-1,c:-1}; }
+      }
+  });
 
   checkBtn.addEventListener("click", onCheckCircuit);
   mobileCheckBtn.addEventListener("click", onCheckCircuit);
@@ -1779,13 +1316,10 @@
     else { initAudioContext(); bgMusic.play().catch(()=>{}); muteBtn.textContent = "Son : ON"; }
     try{localStorage.setItem("voltlink_muted", muted);}catch(e){}
   });
+  
+  // Focus main div on load for keyboard capture
+  mainDiv.focus();
 
-  document.addEventListener("keydown", (e) => {
-    if (e.code === "Space" || e.code === "Enter") { e.preventDefault(); onCheckCircuit(); }
-    else if (e.code === "KeyN") { e.preventDefault(); resetRun(); }
-  });
-
-  /* --- Init --- */
   loadBest();
   resetRun();
   updateUI();
