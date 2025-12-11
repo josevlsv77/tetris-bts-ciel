@@ -2,1330 +2,662 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, maximum-scale=1.0, user-scalable=no">
-<title>VoltLink – Lycée Simone Veil</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>VoltLink - Perfect Logic</title>
 
-<link rel="icon" type="image/jpeg" href="logo 2.png">
-
+<link rel="icon" type="image/png" href="logo 2.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&family=JetBrains+Mono:wght@700&display=swap" rel="stylesheet">
 
 <style>
-  /* --- BASE & MODERNE --- */
-  html, body {
-    height: 100%;
-    margin: 0;
-    padding: 0;
-    overflow: hidden;
-    overscroll-behavior: none;
+  :root {
+    --text: #1e293b;
+    --glass: rgba(255, 255, 255, 0.96);
+    --primary: #2563eb;
+    --success: #16a34a;
+    --danger: #dc2626;
+    --warn: #f97316;
+    --lcd-bg: #c4d4c4;
+    --lcd-text: #1f2923;
   }
 
   body {
-    background: url("fond_lycee.jpg") no-repeat center center fixed;
-    background-color: #1e293b;
+    margin: 0; padding: 0; height: 100vh; overflow: hidden;
+    background: url('fond_lycee.jpg') no-repeat center center fixed;
     background-size: cover;
-    color: #1e293b;
-    font-family: 'Inter', system-ui, -apple-system, sans-serif;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    position: relative;
-    user-select: none; /* Empêche la sélection de texte accidentelle */
+    font-family: 'Inter', sans-serif;
+    user-select: none; -webkit-user-select: none;
   }
-
+  
   body::before {
-    content: "";
-    position: absolute;
-    top: 0; left: 0; right: 0; bottom: 0;
-    background: rgba(15, 23, 42, 0.6);
-    z-index: 1;
+    content:""; position:absolute; inset:0; background:rgba(15,23,42,0.5); z-index:0;
   }
 
-  /* --- MAIN CONTAINER --- */
-  #main {
-    position: relative;
-    z-index: 5;
-    background: rgba(255, 255, 255, 0.5); 
-    backdrop-filter: blur(20px) saturate(180%);
-    -webkit-backdrop-filter: blur(20px) saturate(180%);
-    border: 1px solid rgba(255, 255, 255, 0.6);
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4), 
-                inset 0 0 0 1px rgba(255,255,255,0.3);
+  #lab-container {
+    position: relative; z-index: 10;
+    width: 96%; max-width: 1200px; height: 94vh;
+    margin: 3vh auto;
+    background: var(--glass);
+    border: 1px solid rgba(255,255,255,0.6);
     border-radius: 24px;
-    padding: 20px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 10px;
-    box-sizing: border-box;
-    width: 95%;
-    height: 95%;
-    max-width: 1200px;
-    justify-content: center;
-    outline: none; /* Pour le focus clavier */
+    box-shadow: 0 30px 60px -12px rgba(0,0,0,0.7);
+    display: flex; gap: 20px; padding: 20px; box-sizing: border-box;
   }
 
-  /* --- HEADER --- */
-  #header-group { text-align: center; margin-bottom: 5px; }
-  #logo { width: 60px; height: auto; display: block; margin: 0 auto 5px auto; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1)); }
-  #title { font-size: 24px; font-weight: 900; color: #1e293b; margin: 0; letter-spacing: -0.03em; text-shadow: 0 1px 0 rgba(255,255,255,0.8); }
-  #subtitle { font-size: 12px; color: #64748b; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; }
-
-  #game-container {
-    display: flex;
-    gap: 25px;
-    align-items: flex-start;
-    justify-content: center;
-    height: 80vh;
-    width: 100%;
-    position: relative;
+  /* GAME VIEW - AJUSTÉ (0.2) */
+  #game-viewport {
+    flex: 1; position: relative;
+    border-radius: 16px; overflow: hidden;
+    box-shadow: inset 0 0 60px rgba(0,0,0,0.6);
+    border: 2px solid #334155;
+    /* Fond Vert PCB plus naturel (0.2) */
+    background: linear-gradient(rgba(16, 185, 129, 0.2), rgba(5, 150, 105, 0.25)), url("image_0.png");
+    background-size: cover; background-position: center;
+    cursor: crosshair;
   }
+  canvas { display: block; width: 100%; height: 100%; }
 
-  /* --- CANVAS --- */
-  canvas#circuit {
-    background: linear-gradient(rgba(18, 92, 77, 0.85), rgba(18, 92, 77, 0.85)), url("image_0.png") no-repeat center center;
-    background-size: cover;
-    border-radius: 16px;
-    box-shadow: inset 0 0 60px rgba(0,0,0,0.6), 
-                0 20px 25px -5px rgba(0, 0, 0, 0.2), 
-                0 8px 10px -6px rgba(0, 0, 0, 0.1);
-    display: block;
-    height: 100%;
-    width: auto;
-    aspect-ratio: 3/4;
-    position: relative;
-    z-index: 5;
-    touch-action: none;
-    cursor: pointer;
-    transition: transform 0.1s;
+  #hud-msg {
+    position: absolute; top: 20px; left: 50%; transform: translateX(-50%);
+    background: rgba(0,0,0,0.9); color: #fff; padding: 10px 24px; border-radius: 30px;
+    font-size: 15px; font-weight: 800; pointer-events: none;
+    opacity: 0; transition: opacity 0.3s; z-index: 20; white-space: nowrap;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.2);
   }
 
-  /* --- SIDEBAR --- */
-  #side-panel {
-    display: flex;
-    flex-direction: column;
-    gap: 10px; 
-    background: rgba(255, 255, 255, 0.5);
-    padding: 15px;
-    border-radius: 16px;
-    min-width: 300px;
-    width: 320px; 
-    border: 1px solid rgba(255,255,255,0.4);
-    box-sizing: border-box;
-    height: 100%;
-    overflow: hidden; 
+  #sidebar { width: 320px; display: flex; flex-direction: column; gap: 12px; }
+
+  .panel {
+    background: white; padding: 12px 15px; border-radius: 12px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05); border: 1px solid #e2e8f0;
+  }
+  
+  h1 { margin: 0; font-size: 20px; font-weight: 900; color: var(--text); }
+  .subtitle { font-size: 10px; text-transform: uppercase; color: #64748b; font-weight: 700; margin-bottom: 8px; }
+  .stats-row { display: flex; gap: 10px; }
+  .stat { flex: 1; background: #f8fafc; padding: 6px; border-radius: 8px; text-align: center; }
+  .stat-lbl { font-size: 9px; text-transform: uppercase; font-weight: 800; color: #94a3b8; }
+  .stat-val { font-size: 16px; font-weight: 900; color: #0f172a; }
+
+  #multimeter {
+    background: var(--lcd-bg);
+    background-image: linear-gradient(rgba(0,0,0,0.05) 50%, transparent 50%);
+    background-size: 100% 4px;
+    border: 4px solid #57534e; border-radius: 8px;
+    padding: 10px; font-family: 'JetBrains Mono', monospace; color: var(--lcd-text);
+    transition: all 0.3s; box-shadow: inset 0 0 15px rgba(0,0,0,0.15);
+  }
+  #multimeter.active { border-color: var(--primary); box-shadow: 0 0 15px rgba(37, 99, 235, 0.4), inset 0 0 10px rgba(0,0,0,0.05); }
+  #multimeter.success { border-color: var(--success); background: #dcfce7; }
+  #multimeter.danger { border-color: var(--danger); background: #fee2e2; color: #7f1d1d; }
+  
+  .lcd-line { display: flex; justify-content: space-between; font-size: 11px; font-weight: 800; margin-bottom: 4px; opacity: 0.85; }
+  .lcd-big { font-size: 24px; font-weight: 800; text-align: right; margin-top: 6px; color:inherit; text-shadow: 0 1px 0 rgba(255,255,255,0.4); letter-spacing: -1px; }
+  .probe-hint { font-size: 10px; text-align: center; opacity: 0.7; margin-top: 8px; font-style: italic; font-weight: 600; }
+
+  #edu-panel {
+    background: #f0f9ff; border-left: 4px solid #38bdf8;
+    font-size: 12px; line-height: 1.5; color: #334155;
+    transition: all 0.3s; flex: 1; display: flex; flex-direction: column; justify-content: center;
+  }
+  #edu-title {
+    font-size: 10px; font-weight: 800; text-transform: uppercase; color: #0284c7; margin-bottom: 6px;
+    display: flex; align-items: center; gap: 5px;
+  }
+  .formula {
+    display: inline-block; background: white; padding: 2px 6px; border-radius: 4px; border: 1px solid #bae6fd;
+    font-family: 'JetBrains Mono', monospace; font-weight: bold; color: #0369a1; margin-top: 4px;
   }
 
-  .stats-row { display: flex; gap: 8px; width: 100%; }
-  .stat-card {
-    flex: 1; background: white; padding: 8px 5px; border-radius: 10px;
-    text-align: center; box-shadow: 0 1px 2px rgba(0,0,0,0.05);
-    display: flex; flex-direction: column; justify-content: center;
+  .btn {
+    width: 100%; padding: 12px; border: none; border-radius: 8px;
+    font-family: 'Inter', sans-serif; font-weight: 800; text-transform: uppercase; font-size: 13px;
+    cursor: pointer; transition: all 0.2s; margin-bottom: 6px; display: flex; align-items: center; justify-content: center; gap: 8px;
   }
+  .btn-primary { background: linear-gradient(135deg, #2563eb, #1d4ed8); color: white; box-shadow: 0 4px 10px rgba(37, 99, 235, 0.3); }
+  .btn-primary:active { transform: scale(0.98); }
+  
+  .btn-success { background: linear-gradient(135deg, #16a34a, #15803d); color: white; box-shadow: 0 4px 10px rgba(22, 163, 74, 0.3); animation: pulseBtn 2s infinite; }
+  .btn-success:hover { transform: translateY(-2px); }
+  
+  .btn-warn { background: #fff7ed; border: 1px solid #fdba74; color: #c2410c; }
+  .btn-warn:hover { background: #ffedd5; }
+  .btn-sec { background: white; border: 1px solid #cbd5e1; color: #475569; font-size: 11px; padding: 10px; }
+  .btn-sec:hover { background: #f1f5f9; }
 
-  #best-box {
-    background: rgba(255,255,255,0.6); padding: 6px; border-radius: 8px;
-    text-align: center; border: 1px dashed rgba(0,0,0,0.1);
-  }
+  @keyframes pulseBtn { 0% { box-shadow: 0 0 0 0 rgba(22, 163, 74, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(22, 163, 74, 0); } 100% { box-shadow: 0 0 0 0 rgba(22, 163, 74, 0); } }
 
-  .label-text { font-size: 10px; text-transform: uppercase; color: #94a3b8; font-weight: 800; margin-bottom: 0; line-height: 1; }
-  #score { font-size: 24px; font-weight: 900; color: #0f172a; line-height: 1.1; }
-  #level { font-size: 20px; font-weight: 800; color: #f59e0b; line-height: 1.1; }
-  #rank-name { font-size: 10px; font-weight: 800; color: #dc2626; text-transform: uppercase; margin-top: 2px; }
-  #best-score { font-size: 12px; font-weight: 700; color: #334155; }
+  .char-wrapper {
+    position: fixed; bottom: 0; z-index: 100;
+    pointer-events: none; display: flex; flex-direction: column;
+    transition: all 0.5s cubic-bezier(0.19, 1, 0.22, 1);
+  }
+  .char-wrapper.right { right: 2%; align-items: flex-end; }
+  .char-wrapper.right .char-img { transform: translateX(20%) translateY(110%); }
+  .char-wrapper.right .bubble { margin-right: 40px; transform-origin: bottom right; }
+  .char-wrapper.right .bubble::after { right: 60px; }
 
-  #info-box {
-    flex: 1; background: white; padding: 12px; border-radius: 12px;
-    font-size: 11px; color: #475569; box-shadow: 0 1px 2px rgba(0,0,0,0.05);
-    line-height: 1.3; overflow-y: auto; display: flex; flex-direction: column; justify-content: space-between;
-  }
-  #mission-info p { margin: 4px 0; }
-  #mission-info { margin-bottom: 10px; }
+  .char-wrapper.left { left: 2%; align-items: flex-start; }
+  .char-wrapper.left .char-img { transform: translateX(-20%) translateY(110%); }
+  .char-wrapper.left .bubble { margin-left: 40px; transform-origin: bottom left; }
+  .char-wrapper.left .bubble::after { left: 60px; right: auto; }
 
-  #game-stats {
-      padding: 8px; border-radius: 8px; background: #f1f5f9;
-      border: 1px solid #e2e8f0; margin: 5px 0 10px 0;
-      box-shadow: inset 0 1px 3px rgba(0,0,0,0.05);
+  .char-img {
+    height: 50vh; max-height: 550px; width: auto;
+    filter: drop-shadow(0 10px 30px rgba(0,0,0,0.6));
+    transition: transform 0.5s cubic-bezier(0.19, 1, 0.22, 1);
   }
-  #game-stats-title { font-size: 10px; text-transform: uppercase; font-weight: 800; color: #334155; margin-bottom: 4px; }
-  .game-stats-row { display: flex; justify-content: space-between; font-size: 11px; font-weight: 700; color: #1e293b; margin-top: 4px; }
+  .char-wrapper.visible .char-img { transform: translateX(0) translateY(10px); }
 
-  #ohm-info {
-    margin-top: 8px; padding-top: 8px; border-top: 1px dashed #cbd5e1;
-    background: rgba(241, 245, 249, 0.5); border-radius: 6px; padding: 6px;
+  .bubble {
+    background: white; color: #0f172a; padding: 18px 24px; border-radius: 18px;
+    font-size: 14px; font-weight: 700; line-height: 1.4;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    margin-bottom: -20px; max-width: 280px; position: relative; z-index: 101;
+    opacity: 0; transform: scale(0.8) translateY(20px);
+    transition: all 0.4s cubic-bezier(0.19, 1, 0.22, 1);
   }
-  #ohm-info-title { font-weight: 800; font-size: 10px; text-transform: uppercase; color: #334155; margin-bottom: 4px; }
-  #ohm-Rlist { margin: 2px 0 2px 14px; padding: 0; font-size: 10px; }
-  #ohm-Rlist li { margin-bottom: 1px; }
-
-  /* --- BUTTONS --- */
-  button {
-    padding: 12px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.1);
-    background: linear-gradient(135deg, #334155 0%, #1e293b 100%);
-    color: white; font-weight: 700; font-family: 'Inter', sans-serif;
-    cursor: pointer; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-    text-transform: uppercase; letter-spacing: 0.05em;
+  .bubble::after {
+    content: ''; position: absolute; bottom: -10px;
+    border: 12px solid transparent; border-top-color: white;
   }
-  button:hover {
-    background: linear-gradient(135deg, #475569 0%, #334155 100%);
-    transform: translateY(-2px);
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.15);
-  }
-  button:active { transform: translateY(0) scale(0.98); box-shadow: inset 0 3px 5px rgba(0, 0, 0, 0.2); }
-
-  #check-btn, #btn-check {
-    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-    border: 1px solid rgba(255,255,255,0.2);
-  }
-  #check-btn:hover, #btn-check:hover { background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%); }
-
-  .actions-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
-  #check-btn { grid-column: span 2; margin: 0; font-size: 14px; padding: 10px; }
-  #newgame-btn, #mute-btn { margin: 0; font-size: 11px; padding: 8px; }
-
-  #controls-info {
-    font-size: 10px; text-align: center; color: #94a3b8;
-    background: rgba(255,255,255,0.4); padding: 5px; border-radius: 8px; margin-top: 5px;
-  }
-  /* Indicateur de raccourcis clavier */
-  .key-badge {
-    display: inline-block; padding: 2px 5px; background: rgba(0,0,0,0.1); 
-    border-radius: 4px; font-weight: 800; color: #475569; margin: 0 2px;
-  }
-
-  #message-center {
-    font-size: 16px; font-weight: 800; text-align: center; color: #0369a1;
-    min-height: 24px; margin-top: 15px; text-shadow: 0 1px 0 rgba(255,255,255,0.8);
-  }
-
-  /* --- MOBILE --- */
-  #mobile-header {
-    display: none; flex-direction: column; align-items: center; width: 95%;
-    font-weight: bold; font-size: 14px; margin-top: 5px;
-    background: rgba(255,255,255,0.9); padding: 8px; border-radius: 12px;
-    border: 1px solid rgba(0,0,0,0.05);
-  }
-  #mobile-header-row { display: flex; justify-content: space-between; width: 100%; font-size: 13px; color: #334155; }
-  #mob-rank { color: #dc2626; font-size: 13px; margin-top: 4px; font-weight: 900; }
-  #mobile-controls {
-    display: none; width: 100%; justify-content: center; margin-top: 10px; gap: 20px;
-    padding-bottom: 5px; touch-action: none; z-index: 100; position: relative;
-  }
-  .pad-group { display: flex; gap: 12px; }
-  .mob-btn {
-    width: 80px; height: 80px; font-size: 16px; display: flex; justify-content: center; align-items: center;
-    background: white; border: none; border-radius: 20px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
-    color: #334155; font-weight: 800;
-  }
-  .mob-btn:active { transform: scale(0.95); background: #f1f5f9; }
-
-  /* --- Dialogues --- */
-  @keyframes popIn { from { transform: scale(0) translateY(100px); opacity: 0; } to { transform: scale(1) translateY(0); opacity: 1; } }
-  #proviseur-box, #prof-box {
-    position: fixed; bottom: 0; display: none; cursor: pointer; z-index: 100; transition: transform 0.3s ease-out;
-  }
-  #proviseur-box { right: 2%; left: auto; }
-  #prof-box { left: 2%; right: auto; }
-  #proviseur-box.pop-in, #prof-box.pop-in { animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-  #proviseur-img, #prof-img { height: auto; max-height: 45vh; filter: drop-shadow(0 10px 20px rgba(0,0,0,0.5)); position: relative; z-index: 1; }
-  #speech-bubble, #prof-bubble {
-    position: absolute; bottom: calc(100% + 15px); background: #ffffff;
-    border: 2px solid #334155; border-radius: 20px; padding: 20px;
-    font-size: 15px; line-height: 1.4; font-weight: 600; color: #1e293b;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.15); min-width: 250px; max-width: 320px;
-    opacity: 0; animation: fadeIn 0.3s 0.2s forwards; z-index: 2;
-  }
-  @keyframes fadeIn { to { opacity: 1; } }
-  #speech-bubble::after, #prof-bubble::after {
-    content: ''; position: absolute; width: 0; height: 0; border-style: solid; border-width: 12px;
-    top: 100%; border-color: #334155 transparent transparent transparent; z-index: 3;
-  }
-  #speech-bubble { right: 50%; text-align: right; transform: translateX(50%); }
-  #speech-bubble::after { right: 40px; }
-  #prof-bubble { left: 50%; text-align: left; transform: translateX(-50%); }
-  #prof-bubble::after { left: 40px; }
+  .char-wrapper.visible .bubble { opacity: 1; transform: scale(1) translateY(0); }
 
   @media (max-width: 900px) {
-    #main { width: 100%; height: 100%; padding: 10px; border-radius: 0; justify-content: flex-start; border: none; }
-    #header-group { display: none; }
-    #game-container { height: 60vh; align-items: center; width: 100%; gap: 5px; }
-    #side-panel { display: none; }
-    #mobile-header { display: flex; }
-    #mobile-controls { display: flex; }
-    #message-center { font-size: 14px; margin-bottom: 5px; }
-    #proviseur-box, #prof-box { display: none !important; }
+    #lab-container { flex-direction: column; width: 100%; height: 100%; margin: 0; border-radius: 0; padding: 10px; }
+    #sidebar { width: 100%; flex-direction: row; flex-wrap: wrap; }
+    .panel { flex: 1; padding: 10px; }
+    .char-wrapper { display: none; }
   }
 </style>
 </head>
 <body>
 
-<div id="main" tabindex="0"> <div id="header-group">
-    <img id="logo" src="Logo.gif" alt="Logo BTS" onerror="this.style.display='none'">
-    <div id="title">VoltLink 2.0</div>
-    <div id="subtitle">Relie Vcc à la LED – BTS CIEL</div>
+<div id="lab-container">
+  <div id="game-viewport">
+    <canvas id="canvas"></canvas>
+    <div id="hud-msg">Système Prêt</div>
   </div>
 
-  <div id="mobile-header">
-    <div id="mobile-header-row">
-      <span id="mob-score">Score: 0</span>
-      <span id="mob-level">Niv: 1</span>
-      <span id="mob-time">Dernier: -- s</span>
-    </div>
-    <div id="mob-rank">Nouvelle Recrue</div>
-  </div>
-
-  <div id="game-container">
-    <canvas id="circuit"></canvas>
-
-    <div id="side-panel">
-      
+  <div id="sidebar">
+    <div class="panel">
+      <img src="logo 2.png" alt="Logo" style="height:35px; margin-bottom:5px;" onerror="this.style.display='none'">
+      <h1>VoltLink Pro</h1>
+      <div class="subtitle">BTS CIEL - Lycée Simone Veil</div>
       <div class="stats-row">
-        <div class="stat-card" id="score-box">
-          <div class="label-text">Score</div>
-          <div id="score">0</div>
+        <div class="stat">
+          <div class="stat-lbl">Niveau</div>
+          <div class="stat-val" id="ui-lvl">1</div>
         </div>
-
-        <div class="stat-card" id="level-box">
-          <div class="label-text">Niveau</div>
-          <div id="level">1</div>
-          <div id="rank-name">Nouvelle Recrue</div>
+        <div class="stat">
+          <div class="stat-lbl">Score</div>
+          <div class="stat-val" id="ui-score">0</div>
         </div>
-      </div>
-
-      <div id="best-box">
-        <span class="label-text">Record local : </span>
-        <span id="best-score">0 pts (niv 0)</span>
-      </div>
-
-      <div id="info-box">
-        <div id="mission-info">
-          <p><b>Mission :</b> Calculer I = (Vcc - Vd) / R.</p>
-          <p style="font-size:10px; color:#64748b;">
-            <span class="key-badge">Souris</span> Clic G/D<br>
-            <span class="key-badge">Clavier</span> Flèches + Espace
-          </p>
-        </div>
-
-        <div id="game-stats">
-            <div id="game-stats-title">Progression & Challenge</div>
-            <div class="game-stats-row">
-                <span>Cases du chemin : <span id="path-length-stat">--</span></span>
-                <span>Résistances (R) : <span id="resistor-count-stat">--</span></span>
-            </div>
-            <div class="game-stats-row">
-                <span>Diodes (D) : <span id="diode-count-stat">--</span></span>
-                <span>Tension Vcc : <span id="vcc-voltage-stat">5 V</span></span>
-            </div>
-            <div style="margin-top: 5px;">
-                <div style="font-size: 10px; color: #94a3b8; font-weight: 600;">Tentatives sur cette grille : <span id="checks-count-stat">0</span></div>
-            </div>
-        </div>
-
-        <div id="ohm-info">
-          <div id="ohm-info-title">Analyse (U = <span id="ohm-U">5 V</span>)</div>
-          <p>Type : <span id="ohm-type">Série</span></p>
-          <ul id="ohm-Rlist"></ul>
-          <div style="display:flex; justify-content:space-between; margin-top:2px; font-size: 11px;">
-             <span>R<sub>eq</sub> : <span id="ohm-Req">--</span></span>
-             <span>I : <span id="ohm-I">--</span></span>
-          </div>
-        </div>
-      </div>
-
-      <div class="actions-grid">
-        <button id="check-btn">TESTER LE CIRCUIT</button>
-        <button id="newgame-btn">Nouvelle grille</button>
-        <button id="mute-btn">Son : ON</button>
-      </div>
-
-      <div id="controls-info">
-        VoltLink v2.0 &bull; Pro Simulation
       </div>
     </div>
-    
-  </div>
 
-  <div id="mobile-controls">
-    <div class="pad-group">
-      <button class="mob-btn" id="btn-check">TEST</button>
-      <button class="mob-btn" id="btn-new">NEW</button>
+    <div class="panel">
+      <div class="stat-lbl" style="margin-bottom:5px;">Multimètre</div>
+      <div id="multimeter">
+        <div class="lcd-line"><span>V (Potentiel)</span> <span id="lcd-u">-- V</span></div>
+        <div class="lcd-line"><span>I (Courant)</span> <span id="lcd-i">-- mA</span></div>
+        <div style="height:2px; background:rgba(0,0,0,0.1); margin:6px 0;"></div>
+        <div class="lcd-big" id="lcd-r">-- Ω</div>
+        <div class="probe-hint" id="probe-hint">Sonde inactive</div>
+      </div>
+    </div>
+
+    <div class="panel" id="edu-panel">
+      <div id="edu-title">
+        <svg width="14" height="14" fill="currentColor" viewBox="0 0 20 20"><path d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path></svg>
+        Assistant Labo
+      </div>
+      <div id="edu-content">
+        Connecte la source <b>Vcc (5V)</b> à la LED. <br>
+        <span class="formula">I = (Vcc - Vd) / R</span>
+      </div>
+    </div>
+
+    <div style="margin-top:auto;">
+      <button class="btn btn-primary" id="btn-check">TESTER LE CIRCUIT</button>
+      <button class="btn btn-warn" id="btn-retry">RÉINITIALISER CE NIVEAU</button>
+      <div style="display:flex; gap:10px;">
+        <button class="btn btn-sec" id="btn-new">Nouveau</button>
+        <button class="btn btn-sec" id="btn-sound">Son : ON</button>
+      </div>
     </div>
   </div>
-
-  <div id="message-center">
-    VoltLink : tourne les cases, puis teste le circuit.
-  </div>
 </div>
 
-<div id="proviseur-box">
-  <div id="speech-bubble"></div>
-  <img id="proviseur-img" src="proviseur.png" alt="Proviseur">
+<div id="char-wrap" class="char-wrapper right">
+  <div class="bubble" id="char-bub">Connecte le circuit !</div>
+  <img src="proviseur.png" class="char-img" id="char-img">
 </div>
-
-<div id="prof-box">
-  <div id="prof-bubble"></div>
-  <img id="prof-img" src="Perso1.png" alt="Professeur">
-</div>
-
-<audio id="bg-music" loop>
-  <source src="musique.mp3" type="audio/mpeg">
-</audio>
 
 <script>
-(function() {
-  /* --- Canvas & dimensions --- */
-  const canvas = document.getElementById("circuit");
-  const ctx = canvas.getContext("2d");
-  const mainDiv = document.getElementById("main");
+/**
+ * VOLTLINK 4.4 - FINAL CORRECTED
+ * - Dynamic Orientation for Source/LED (Guarantees solution)
+ * - Improved Wire Opacity (0.7)
+ * - Improved PCB Brightness (0.2)
+ */
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
 
-  const GAME_WIDTH = 800;
-  const GAME_HEIGHT = 1000;
+const GRID_W = 7;
+const GRID_H = 6;
+// COULEURS AJUSTÉES
+const COLS = {
+  wireOff: 'rgba(255, 255, 255, 0.7)', // 70% opacité
+  error: '#ef4444',
+  hover: 'rgba(255,255,255,0.3)'
+};
 
-  function resizeCanvas() {
-    const dpr = window.devicePixelRatio || 1;
-    const rect = canvas.getBoundingClientRect();
-    canvas.width = GAME_WIDTH * dpr;
-    canvas.height = GAME_HEIGHT * dpr;
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    ctx.imageSmoothingEnabled = true;
-    ctx.imageSmoothingQuality = "high";
+let state = {
+  grid: [], initialGridState: [],
+  score: 0, level: 1,
+  hover: {c:-1, r:-1},
+  status: 'PLAY',
+  path: null, flowIdx: 0, flowTimer: 0, flowResult: null,
+  lastI: 0, muted: false, failReason: null, 
+  confetti: [], particles: []
+};
+
+// AUDIO
+const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+function playSound(type) {
+  if(state.muted || audioCtx.state === 'suspended') { if(!state.muted)audioCtx.resume(); return; }
+  const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
+  osc.connect(gain); gain.connect(audioCtx.destination);
+  const now = audioCtx.currentTime;
+  if(type==='click') { osc.frequency.setValueAtTime(600, now); gain.gain.setValueAtTime(0.05, now); gain.gain.exponentialRampToValueAtTime(0.001, now+0.1); osc.start(); osc.stop(now+0.1); }
+  else if(type==='win') { osc.type='triangle'; osc.frequency.setValueAtTime(440, now); osc.frequency.linearRampToValueAtTime(880, now+0.4); gain.gain.setValueAtTime(0.1, now); gain.gain.linearRampToValueAtTime(0, now+0.4); osc.start(); osc.stop(now+0.4); }
+  else if(type==='fail') { osc.type='sawtooth'; osc.frequency.setValueAtTime(150, now); osc.frequency.linearRampToValueAtTime(50, now+0.4); gain.gain.setValueAtTime(0.1, now); gain.gain.linearRampToValueAtTime(0, now+0.4); osc.start(); osc.stop(now+0.4); }
+}
+
+// ENGINE
+let tileSize = 0, offX = 0, offY = 0;
+function resize() {
+  const rect = canvas.parentElement.getBoundingClientRect(); const dpr = window.devicePixelRatio || 1;
+  canvas.width = rect.width * dpr; canvas.height = rect.height * dpr;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  tileSize = Math.floor(Math.min((rect.width-40)/GRID_W, (rect.height-40)/GRID_H));
+  offX = (rect.width - tileSize * GRID_W) / 2; offY = (rect.height - tileSize * GRID_H) / 2;
+}
+function getGridPos(e) {
+  const rect = canvas.getBoundingClientRect();
+  const c = Math.floor((e.clientX - rect.left - offX)/tileSize);
+  const r = Math.floor((e.clientY - rect.top - offY)/tileSize);
+  if(c>=0 && c<GRID_W && r>=0 && r<GRID_H) return {c, r, valid:true};
+  return {c:-1, r:-1, valid:false};
+}
+
+const TILE = { STR:1, COR:2, TEE:3, CRO:4, SRC:5, LED:6 };
+const COMP = { NO:0, R:1, D:2 };
+const MASKS = { [TILE.STR]:10, [TILE.COR]:6, [TILE.TEE]:14, [TILE.CRO]:15, [TILE.SRC]:2, [TILE.LED]:8 };
+
+function getMask(t) {
+  let m = MASKS[t.type] || 0;
+  for(let i=0; i<t.rot; i++) { let n=0; if(m&1)n|=2; if(m&2)n|=4; if(m&4)n|=8; if(m&8)n|=1; m=n; }
+  return m;
+}
+
+function getResistorColors(val) {
+  const cols = ["#000", "#5c3a21", "#dc2626", "#ea580c", "#fbbf24", "#16a34a", "#2563eb", "#7e22ce", "#6b7280", "#fff"];
+  if(val === 220) return [cols[2], cols[2], cols[1]]; 
+  if(val === 330) return [cols[3], cols[3], cols[1]]; 
+  if(val === 470) return [cols[4], cols[7], cols[1]]; 
+  if(val === 1000) return [cols[1], cols[0], cols[2]]; 
+  return [cols[1], cols[0], cols[2]]; 
+}
+
+function getVoltageColor(v) {
+  let ratio = Math.max(0, Math.min(5, v)) / 5.0;
+  let hue = 240 - (ratio * 190); 
+  return `hsl(${hue}, 100%, 60%)`;
+}
+
+function generateSafePath() {
+  let attempts = 0;
+  while(attempts < 100) {
+    let visited = new Set(); let y = Math.floor(GRID_H/2), x = 0;
+    let path = [{x,y}]; visited.add(`${x},${y}`); let stuck = false;
+    while(x < GRID_W-1) {
+      let candidates = [];
+      if(!visited.has(`${x+1},${y}`)) candidates.push({x:x+1, y:y});
+      if(y>1 && !visited.has(`${x},${y-1}`)) candidates.push({x:x, y:y-1});
+      if(y<GRID_H-2 && !visited.has(`${x},${y+1}`)) candidates.push({x:x, y:y+1});
+      if(candidates.length === 0) { stuck = true; break; }
+      let pick = candidates[Math.floor(Math.random()*candidates.length)];
+      if(candidates.some(c => c.x > x) && Math.random()>0.4) pick = candidates.find(c => c.x > x) || pick;
+      x = pick.x; y = pick.y; path.push({x,y}); visited.add(`${x},${y}`);
+    }
+    if(!stuck) return path; attempts++;
   }
+  let fallback = []; for(let i=0; i<GRID_W; i++) fallback.push({x:i, y:Math.floor(GRID_H/2)}); return fallback;
+}
 
-  window.addEventListener("resize", resizeCanvas);
-  resizeCanvas(); 
-
-  /* --- UI elements --- */
-  const scoreElem = document.getElementById("score");
-  const levelElem = document.getElementById("level");
-  const rankElem = document.getElementById("rank-name");
-  const bestElem = document.getElementById("best-score");
-  const messageCenter = document.getElementById("message-center");
-
-  const mobScoreElem = document.getElementById("mob-score");
-  const mobLevelElem = document.getElementById("mob-level");
-  const mobTimeElem = document.getElementById("mob-time");
-  const mobRankElem = document.getElementById("mob-rank");
-
-  const checkBtn = document.getElementById("check-btn");
-  const newGameBtn = document.getElementById("newgame-btn");
-  const muteBtn = document.getElementById("mute-btn");
-  const mobileCheckBtn = document.getElementById("btn-check");
-  const mobileNewBtn = document.getElementById("btn-new");
-
-  const ohmU = document.getElementById("ohm-U");
-  const ohmTypeElem = document.getElementById("ohm-type");
-  const ohmRlist = document.getElementById("ohm-Rlist");
-  const ohmReqElem = document.getElementById("ohm-Req");
-  const ohmIElem = document.getElementById("ohm-I");
+function initLevel() {
+  state.status = 'PLAY'; state.path = null; state.grid = []; state.failReason = null; state.confetti = []; state.particles = [];
+  updateEdu("intro"); updateMultimeterUI(false); updateMainButton("check");
   
-  const pathLengthStat = document.getElementById("path-length-stat");
-  const resistorCountStat = document.getElementById("resistor-count-stat");
-  const diodeCountStat = document.getElementById("diode-count-stat"); 
-  const checksCountStat = document.getElementById("checks-count-stat");
-
-  const bgMusic = document.getElementById("bg-music");
-
-  /* --- Audio --- */
-  let audioCtx = null;
-  let muted = false;
-
-  try {
-    if (localStorage.getItem("voltlink_muted") === "true") {
-      muted = true;
-      muteBtn.textContent = "Son : OFF";
-    }
-  } catch(e) {}
-
-  bgMusic.volume = 0.2; 
-
-  function initAudioContext() {
-    if (!audioCtx) {
-      const AC = window.AudioContext || window.webkitAudioContext;
-      if (AC) audioCtx = new AC();
-    }
-    if (audioCtx && audioCtx.state === "suspended") {
-      audioCtx.resume().catch(() => {});
-    }
-    if (!muted) {
-      bgMusic.play().catch(() => {});
-    }
+  const types = [TILE.STR, TILE.COR, TILE.TEE, TILE.CRO];
+  for(let y=0; y<GRID_H; y++) {
+    let row = [];
+    for(let x=0; x<GRID_W; x++) row.push({type:types[Math.floor(Math.random()*types.length)], rot:0, anim:0, comp:COMP.NO, val:0, potential:0});
+    state.grid.push(row);
   }
 
-  function playTone(type, startFreq, endFreq, duration, vol) {
-    if (muted || !audioCtx) return;
-    const osc = audioCtx.createOscillator();
-    const gain = audioCtx.createGain();
-
-    osc.type = type;
-    osc.frequency.setValueAtTime(startFreq, audioCtx.currentTime);
-    if (endFreq && endFreq !== startFreq) {
-      osc.frequency.exponentialRampToValueAtTime(endFreq, audioCtx.currentTime + duration);
-    }
-    gain.gain.setValueAtTime(0, audioCtx.currentTime);
-    gain.gain.linearRampToValueAtTime(vol, audioCtx.currentTime + 0.01);
-    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
-
-    osc.connect(gain);
-    gain.connect(audioCtx.destination);
-    osc.start();
-    osc.stop(audioCtx.currentTime + duration);
+  let path = generateSafePath();
+  let straightIndices = [];
+  for(let i=1; i<path.length-1; i++) {
+    let pre=path[i-1], cur=path[i], nxt=path[i+1];
+    if(pre.x!==nxt.x && pre.y!==nxt.y) continue; 
+    straightIndices.push(i);
   }
+  let forceR = (straightIndices.length>0) ? straightIndices[Math.floor(Math.random()*straightIndices.length)] : -1;
 
-  function sRotate() { playTone("sine", 300, 500, 0.08, 0.03); } 
-  function sMove()   { playTone("triangle", 200, 200, 0.02, 0.01); } // Petit son de déplacement clavier
-  function sCheck()  { playTone("triangle", 440, 660, 0.12, 0.08); }
-  function sFail()   { playTone("sawtooth", 150, 50, 0.4, 0.1); }
-  function sSuccess(){ 
-    playTone("sine", 523, 523, 0.1, 0.1);
-    setTimeout(() => playTone("sine", 659, 659, 0.1, 0.1), 100);
-    setTimeout(() => playTone("sine", 784, 1200, 0.3, 0.1), 200);
-  }
-
-  /* --- Rangs --- */
-  const cielRanks = [
-    "Nouvelle Recrue", "Apprenti Câbleur", "Scripteur Bash", 
-    "Décodeur Binaire", "Admin Réseau", "Développeur C++", 
-    "Survivant de l'E4", "Expert Cybersécu", "Chef de Projet E6", 
-    "Major de Promo", "Diplômé CIEL", "Légende du Lycée"
-  ];
-  function getRankName(level) {
-    if (level > cielRanks.length) return cielRanks[cielRanks.length - 1];
-    return cielRanks[level - 1];
-  }
-
-  /* --- Dialogues --- */
-  const proviseurBox = document.getElementById("proviseur-box");
-  const profBox = document.getElementById("prof-box");
-  const speechBubble = document.getElementById("speech-bubble");
-  const profBubble = document.getElementById("prof-bubble");
-  const profImg = document.getElementById("prof-img");
-
-  const PROF_CONFIGS = [
-    { filename: "Perso1.png", role: "physics" },
-    { filename: "Perso2.png", role: "general" },
-    { filename: "Perso3.png", role: "physics" },
-    { filename: "Perso4.png", role: "physics" },
-    { filename: "Perso5.png", role: "general" },
-    { filename: "Perso6.png", role: "physics" },
-    { filename: "Perso7.png", role: "physics" }
-  ];
-
-  const CHAR_MESSAGES = {
-    intro: {
-      proviseur: [
-        "Attention : un fil sans résistance est un court-circuit !",
-        "Vcc = 5V. Calcule ton courant I = U/R avant de valider."
-      ],
-      general: [
-        "Les Diodes (D) font chuter la tension de 0.7V environ.",
-        "Il te faut un courant entre 1mA et 30mA pour gagner."
-      ],
-      physics: [
-        "Rappel : Loi des mailles. U_res = Vcc - N_diodes * 0.7V.",
-        "Si I > 30mA, la LED grille. Si R=0, c'est l'explosion."
-      ]
-    },
-    success: {
-      proviseur: [ "Un courant parfait.", "Beau travail d'ingénierie." ],
-      general: [ "Bien joué ! La LED brille sans surchauffer.", "Validé par le département." ],
-      physics: [ "Exactement ! La résistance limite le courant.", "Tu as bien compensé la chute de tension." ]
-    },
-    fail: {
-      proviseur: [ "Mon budget matériel ! Attention aux courts-circuits !", "Circuit ouvert ou composant grillé." ],
-      general: [ "Tu as peut-être oublié une résistance ?", "Courant trop faible ou trop fort." ],
-      physics: [ "Analyse : I = U/R. Si R est trop faible, I explose.", "Vérifie tes connexions. Le courant ne passe pas." ]
-    }
-  };
-
-  let charTimeout = null;
-  function hideCharacters() {
-    if (charTimeout) { clearTimeout(charTimeout); charTimeout = null; }
-    proviseurBox.style.display = "none"; profBox.style.display = "none";
-    proviseurBox.classList.remove("pop-in"); profBox.classList.remove("pop-in");
-  }
-  function showCharacterMessage(type, role) {
-    const set = CHAR_MESSAGES[type];
-    if (!set) return;
-    hideCharacters();
-    if (role === "proviseur") {
-      const pool = set.proviseur || [];
-      if (!pool.length) return;
-      speechBubble.textContent = pool[Math.floor(Math.random() * pool.length)];
-      proviseurBox.style.display = "block"; void proviseurBox.offsetWidth; proviseurBox.classList.add("pop-in");
-    } else {
-      const candidates = (role === "physics") ? PROF_CONFIGS.filter(p => p.role === "physics") : PROF_CONFIGS;
-      const pool = (role === "physics" && set.physics) ? set.physics : (set.general || set.physics);
-      if (!pool.length) return;
-      const chosenProf = candidates[Math.floor(Math.random() * candidates.length)];
-      profImg.src = chosenProf.filename;
-      profBubble.textContent = pool[Math.floor(Math.random() * pool.length)];
-      profBox.style.display = "block"; void profBox.offsetWidth; profBox.classList.add("pop-in");
-    }
-    charTimeout = setTimeout(hideCharacters, 6000);
-  }
-  function triggerCharacter(type) {
-    let role; const r = Math.random();
-    if (type === "intro") role = (r < 0.3) ? "proviseur" : "physics";
-    else if (type === "success") role = (r < 0.2) ? "proviseur" : (r < 0.7 ? "physics" : "general");
-    else role = (r < 0.4) ? "proviseur" : "physics";
-    showCharacterMessage(type, role);
-  }
-
-  /* --- Game state --- */
-  let score = 0;
-  let level = 1;
-  let bestScore = 0;
-  let bestLevel = 0;
-  let gridRows = 6;
-  let gridCols = 7;
-  let grid = [];
-  let sourcePos = { row: 0, col: 0 };
-  let ledPos = { row: 0, col: 0 };
-  let pathCells = [];
-  let puzzleStartTime = performance.now();
-  let lastSolveTime = null;
-  let checksCount = 0;
-  let diodeCount = 0; 
-  const supplyVoltage = 5;
-  let resistorList = [];
-  let gridOriginX = 0;
-  let gridOriginY = 0;
-  let tileSize = 0;
-
-  // Animation & Visuals
-  let gameState = "idle";
-  let activePath = null; // Used for both success (full) and fail (partial)
-  let animStartTime = 0;
-  const SUCCESS_WAVE_DURATION = 800;
-  const FAIL_ANIM_DURATION = 1500;
-  
-  // Selection / Inputs
-  let lastHovered = { r: -1, c: -1 }; 
-  let keyboardCursor = { r: 0, c: 0 }; // Position curseur clavier
-  let inputMode = 'mouse'; // 'mouse' or 'keyboard'
-
-  /* --- Tiles --- */
-  const TILE_TYPES = { EMPTY: 0, STRAIGHT: 1, CORNER: 2, TEE: 3, CROSS: 4, SOURCE: 5, LED: 6 };
-  const BASE_MASK = {};
-  BASE_MASK[TILE_TYPES.EMPTY] = 0;
-  BASE_MASK[TILE_TYPES.STRAIGHT] = 2 | 8; 
-  BASE_MASK[TILE_TYPES.CORNER] = 1 | 2; 
-  BASE_MASK[TILE_TYPES.TEE] = 1 | 2 | 8; 
-  BASE_MASK[TILE_TYPES.CROSS] = 1 | 2 | 4 | 8;
-  BASE_MASK[TILE_TYPES.SOURCE] = 2; 
-  BASE_MASK[TILE_TYPES.LED] = 8; 
-
-  const DIRS = [ { dx: 0, dy: -1, bit: 1 }, { dx: 1, dy: 0, bit: 2 }, { dx: 0, dy: 1, bit: 4 }, { dx: -1, dy: 0, bit: 8 } ];
-  const DIODE_ALLOWED_EXIT = [2, 4, 8, 1];
-
-  function rotateMask(mask, rot) {
-    rot = ((rot % 4) + 4) % 4;
-    if (rot === 0) return mask;
-    let res = 0;
-    const bits = [1, 2, 4, 8];
-    for (let i = 0; i < 4; i++) { if (mask & bits[i]) res |= bits[(i + rot) % 4]; }
-    return res;
-  }
-
-  function findRotationForMask(type, mask) {
-    const base = BASE_MASK[type];
-    for (let r = 0; r < 4; r++) { if (rotateMask(base, r) === mask) return r; }
-    return 0;
-  }
-
-  function getGridSizeForLevel(level) {
-    const baseRows = 5, baseCols = 6;
-    const inc = Math.floor((level - 1) / 1); 
-    return { rows: Math.min(baseRows + inc, 8), cols: Math.min(baseCols + inc, 10) };
-  }
-
-  /* --- Persistence --- */
-  function loadBest() {
-    try {
-      const s = localStorage.getItem("voltlink_best_score");
-      const l = localStorage.getItem("voltlink_best_level");
-      bestScore = s ? parseInt(s, 10) || 0 : 0;
-      bestLevel = l ? parseInt(l, 10) || 0 : 0;
-    } catch(e) {}
-  }
-  function saveBest() {
-    try {
-      localStorage.setItem("voltlink_best_score", String(bestScore));
-      localStorage.setItem("voltlink_best_level", String(bestLevel));
-    } catch(e) {}
-  }
-  function updateBestIfNeeded() {
-    if (score > bestScore) { bestScore = score; bestLevel = level; saveBest(); }
-  }
-
-  /* --- UI UPDATES --- */
-  function updateStats() {
-    pathLengthStat.textContent = pathCells.length;
-    resistorCountStat.textContent = resistorList.length;
-    diodeCountStat.textContent = diodeCount; 
-    checksCountStat.textContent = checksCount;
-  }
-
-  function updateOhmInfo() {
-    ohmTypeElem.textContent = "Série";
-    ohmRlist.innerHTML = "";
-    let currentEqR = resistorList.reduce((acc, r) => acc + r.rValue, 0);
-    if (resistorList.length === 0) {
-      const li = document.createElement("li");
-      li.textContent = "ATTENTION : Pas de résistance !";
-      li.style.color = "#dc2626"; li.style.fontWeight = "bold";
-      ohmRlist.appendChild(li);
-      ohmReqElem.textContent = "0 Ω";
-    } else {
-      resistorList.forEach((rObj, idx) => {
-        const li = document.createElement("li");
-        li.textContent = `R${idx + 1} = ${rObj.rValue} Ω`;
-        ohmRlist.appendChild(li);
-      });
-      ohmReqElem.textContent = currentEqR + " Ω";
-    }
-    ohmIElem.textContent = "?";
-    ohmU.textContent = supplyVoltage + " V";
-  }
-
-  function updateUI() {
-    scoreElem.textContent = score; levelElem.textContent = level; rankElem.textContent = getRankName(level);
-    mobScoreElem.textContent = "Score: " + score; mobLevelElem.textContent = "Niv: " + level; mobRankElem.textContent = getRankName(level);
-    mobTimeElem.textContent = lastSolveTime ? "Dernier: " + lastSolveTime.toFixed(1) + " s" : "Dernier: -- s";
-    bestElem.textContent = bestScore + " pts (niv " + bestLevel + ")";
-    updateOhmInfo(); updateStats(); 
-  }
-
-  /* --- GENERATION --- */
-  function generatePuzzle() {
-    const size = getGridSizeForLevel(level);
-    gridRows = size.rows; gridCols = size.cols;
-    grid = [];
-    for (let r = 0; r < gridRows; r++) {
-      const row = [];
-      for (let c = 0; c < gridCols; c++) {
-        row.push({ 
-          type: TILE_TYPES.EMPTY, rotation: 0, visualRotation: 0,
-          fixed: false, component: null, rValue: 0 
-        });
-      }
-      grid.push(row);
-    }
-
-    let row = 1 + Math.floor(Math.random() * Math.max(1, gridRows - 2));
-    let col = 0;
-    sourcePos = { row, col };
-    pathCells = [{ row, col }];
-
-    while (col < gridCols - 1) {
-      const options = ["R","R","R","R"];
-      if (row > 0) options.push("U");
-      if (row < gridRows - 1) options.push("D");
-      const dir = options[Math.floor(Math.random() * options.length)];
-      if (dir === "R" && col < gridCols - 1) col++;
-      else if (dir === "U" && row > 0) row--;
-      else if (dir === "D" && row < gridRows - 1) row++;
-      else if (col < gridCols - 1) col++;
-      pathCells.push({ row, col });
-    }
-    ledPos = { row, col };
-    keyboardCursor = { ...sourcePos };
-
-    const maskGrid = Array(gridRows).fill(0).map(() => Array(gridCols).fill(0));
-    for (let i = 0; i < pathCells.length - 1; i++) {
-      const a = pathCells[i], b = pathCells[i + 1];
-      const dr = b.row - a.row, dc = b.col - a.col;
-      let bitAB = 0;
-      if (dr === -1) bitAB = 1; else if (dr === 1) bitAB = 4;
-      else if (dc === 1) bitAB = 2; else if (dc === -1) bitAB = 8;
-      if (!bitAB) continue;
-      maskGrid[a.row][a.col] |= bitAB;
-      const opp = (bitAB===1?4 : bitAB===4?1 : bitAB===2?8 : 2);
-      maskGrid[b.row][b.col] |= opp;
-    }
-
-    for (let r = 0; r < gridRows; r++) {
-      for (let c = 0; c < gridCols; c++) {
-        const mask = maskGrid[r][c];
-        if (mask === 0) continue;
-        let type;
-        const count = ((mask&1)?1:0)+((mask&2)?1:0)+((mask&4)?1:0)+((mask&8)?1:0);
-        if (r === sourcePos.row && c === sourcePos.col) type = TILE_TYPES.SOURCE;
-        else if (r === ledPos.row && c === ledPos.col) type = TILE_TYPES.LED;
-        else {
-          if (count === 2) type = (mask === (1|4) || mask === (2|8)) ? TILE_TYPES.STRAIGHT : TILE_TYPES.CORNER;
-          else if (count === 3) type = TILE_TYPES.TEE;
-          else type = TILE_TYPES.CROSS;
+  for(let i=0; i<path.length; i++) {
+    let cur = path[i], t = state.grid[cur.y][cur.x];
+    if(i===0) {
+      // FIX ORIENTATION SOURCE
+      t.type = TILE.SRC; t.fixed=true; 
+      let nxt = path[1];
+      if(nxt.x > cur.x) t.rot = 0;      // Droite (Mask 2)
+      else if(nxt.y > cur.y) t.rot = 1; // Bas
+      else if(nxt.y < cur.y) t.rot = 3; // Haut
+    } 
+    else if(i===path.length-1) {
+      // FIX ORIENTATION LED
+      t.type = TILE.LED; t.fixed=true; 
+      let pre = path[i-1];
+      if(pre.x < cur.x) t.rot = 0;      // Input Gauche (Mask 8) -> Rot 0
+      else if(pre.y < cur.y) t.rot = 1; // Input Haut -> Rot 1
+      else if(pre.y > cur.y) t.rot = 3; // Input Bas -> Rot 3
+    } 
+    else {
+      let pre = path[i-1], nxt = path[i+1];
+      let d1x=cur.x-pre.x, d1y=cur.y-pre.y; let d2x=nxt.x-cur.x, d2y=nxt.y-cur.y;
+      if(d1x===d2x && d1y===d2y) { 
+        t.type = TILE.STR; t.rot = (d1x!==0)?0:1;
+        if(i === forceR || Math.random()>0.5) {
+          t.comp = (state.level>2 && Math.random()>0.8 && i!==forceR)?COMP.D:COMP.R;
+          if(t.comp===COMP.R) t.val = [220,330,470,1000][Math.floor(Math.random()*4)];
         }
-        const rot = findRotationForMask(type, mask);
-        grid[r][c] = { 
-          type, rotation: rot, visualRotation: rot * (Math.PI/2),
-          fixed: (type === TILE_TYPES.SOURCE || type === TILE_TYPES.LED),
-          component: null, rValue: 0
-        };
-      }
+      } else t.type = TILE.COR;
     }
-
-    const distract = [TILE_TYPES.STRAIGHT, TILE_TYPES.CORNER, TILE_TYPES.TEE, TILE_TYPES.CROSS];
-    for (let r = 0; r < gridRows; r++) {
-      for (let c = 0; c < gridCols; c++) {
-        if (maskGrid[r][c] !== 0) continue;
-        const t = distract[Math.floor(Math.random()*distract.length)];
-        const rot = Math.floor(Math.random()*4);
-        grid[r][c] = { type: t, rotation: rot, visualRotation: rot*(Math.PI/2), fixed: false, component: null, rValue: 0 };
-      }
-    }
-    
-    resistorList = [];
-    diodeCount = 0;
-    const rValues = [220, 330, 470, 1000]; 
-    const pathCandidates = pathCells.slice(1, pathCells.length - 1); 
-    const pathSet = new Set();
-    pathCells.forEach(p => pathSet.add(`${p.row},${p.col}`)); 
-    
-    let straightCandidates = [];
-    pathCandidates.forEach(cell => {
-        const tile = grid[cell.row][cell.col];
-        if (tile.type === TILE_TYPES.STRAIGHT) straightCandidates.push(cell);
-    });
-
-    for (let i = straightCandidates.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [straightCandidates[i], straightCandidates[j]] = [straightCandidates[j], straightCandidates[i]];
-    }
-
-    const nbComponents = Math.max(1, Math.min(straightCandidates.length, Math.ceil(level/2)));
-    for (let i = 0; i < nbComponents; i++) {
-        const cell = straightCandidates[i];
-        const tile = grid[cell.row][cell.col];
-        let componentType = (level > 2 && Math.random() < 0.4) ? "D" : "R";
-        tile.component = componentType;
-        if (componentType === "R") {
-            tile.rValue = rValues[Math.floor(Math.random()*rValues.length)];
-            resistorList.push({rValue:tile.rValue, row:cell.row, col:cell.col});
-        } else if (componentType === "D") {
-            diodeCount++; 
-        }
-    }
-
-    if (level >= 3) {
-        const trapCandidates = [];
-        for (let r = 0; r < gridRows; r++) {
-            for (let c = 0; c < gridCols; c++) {
-                const tile = grid[r][c];
-                if (!tile.fixed && tile.type === TILE_TYPES.STRAIGHT && !pathSet.has(`${r},${c}`) && tile.component === null) {
-                    trapCandidates.push({r, c});
-                }
-            }
-        }
-        const maxTraps = Math.min(2, Math.floor(gridRows * gridCols / 20));
-        let trapsPlaced = 0;
-        const trapRValues = [10, 10000]; 
-        while (trapsPlaced < maxTraps && trapCandidates.length > 0) {
-            const idx = Math.floor(Math.random() * trapCandidates.length);
-            const trapPos = trapCandidates.splice(idx, 1)[0]; 
-            const tile = grid[trapPos.r][trapPos.c];
-            tile.component = "R";
-            tile.rValue = trapRValues[trapsPlaced % trapRValues.length];
-            trapsPlaced++;
-        }
-    }
-
-    for (let r = 0; r < gridRows; r++) {
-      for (let c = 0; c < gridCols; c++) {
-        const tile = grid[r][c];
-        if (!tile || tile.fixed || tile.type === TILE_TYPES.EMPTY) continue;
-        const extra = Math.floor(Math.random()*4);
-        tile.rotation = (tile.rotation + extra) % 4;
-        tile.visualRotation = tile.rotation * (Math.PI/2);
-      }
-    }
-
-    checksCount = 0;
-    puzzleStartTime = performance.now();
-    messageCenter.textContent = "Connecte les pistes, puis teste le circuit. Attention aux pièges !";
-    updateOhmInfo(); updateStats(); 
   }
+  state.grid.forEach(r => r.forEach(t => { if(!t.fixed) t.rot = Math.floor(Math.random()*4); t.anim = t.rot*Math.PI/2; }));
+  saveInitialState(); updateUI(); showChar("intro");
+}
 
-  function getTileMask(tile) { return rotateMask(BASE_MASK[tile.type], tile.rotation); }
+function saveInitialState() { state.initialGridState = state.grid.map(row => row.map(t => t.rot)); }
 
-  /* --- CIRCUIT LOGIC --- */
-  function evaluateCircuitPath() {
-    // Return: { ok: bool, path: Array, failPoint: {row, col} }
-    const visited = Array(gridRows).fill(null).map(()=>Array(gridCols).fill(false));
-    const parent = Array(gridRows).fill(null).map(()=>Array(gridCols).fill(null));
-    const queue = [{ row: sourcePos.row, col: sourcePos.col }];
-    visited[sourcePos.row][sourcePos.col] = true;
-    
-    // Pour visualiser le "fail trace", on garde l'ordre de visite
-    let traversalOrder = [{ row: sourcePos.row, col: sourcePos.col }];
+function resetLevel() {
+  if(state.status === 'SUCCESS') return;
+  state.status = 'PLAY'; state.path = null; state.failReason = null; state.confetti = []; state.particles = [];
+  msg("Niveau Réinitialisé", 0); updateMultimeterUI(false); updateMainButton("check");
+  for(let y=0; y<GRID_H; y++) for(let x=0; x<GRID_W; x++) {
+    let t = state.grid[y][x]; t.rot = state.initialGridState[y][x]; t.anim = t.rot*Math.PI/2; t.potential = 0;
+  }
+  updateEdu("intro");
+}
 
-    while (queue.length > 0) {
-      const cur = queue.shift();
-      const tile = grid[cur.row][cur.col];
-      const mask = getTileMask(tile);
+function handleMainClick() { if (state.status === 'SUCCESS') { state.level++; initLevel(); } else { check(); } }
 
-      let dirsToCheck = DIRS;
-      if (tile.component === "D") {
-         const allowed = DIODE_ALLOWED_EXIT[tile.rotation];
-         dirsToCheck = DIRS.filter(d => d.bit === allowed);
-      }
-
-      for (const dir of dirsToCheck) {
-          if (!(mask & dir.bit)) continue;
-          
-          const nr = cur.row + dir.dy, nc = cur.col + dir.dx;
-          if (nr<0 || nr>=gridRows || nc<0 || nc>=gridCols || visited[nr][nc]) continue;
-
-          const neighbor = grid[nr][nc];
-          if (!neighbor) continue;
-          const nMask = getTileMask(neighbor);
-          const opp = (dir.bit===1?4 : dir.bit===4?1 : dir.bit===2?8 : 2);
-          
-          if (!(nMask & opp)) continue;
-          if (neighbor.component === "D") {
-            const nAllowed = DIODE_ALLOWED_EXIT[neighbor.rotation];
-            if (opp === nAllowed) continue; // Blocked by diode direction
-          }
-
-          visited[nr][nc] = true;
-          parent[nr][nc] = cur;
-          queue.push({ row: nr, col: nc });
-          traversalOrder.push({ row: nr, col: nc });
-      }
+function check() {
+  if(state.status === 'SUCCESS') return;
+  state.status = 'PLAY'; state.failReason = null; state.particles = [];
+  let q=[], vis=new Set();
+  for(let y=0; y<GRID_H; y++) for(let x=0; x<GRID_W; x++) if(state.grid[y][x].type===TILE.SRC) q.push({x,y,p:[{x,y}]});
+  let success = null, maxP = [];
+  while(q.length) {
+    let cur = q.shift(); let k = cur.x+","+cur.y;
+    if(vis.has(k)) continue; vis.add(k);
+    if(cur.p.length > maxP.length) maxP = cur.p;
+    let t = state.grid[cur.y][cur.x];
+    if(t.type === TILE.LED) { success=cur.p; break; }
+    let m = getMask(t);
+    let dirs = [{dx:0,dy:-1,b:1,o:4}, {dx:1,dy:0,b:2,o:8}, {dx:0,dy:1,b:4,o:1}, {dx:-1,dy:0,b:8,o:2}];
+    for(let d of dirs) if(m & d.b) {
+      let nx=cur.x+d.dx, ny=cur.y+d.dy;
+      if(nx>=0 && nx<GRID_W && ny>=0 && ny<GRID_H) { if(getMask(state.grid[ny][nx]) & d.o) q.push({x:nx, y:ny, p:[...cur.p, {x:nx, y:ny}]}); }
     }
-
-    if (!visited[ledPos.row][ledPos.col]) {
-        // En cas d'échec, on reconstruit le chemin le plus long depuis la source
-        // C'est une approximation pour l'effet visuel "debug"
-        return { ok: false, path: traversalOrder }; 
-    }
-
-    const path = [];
-    let cur = { row: ledPos.row, col: ledPos.col };
-    while (cur) {
-      path.push({ row: cur.row, col: cur.col });
-      if (cur.row === sourcePos.row && cur.col === sourcePos.col) break;
-      cur = parent[cur.row][cur.col];
-      if (path.length > gridRows * gridCols * 2) break; 
-    }
-    path.reverse();
-    return { ok: true, path };
   }
+  if(!success) { state.path = maxP; fail("open", maxP[maxP.length-1]); } else { state.path = success; startFlowAnimation(success); }
+}
 
-  /* --- INPUT --- */
-  function rotateTile(r, c, clockwise) {
-      const tile = grid[r][c];
-      if (!tile || tile.fixed) return;
-      
-      initAudioContext();
-      // Rotation logic
-      if (!clockwise) tile.rotation = (tile.rotation + 3) % 4;
-      else tile.rotation = (tile.rotation + 1) % 4;
-      
-      // Animation "Overshoot" (Elastic physics)
-      // On "triche" en ajoutant une valeur cible éloignée visuellement
-      // Le loop d'animation gérera le lissage vers la vraie valeur
-      
-      sRotate();
-  }
+function startFlowAnimation(path) {
+  let R=0, D=0;
+  path.forEach(p => { let t=state.grid[p.y][p.x]; if(t.comp===COMP.R)R+=t.val; if(t.comp===COMP.D)D++; });
+  let Vcc=5, Vdrop=2+(D*0.7); let I = (Vcc-Vdrop)/R;
+  state.lastI = I; 
 
-  function handleInteraction(x, y, isRightClick) {
-    if (gameState !== "idle" || tileSize <= 0) return;
-    const gx = x - gridOriginX, gy = y - gridOriginY;
-    if (gx < 0 || gy < 0) return;
-    const c = Math.floor(gx / tileSize), r = Math.floor(gy / tileSize);
-    if (r < 0 || r >= gridRows || c < 0 || c >= gridCols) return;
-
-    inputMode = 'mouse';
-    keyboardCursor = {r, c}; // Sync cursor
-    rotateTile(r, c, !isRightClick);
-  }
-
-  function onCanvasClick(evt) {
-    const rect = canvas.getBoundingClientRect();
-    const x = (evt.clientX - rect.left) * (GAME_WIDTH / rect.width);
-    const y = (evt.clientY - rect.top) * (GAME_HEIGHT / rect.height);
-    handleInteraction(x, y, false);
-  }
-  
-  canvas.addEventListener("contextmenu", (e) => {
-    e.preventDefault(); 
-    const rect = canvas.getBoundingClientRect();
-    const x = (e.clientX - rect.left) * (GAME_WIDTH / rect.width);
-    const y = (e.clientY - rect.top) * (GAME_HEIGHT / rect.height);
-    handleInteraction(x, y, true);
-  });
-  
-  // KEYBOARD CONTROLS (Pro Feature)
-  document.addEventListener("keydown", (e) => {
-      // Ignorer si on n'est pas focus sur le jeu
-      // if (document.activeElement !== mainDiv && document.activeElement !== document.body) return;
-
-      if (e.code === "Space" || e.code === "Enter") { 
-          e.preventDefault();
-          if (gameState === "idle") {
-             inputMode = 'keyboard';
-             rotateTile(keyboardCursor.r, keyboardCursor.c, true);
-          }
-      }
-      else if (e.key.startsWith("Arrow") || ["KeyW","KeyA","KeyS","KeyD"].includes(e.code)) {
-          e.preventDefault();
-          if (gameState !== "idle") return;
-          inputMode = 'keyboard';
-          let nr = keyboardCursor.r, nc = keyboardCursor.c;
-          if (e.code === "ArrowUp" || e.code === "KeyW") nr--;
-          if (e.code === "ArrowDown" || e.code === "KeyS") nr++;
-          if (e.code === "ArrowLeft" || e.code === "KeyA") nc--;
-          if (e.code === "ArrowRight" || e.code === "KeyD") nc++;
-          
-          if (nr >= 0 && nr < gridRows && nc >= 0 && nc < gridCols) {
-              keyboardCursor = {r: nr, c: nc};
-              sMove();
-          }
-      }
-      else if (e.code === "KeyT") {
-          e.preventDefault(); onCheckCircuit();
-      }
-      else if (e.code === "KeyN") {
-          e.preventDefault(); resetRun();
-      }
+  let currentV = 5.0;
+  path.forEach(p => {
+    let t = state.grid[p.y][p.x]; t.potential = currentV; 
+    let drop = 0;
+    if(t.comp === COMP.R) drop = I * t.val;
+    else if(t.comp === COMP.D) drop = 0.7;
+    else if(t.type === TILE.LED) drop = 2.0;
+    currentV -= drop; if(currentV < 0) currentV = 0;
   });
 
+  state.status = 'FLOW'; state.flowIdx = 0; state.flowTimer = 0; state.flowResult = { I, Vdrop, R };
+}
 
-  /* --- VALIDATION --- */
-  function onCheckCircuit() {
-    if (gameState !== "idle") return;
-    initAudioContext();
-    sCheck();
-    checksCount++;
-    const now = performance.now();
-    const res = evaluateCircuitPath();
-    const elapsed = (now - puzzleStartTime) / 1000;
-    
-    // On stocke le chemin (complet si succès, partiel si échec)
-    activePath = res.path; 
-
-    if (res.ok) {
-      let pathResistors = 0;
-      let pathDiodes = 0;
-      let rList = [];
-      
-      res.path.forEach(pos => {
-          const tile = grid[pos.row][pos.col];
-          if (tile.component === "R") { pathResistors += tile.rValue; rList.push(tile.rValue); }
-          if (tile.component === "D") pathDiodes += 1;
-      });
-
-      const Vf_total = pathDiodes * 0.7;
-      const U_restante = supplyVoltage - Vf_total;
-      let I_amp = 0;
-      let failMessage = "";
-
-      if (U_restante <= 0) {
-          I_amp = 0;
-          failMessage = `Tension insuffisante (${pathDiodes} diodes).`;
-      } else if (pathResistors === 0) {
-          I_amp = 999; 
-          failMessage = "COURT-CIRCUIT (R=0Ω) !";
-      } else {
-          I_amp = U_restante / pathResistors;
-      }
-
-      ohmIElem.textContent = (I_amp * 1000).toFixed(1) + " mA";
-      ohmReqElem.textContent = pathResistors + " Ω";
-      ohmRlist.innerHTML = "";
-      rList.forEach((rValue, idx) => {
-        const li = document.createElement("li"); li.textContent = `R${idx + 1} = ${rValue} Ω`; ohmRlist.appendChild(li);
-      });
-      if (rList.length === 0) {
-          const li = document.createElement("li"); li.textContent = "ATTENTION : R=0 !";
-          li.style.color = "#dc2626"; li.style.fontWeight = "bold"; ohmRlist.appendChild(li);
-      }
-
-      if (I_amp > 0.030 || (I_amp < 0.001 && I_amp >= 0)) {
-          sFail();
-          gameState = "anim_fail";
-          animStartTime = now;
-          if(I_amp > 0.030) messageCenter.textContent = failMessage || `I=${(I_amp * 1000).toFixed(1)}mA > 30mA. Surchauffe !`;
-          else messageCenter.textContent = failMessage || `I=${(I_amp * 1000).toFixed(1)}mA < 1mA. Trop faible.`;
-          triggerCharacter("fail");
-      } else {
-          // SUCCESS
-          sSuccess();
-          lastSolveTime = elapsed;
-          const base = 100 + (level-1)*20;
-          const penalty = Math.min(base*0.5, elapsed*2) + (checksCount-1)*10;
-          const gain = Math.floor(Math.max(20, base - penalty));
-          score += gain;
-          updateBestIfNeeded();
-          
-          gameState = "anim_success";
-          animStartTime = now;
-          messageCenter.textContent = `Succès ! I = ${(I_amp*1000).toFixed(1)}mA. +${gain} pts.`;
-          triggerCharacter("success");
-      }
-      updateUI();
-    } else {
-      // Circuit Ouvert
-      sFail();
-      gameState = "anim_fail";
-      animStartTime = now;
-      messageCenter.textContent = "Circuit ouvert. Regarde le tracé rouge !";
-      triggerCharacter("fail");
-      updateUI();
-    }
-  }
-
-  function resetRun() {
-    score = 0; level = 1; lastSolveTime = null;
-    gameState = "idle";
-    generatePuzzle();
-    updateUI();
-    triggerCharacter("intro");
-  }
-
-  /* --- ANIMATION LOOP --- */
-  function updateAnimations() {
-    const now = performance.now();
-    if (gameState === "anim_success") {
-      if ((now - animStartTime) > SUCCESS_WAVE_DURATION + 1000) {
-        gameState = "idle"; level++; generatePuzzle(); updateUI();
-      }
-    } else if (gameState === "anim_fail") {
-      if ((now - animStartTime) > FAIL_ANIM_DURATION) gameState = "idle";
-    }
-    return now;
-  }
-
-  // Elastic Rotation Physics
-  function updateTileAnimations() {
-    const tension = 0.2; // Spring tension
-    const damping = 0.75; // Friction
-    
-    for (let r = 0; r < gridRows; r++) {
-      for (let c = 0; c < gridCols; c++) {
-        const tile = grid[r][c];
-        if (!tile) continue;
-        
-        let target = tile.rotation * (Math.PI / 2);
-        let current = tile.visualRotation;
-
-        // Wrap around logic to find shortest path
-        while(current > Math.PI * 2) current -= Math.PI * 2;
-        while(current < -Math.PI * 2) current += Math.PI * 2;
-        if (Math.abs(target - current) > Math.PI * 1.5) {
-            if (target > current) current += Math.PI * 2; else current -= Math.PI * 2;
+function updateFlow() {
+  if(state.status === 'FLOW') {
+    state.flowTimer++;
+    if(state.flowTimer > 3) { 
+      state.flowTimer = 0; state.flowIdx++;
+      if(state.flowIdx >= state.path.length) {
+        let {I, Vdrop, R} = state.flowResult; let Vcc = 5;
+        if(Vcc <= Vdrop) fail("voltage", state.path[state.path.length-1]);
+        else if(R===0) fail("short", state.path[0]);
+        else if(I>0.03) {
+           let burnPos = state.path.find(p => state.grid[p.y][p.x].comp === COMP.R) || state.path[0];
+           fail("high", burnPos);
         }
-
-        // Simple Lerp is boring. Let's make it snappy.
-        // Actually for simplicity within this strict constraint, let's stick to a fast Lerp with snap
-        // To do real spring physics requires velocity tracking per tile.
-        // Let's use a very fast asymptotic slide.
-        const diff = target - current;
-        if (Math.abs(diff) < 0.001) {
-            tile.visualRotation = target;
-        } else {
-            tile.visualRotation = current + diff * 0.25; 
-        }
+        else if(I<0.001) fail("low", state.path[state.path.length-1]);
+        else win(I);
       }
     }
   }
+}
 
-  function isTileEnergized(r, c, now) {
-    if (!activePath) return false;
-    const duration = (gameState === "anim_success") ? SUCCESS_WAVE_DURATION : FAIL_ANIM_DURATION*0.6;
-    const t = Math.min(1, (now - animStartTime) / duration);
-    const idx = Math.floor(t * (activePath.length + 1)); 
-    
-    // Check if tile is in the active portion of the path
-    for(let i=0; i<idx && i<activePath.length; i++) {
-      if (activePath[i].row === r && activePath[i].col === c) return true;
-    }
-    return false;
-  }
-  
-  // Highlight cursor logic
-  function drawCursor(ctx, x, y, size) {
-      const time = performance.now();
-      const pulse = 0.5 + 0.5 * Math.sin(time * 0.008);
-      ctx.strokeStyle = `rgba(255, 255, 255, ${0.4 + 0.4*pulse})`;
-      ctx.lineWidth = 4;
-      ctx.strokeRect(x, y, size, size);
-  }
+function spawnConfetti() { for(let i=0; i<100; i++) state.confetti.push({x:canvas.width/2, y:canvas.height/2, vx:(Math.random()-0.5)*15, vy:(Math.random()-1)*15, c:`hsl(${Math.random()*360},100%,50%)`, life:100}); }
+function spawnSmoke(pos) { for(let i=0; i<50; i++) state.particles.push({x: offX + pos.x*tileSize + tileSize/2, y: offY + pos.y*tileSize + tileSize/2, vx:(Math.random()-0.5)*2, vy:-Math.random()*3, size:Math.random()*10+5, type:'smoke', life:100}); }
+function spawnSparks(pos) { for(let i=0; i<30; i++) state.particles.push({x: offX + pos.x*tileSize + tileSize/2, y: offY + pos.y*tileSize + tileSize/2, vx:(Math.random()-0.5)*10, vy:(Math.random()-0.5)*10, type:'spark', life:40}); }
 
-  /* --- DRAW --- */
-  function draw(now) {
-    ctx.clearRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
-
-    const availableW = GAME_WIDTH - 60;
-    const availableH = GAME_HEIGHT - 60;
-    tileSize = Math.min(availableW / gridCols, availableH / gridRows);
-    gridOriginX = (GAME_WIDTH - (tileSize * gridCols)) / 2;
-    gridOriginY = (GAME_HEIGHT - (tileSize * gridRows)) / 2;
-
-    for (let r = 0; r < gridRows; r++) {
-      for (let c = 0; c < gridCols; c++) {
-        const tile = grid[r][c];
-        const x = gridOriginX + c * tileSize;
-        const y = gridOriginY + r * tileSize;
-
-        ctx.strokeStyle = "rgba(255,255,255,0.08)";
-        ctx.lineWidth = 1;
-        ctx.strokeRect(x, y, tileSize, tileSize);
-
-        // Highlight Keyboard Cursor
-        if (inputMode === 'keyboard' && keyboardCursor.r === r && keyboardCursor.c === c) {
-             drawCursor(ctx, x, y, tileSize);
-        }
-        // Hover Mouse
-        else if (inputMode === 'mouse' && lastHovered.r === r && lastHovered.c === c && !tile.fixed) {
-            ctx.fillStyle = "rgba(255, 255, 255, 0.05)";
-            ctx.fillRect(x, y, tileSize, tileSize);
-        }
-
-        if (!tile || tile.type === TILE_TYPES.EMPTY) continue;
-
-        const cx = x + tileSize/2;
-        const cy = y + tileSize/2;
-        
-        ctx.save();
-        ctx.translate(cx, cy);
-        ctx.rotate(tile.visualRotation);
-
-        // TRACKS
-        ctx.strokeStyle = "rgba(200, 200, 200, 0.8)";
-        ctx.lineWidth = Math.max(5, tileSize * 0.14);
-        ctx.lineCap = "round"; ctx.lineJoin = "round";
-        ctx.shadowColor = "rgba(0,0,0,0.5)"; ctx.shadowBlur = 4; ctx.shadowOffsetY = 2;
-        
-        const baseM = BASE_MASK[tile.type];
-        ctx.beginPath();
-        if (baseM & 1) { ctx.moveTo(0,0); ctx.lineTo(0, -tileSize*0.4); }
-        if (baseM & 2) { ctx.moveTo(0,0); ctx.lineTo(tileSize*0.4, 0); }
-        if (baseM & 4) { ctx.moveTo(0,0); ctx.lineTo(0, tileSize*0.4); }
-        if (baseM & 8) { ctx.moveTo(0,0); ctx.lineTo(-tileSize*0.4, 0); }
-        ctx.stroke();
-
-        // ENERGY TRACE (Success OR Fail)
-        if ((gameState === "anim_success" || gameState === "anim_fail") && isTileEnergized(r, c, now)) {
-            const isFail = (gameState === "anim_fail");
-            ctx.strokeStyle = isFail ? "#ef4444" : "#38bdf8"; 
-            ctx.shadowColor = isFail ? "#b91c1c" : "#0ea5e9";
-            ctx.shadowBlur = isFail ? 10 : 15;
-            ctx.shadowOffsetY = 0;
-            ctx.lineWidth = Math.max(4, tileSize * 0.12); 
-            ctx.stroke();
-            
-            ctx.strokeStyle = "#ffffff";
-            ctx.lineWidth = 2; ctx.shadowBlur = 0;
-            ctx.stroke();
-            
-            // Spark at the end of fail path
-            if (isFail && activePath && activePath.length > 0) {
-                const last = activePath[activePath.length-1];
-                if (last.row === r && last.col === c) {
-                     // Draw fail cross
-                     ctx.rotate(-tile.visualRotation);
-                     ctx.fillStyle = "#ef4444";
-                     ctx.font = "bold "+(tileSize*0.5)+"px Arial";
-                     ctx.textAlign="center"; ctx.textBaseline="middle";
-                     ctx.fillText("✕", 0, 0);
-                     ctx.rotate(tile.visualRotation);
-                }
-            }
-        }
-
-        // COMPONENTS
-        ctx.shadowBlur = 0;
-        if (tile.type === TILE_TYPES.SOURCE) {
-          ctx.fillStyle = "#f59e0b"; ctx.strokeStyle = "#fff"; ctx.lineWidth = 2;
-          ctx.beginPath(); ctx.arc(0,0, tileSize*0.22, 0, Math.PI*2); ctx.fill(); ctx.stroke();
-          ctx.fillStyle = "#fff"; ctx.font = "bold " + (tileSize*0.2) + "px 'Inter', sans-serif";
-          ctx.textAlign = "center"; ctx.textBaseline="middle"; ctx.fillText("Vcc", 0, 1);
-        }
-        else if (tile.type === TILE_TYPES.LED) {
-          const energized = (gameState === "anim_success" && isTileEnergized(r, c, now));
-          ctx.fillStyle = energized ? "#fbbf24" : "#334155";
-          if (energized) { ctx.shadowColor = "#fbbf24"; ctx.shadowBlur = 20; }
-          ctx.strokeStyle = "#fff"; ctx.lineWidth = 2;
-          ctx.beginPath(); ctx.arc(0,0, tileSize*0.2, 0, Math.PI*2); ctx.fill(); ctx.stroke();
-        }
-        else if (tile.component === "R") {
-          ctx.fillStyle = "#e2e8f0"; ctx.strokeStyle = "#475569"; ctx.lineWidth = 2;
-          const rw = tileSize*0.5, rh = tileSize*0.22;
-          ctx.beginPath(); ctx.rect(-rw/2, -rh/2, rw, rh); ctx.fill(); ctx.stroke();
-          ctx.fillStyle = "#ef4444"; ctx.fillRect(-rw/4, -rh/2, rw/8, rh);
-          ctx.fillStyle = "#3b82f6"; ctx.fillRect(0, -rh/2, rw/8, rh);
-          ctx.fillStyle = "#eab308"; ctx.fillRect(rw/4, -rh/2, rw/8, rh);
-          ctx.rotate(-tile.visualRotation); 
-          ctx.fillStyle = "#fff"; ctx.shadowColor="black"; ctx.shadowBlur=4;
-          ctx.font = "bold " + (tileSize*0.22) + "px 'Inter', sans-serif";
-          ctx.textAlign = "center"; ctx.textBaseline = "middle";
-          ctx.fillText(tile.rValue, 0, -tileSize*0.35); 
-        }
-        else if (tile.component === "D") {
-          const triSize = tileSize*0.18;
-          ctx.strokeStyle = "#475569"; ctx.lineWidth = 2; ctx.fillStyle = "#fff";
-          ctx.beginPath(); ctx.moveTo(-triSize/1.5, triSize/2); ctx.lineTo(-triSize/1.5, -triSize/2); ctx.lineTo(triSize/1.5, 0); ctx.closePath(); ctx.fill(); ctx.stroke();
-          ctx.beginPath(); ctx.moveTo(-triSize/1.5 - 2, triSize/2); ctx.lineTo(-triSize/1.5 - 2, -triSize/2); ctx.lineWidth = 3; ctx.strokeStyle = "#dc2626"; ctx.stroke();
-          ctx.rotate(-tile.visualRotation);
-          ctx.fillStyle = "#fff"; ctx.shadowColor="black"; ctx.shadowBlur=4;
-          ctx.font = "bold " + (tileSize*0.22) + "px 'Inter', sans-serif";
-          ctx.textAlign = "center"; ctx.textBaseline = "middle";
-          ctx.fillText("D", 0, -tileSize*0.35); 
-        }
-        ctx.restore();
-      }
-    }
-  }
-
-  function loop() {
-    const now = updateAnimations();
-    updateTileAnimations(); 
-    draw(now);
-    requestAnimationFrame(loop);
-  }
-
-  /* --- Event Listeners --- */
-  canvas.addEventListener("click", onCanvasClick);
-  canvas.addEventListener("mousemove", (e) => {
-      const rect = canvas.getBoundingClientRect();
-      const x = (e.clientX - rect.left) * (GAME_WIDTH / rect.width);
-      const y = (e.clientY - rect.top) * (GAME_HEIGHT / rect.height);
-      if (gameState === "idle" && tileSize > 0) {
-          const gx = x - gridOriginX, gy = y - gridOriginY;
-          const c = Math.floor(gx / tileSize), r = Math.floor(gy / tileSize);
-          if (r>=0 && c>=0 && r<gridRows && c<gridCols) {
-              lastHovered = {r,c};
-              if (inputMode === 'keyboard') inputMode = 'mouse';
-          } else { lastHovered = {r:-1,c:-1}; }
-      }
+function drawParticles() {
+  state.confetti.forEach((p,i)=>{ p.x+=p.vx; p.y+=p.vy; p.vy+=0.5; p.life--; ctx.fillStyle=p.c; ctx.fillRect(p.x,p.y,6,6); if(p.life<=0)state.confetti.splice(i,1); });
+  state.particles.forEach((p,i) => {
+    p.x += p.vx; p.y += p.vy; p.life--;
+    if(p.type === 'smoke') { ctx.fillStyle = `rgba(50,50,50,${p.life/100})`; ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI*2); ctx.fill(); } 
+    else { ctx.fillStyle = `rgba(255, 200, 0, ${p.life/40})`; ctx.fillRect(p.x, p.y, 4, 4); }
+    if(p.life<=0) state.particles.splice(i,1);
   });
+}
 
-  checkBtn.addEventListener("click", onCheckCircuit);
-  mobileCheckBtn.addEventListener("click", onCheckCircuit);
-  newGameBtn.addEventListener("click", resetRun);
-  mobileNewBtn.addEventListener("click", resetRun);
+function updateEdu(situation, data) {
+  const box = document.getElementById('edu-content'); const boxP = document.getElementById('edu-panel'); const title = document.getElementById('edu-title');
+  boxP.style.borderLeftColor = "#38bdf8"; boxP.style.background = "#f0f9ff"; title.innerText = "Conseil";
+  if(situation === 'intro') box.innerHTML = `Connecte la source <b>Vcc (5V)</b> à la LED. <br>Le courant doit être entre <b>1mA et 30mA</b>.`;
+  else if (situation === 'victory_explore') { boxP.style.borderLeftColor = "#16a34a"; boxP.style.background = "#dcfce7"; title.innerText = "Succès !"; box.innerHTML = `Analyse les potentiels avec le multimètre avant de passer à la suite.`; }
+  else if (situation === 'hover_res') { boxP.style.borderLeftColor = "#2563eb"; box.innerHTML = `<b>Résistance ${data.val}Ω</b><br>Tension avant : <b>${data.vIn}V</b><br>Tension après : <b>${data.vOut}V</b>`; }
+  else if (situation === 'hover_led') { boxP.style.borderLeftColor = "#eab308"; box.innerHTML = `<b>LED</b> (2V)<br>Courant qui traverse : <b>${data.i}</b>.`; }
+  else if (situation === 'short') { boxP.style.borderLeftColor="#ef4444"; boxP.style.background="#fef2f2"; box.innerHTML = `<b>DANGER ! Court-Circuit</b>.<br>R=0Ω -> I infini.<br>Ajoute une résistance en série !`; }
+  else if (situation === 'open') box.innerHTML = `<b>Circuit Ouvert.</b><br>Utilise le multimètre pour trouver la coupure.`;
+  else if (situation === 'high') { boxP.style.borderLeftColor="#f97316"; box.innerHTML = `<b>Surchauffe !</b> I > 30mA.<br>Résistance trop faible. Augmente R.`; }
+  else if (situation === 'low') { boxP.style.borderLeftColor="#f97316"; box.innerHTML = `<b>Courant trop faible.</b> I < 1mA.<br>La LED ne brille pas. Diminue R.`; }
+  else if (situation === 'voltage') box.innerHTML = `<b>Tension insuffisante.</b><br>Trop de diodes consomment la tension.`;
+}
 
-  muteBtn.addEventListener("click", () => {
-    muted = !muted;
-    if (muted) { bgMusic.pause(); muteBtn.textContent = "Son : OFF"; }
-    else { initAudioContext(); bgMusic.play().catch(()=>{}); muteBtn.textContent = "Son : ON"; }
-    try{localStorage.setItem("voltlink_muted", muted);}catch(e){}
-  });
+function updateMultimeterUI(active, danger=false, success=false) {
+  const m = document.getElementById('multimeter'); const h = document.getElementById('probe-hint');
+  m.className = active ? 'active' : ''; if(danger) m.classList.add('danger'); if(success) m.classList.add('success');
+  h.innerText = active ? "Sonde active (Fil Noir sur Masse)" : "Sonde inactive";
+}
+
+function fail(reason, errorPos) {
+  state.status='FAIL'; state.failReason = reason; playSound('fail'); 
+  let map = { "open": ["Circuit coupé."], "short": ["Court-circuit !"], "high": ["Surcharge !"], "low": ["Signal faible."], "voltage": ["Tension basse."] };
+  msg(map[reason][0], 1); showChar("fail", map[reason][0]); updateEdu(reason); updateMultimeterUI(true, true);
+  if(reason === 'short') spawnSparks(errorPos); if(reason === 'high' || reason === 'short') spawnSmoke(errorPos);
+}
+
+function win(I) { 
+  state.status='SUCCESS'; playSound('win'); spawnConfetti();
+  state.score += 100+state.level*50; msg(`SUCCÈS : ${(I*1000).toFixed(1)} mA`, 2); showChar("success"); 
+  updateUI(); updateMultimeterUI(true, false, true); updateMainButton("next"); updateEdu("victory_explore");
+}
+
+function updateMainButton(mode) {
+  const btn = document.getElementById('btn-check');
+  if(mode === "next") { btn.innerHTML = `CIRCUIT SUIVANT <span style='font-size:16px'>➔</span>`; btn.className = "btn btn-success"; } 
+  else { btn.innerHTML = "TESTER LE CIRCUIT"; btn.className = "btn btn-primary"; }
+}
+
+// RENDER
+function draw() {
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  updateFlow();
+  ctx.strokeStyle = "rgba(255,255,255,0.05)"; ctx.lineWidth=1;
+  ctx.beginPath();
+  for(let i=0; i<=GRID_W; i++) { ctx.moveTo(offX+i*tileSize,0); ctx.lineTo(offX+i*tileSize,canvas.height); }
+  for(let i=0; i<=GRID_H; i++) { ctx.moveTo(0,offY+i*tileSize); ctx.lineTo(canvas.width,offY+i*tileSize); }
+  ctx.stroke();
+
+  for(let y=0; y<GRID_H; y++) for(let x=0; x<GRID_W; x++) drawTile(x,y);
+  drawParticles();
+
+  if(state.hover.valid && state.status!=='PLAY' && state.status!=='FLOW') {
+    let hx=offX+state.hover.c*tileSize+tileSize/2, hy=offY+state.hover.r*tileSize+tileSize/2;
+    ctx.shadowBlur=5; ctx.shadowColor="black"; ctx.fillStyle="#dc2626"; ctx.beginPath(); ctx.arc(hx,hy,4,0,Math.PI*2); ctx.fill();
+    ctx.strokeStyle="#b91c1c"; ctx.lineWidth=2; ctx.beginPath(); ctx.moveTo(hx,hy); ctx.lineTo(hx+15,hy-20); ctx.stroke();
+    ctx.lineWidth=6; ctx.beginPath(); ctx.moveTo(hx+15,hy-20); ctx.lineTo(hx+25,hy-35); ctx.stroke(); ctx.shadowBlur=0;
+  }
+  if(state.hover.valid && state.status!=='SUCCESS') {
+    let x=offX+state.hover.c*tileSize, y=offY+state.hover.r*tileSize;
+    ctx.strokeStyle=COLS.hover; ctx.lineWidth=2; ctx.strokeRect(x+2,y+2,tileSize-4,tileSize-4);
+  }
+  requestAnimationFrame(draw);
+}
+
+function drawTile(gx, gy) {
+  let t = state.grid[gy][gx];
+  let x = offX + gx*tileSize + tileSize/2; let y = offY + gy*tileSize + tileSize/2;
+  let trg = t.rot*Math.PI/2, diff = trg - t.anim; if(Math.abs(diff)>0.01) t.anim += diff*0.2; else t.anim = trg;
+
+  ctx.save(); ctx.translate(x,y); ctx.rotate(t.anim);
+
+  let c=COLS.wireOff, shadow=0, pIdx=-1;
+  if(state.path) pIdx = state.path.findIndex(p=>p.x===gx && p.y===gy);
   
-  // Focus main div on load for keyboard capture
-  mainDiv.focus();
+  if(pIdx!==-1) {
+    if(state.status==='FAIL') c=COLS.error;
+    else if(state.status==='SUCCESS' || (state.status === 'FLOW' && pIdx <= state.flowIdx)) {
+       c = getVoltageColor(t.potential); shadow = 15;
+    }
+  }
+  // Ombre noire sous les fils pour effet 3D
+  ctx.shadowColor = "rgba(0,0,0,0.5)"; ctx.shadowBlur = 4;
+  
+  ctx.strokeStyle=c; ctx.lineWidth=tileSize*0.16; ctx.lineCap="round";
+  if(shadow>0){ ctx.shadowColor=c; ctx.shadowBlur=shadow; }
 
-  loadBest();
-  resetRun();
-  updateUI();
-  requestAnimationFrame(loop);
+  ctx.beginPath();
+  if(t.type===TILE.STR){ ctx.moveTo(-tileSize*0.5,0); ctx.lineTo(tileSize*0.5,0); }
+  else if(t.type===TILE.COR){ ctx.moveTo(tileSize*0.5,0); ctx.lineTo(0,0); ctx.lineTo(0,tileSize*0.5); }
+  else if(t.type===TILE.TEE){ ctx.moveTo(-tileSize*0.5,0); ctx.lineTo(tileSize*0.5,0); ctx.moveTo(0,0); ctx.lineTo(0,tileSize*0.5); }
+  else if(t.type===TILE.CRO){ ctx.moveTo(-tileSize*0.5,0); ctx.lineTo(tileSize*0.5,0); ctx.moveTo(0,-tileSize*0.5); ctx.lineTo(0,tileSize*0.5); }
+  else if(t.type===TILE.SRC){ ctx.moveTo(0,0); ctx.lineTo(tileSize*0.4,0); }
+  else if(t.type===TILE.LED){ ctx.moveTo(0,0); ctx.lineTo(-tileSize*0.4,0); }
+  ctx.stroke(); ctx.shadowBlur=0;
 
-})();
+  if(t.comp===COMP.R) {
+    let w=tileSize*0.5, h=tileSize*0.22;
+    ctx.fillStyle="#e2e8f0"; ctx.fillRect(-w/2,-h/2,w,h);
+    let clrs = getResistorColors(t.val);
+    ctx.fillStyle=clrs[0]; ctx.fillRect(-w/4, -h/2, w/8, h);
+    ctx.fillStyle=clrs[1]; ctx.fillRect(-w/10, -h/2, w/8, h);
+    ctx.fillStyle=clrs[2]; ctx.fillRect(w/12, -h/2, w/8, h);
+    ctx.rotate(-Math.PI/2); ctx.fillStyle="white"; ctx.font="9px Arial"; ctx.textAlign="center"; ctx.fillText(t.val,0,-w/2-2);
+  } else if(t.comp===COMP.D) {
+    let s=tileSize*0.16; ctx.fillStyle="#cbd5e1"; ctx.beginPath(); ctx.moveTo(-s,-s); ctx.lineTo(-s,s); ctx.lineTo(s,0); ctx.fill();
+    ctx.strokeStyle="#dc2626"; ctx.lineWidth=3; ctx.beginPath(); ctx.moveTo(s,-s); ctx.lineTo(s,s); ctx.stroke();
+  }
+  ctx.restore();
+
+  if(t.type===TILE.SRC){ ctx.fillStyle="#f59e0b"; ctx.beginPath(); ctx.arc(x,y,tileSize*0.22,0,Math.PI*2); ctx.fill(); ctx.fillStyle="white"; ctx.font="bold 10px Arial"; ctx.textAlign="center"; ctx.textBaseline="middle"; ctx.fillText("5V",x,y); }
+  if(t.type===TILE.LED){
+    let lit = (state.status==='SUCCESS' || (state.status==='FLOW' && pIdx!==-1 && pIdx<=state.flowIdx));
+    ctx.fillStyle=lit?"#fbbf24":"#475569"; if(lit){ ctx.shadowColor="#fbbf24"; ctx.shadowBlur=20; }
+    ctx.beginPath(); ctx.arc(x,y,tileSize*0.2,0,Math.PI*2); ctx.fill(); ctx.shadowBlur=0;
+  }
+}
+
+canvas.addEventListener('contextmenu', e => e.preventDefault());
+canvas.addEventListener('mousedown', e => {
+  let pos = getGridPos(e);
+  if(pos.valid && !state.grid[pos.r][pos.c].fixed && state.status !== 'SUCCESS') {
+    let t = state.grid[pos.r][pos.c];
+    if(e.button === 0) t.rot = (t.rot+1)%4; if(e.button === 2) t.rot = (t.rot+3)%4;
+    playSound('click');
+  }
+});
+canvas.addEventListener('mousemove', e => {
+  let pos = getGridPos(e); state.hover = pos.valid ? pos : {c:-1, r:-1};
+  let u="--", i="--", r="--";
+  if((state.status==='SUCCESS' || state.status==='FAIL') && pos.valid) {
+    let t = state.grid[pos.r][pos.c];
+    let inPath = state.path && state.path.some(p => p.x===pos.c && p.y===pos.r);
+    
+    if(state.status === 'SUCCESS' && inPath) {
+       if(t.comp === COMP.R) {
+         let vDrop = (state.lastI*t.val);
+         updateEdu("hover_res", {val:t.val, vIn:t.potential.toFixed(2), vOut:(t.potential-vDrop).toFixed(2)});
+       }
+       else if(t.type === TILE.LED) updateEdu("hover_led", {i:(state.lastI*1000).toFixed(1)+"mA"});
+    }
+
+    if(inPath) {
+      if(state.failReason === 'short' || state.failReason === 'high') { i="⚠️"; u="⚠️"; r = (t.comp===COMP.R)?t.val+" Ω":"0 Ω"; } 
+      else if (state.failReason === 'open') { i="0.0 mA"; u=(t.type===TILE.SRC)?"5.00 V":"0.00 V"; if(t.comp===COMP.R)r=t.val+" Ω"; }
+      else { 
+        i=(state.lastI*1000).toFixed(1)+" mA"; 
+        if(t.comp===COMP.R){ u=t.potential.toFixed(2)+" V"; r=t.val+" Ω"; } 
+        else if(t.type===TILE.SRC){ u="5.00 V"; r="Source"; } 
+        else if(t.type===TILE.LED){ u="2.00 V"; r="LED"; } 
+        else { u=t.potential.toFixed(2)+" V"; r="Fil"; } 
+      }
+    } else { u="0.00 V"; i="0.0 mA"; r="∞"; }
+  }
+  document.getElementById('lcd-u').innerText = u; document.getElementById('lcd-i').innerText = i; document.getElementById('lcd-r').innerText = r;
+});
+
+function updateUI() { document.getElementById('ui-lvl').innerText = state.level; document.getElementById('ui-score').innerText = state.score; }
+function msg(txt, type) { let h = document.getElementById('hud-msg'); h.innerText = txt; h.style.opacity = 1; h.style.background = (type===1)?"rgba(220,38,38,0.9)":"rgba(22,163,74,0.9)"; }
+function showChar(type, txt) {
+  let wrap = document.getElementById('char-wrap'); let img = document.getElementById('char-img'); let bub = document.getElementById('char-bub');
+  let msgs = { intro: ["Connecte Vcc à la LED !", "N'oublie pas la résistance."], success: ["Excellent !", "C'est parfait.", "Tu gères !"], fail: ["Court-circuit !", "Ça ne marche pas.", "Recommence."] };
+  let isProf = (Math.random() > 0.5); 
+  wrap.classList.remove('left', 'right', 'visible');
+  if(isProf) { wrap.classList.add('left'); let id = 1 + Math.floor(Math.random()*7); img.src = `Perso${id}.png`; } else { wrap.classList.add('right'); img.src = "proviseur.png"; }
+  void wrap.offsetWidth; bub.innerText = txt || msgs[type][Math.floor(Math.random()*msgs[type].length)];
+  wrap.classList.add('visible'); setTimeout(() => wrap.classList.remove('visible'), 5000);
+}
+
+document.getElementById('btn-check').addEventListener('click', handleMainClick);
+document.getElementById('btn-retry').addEventListener('click', resetLevel);
+document.getElementById('btn-new').addEventListener('click', () => { state.level++; initLevel(); });
+document.getElementById('btn-sound').addEventListener('click', function(){state.muted=!state.muted;this.innerText=state.muted?"Son : OFF":"Son : ON";});
+
+window.addEventListener('resize', resize);
+resize(); initLevel(); draw();
+
 </script>
 </body>
 </html>
