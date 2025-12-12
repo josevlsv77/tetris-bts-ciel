@@ -70,7 +70,17 @@
     display: flex; flex-direction: column;
     position: relative; z-index: 10;
     overflow: hidden;
-    transition: transform 0.1s ease-out;
+    
+    /* MODIF POUR CORRIGER L'AFFICHAGE ERRATIQUE */
+    opacity: 0; /* On cache par défaut */
+    transform: scale(0.98); /* Légèrement dézoomé pour l'anim d'entrée */
+    transition: transform 0.1s ease-out, opacity 0.5s ease-out; /* Transition fluide pour l'apparition */
+  }
+
+  /* Une classe pour l'état visible */
+  #main-wrapper.loaded {
+    opacity: 1;
+    transform: scale(1);
   }
 
   /* HEADER */
@@ -199,7 +209,6 @@
   .t-arkanoid { background: linear-gradient(135deg, #e74c3c, #c0392b); }
   .v-arkanoid { background-image: url("CaseArkanoid.gif"); }
   
-  /* VOLTLINK : CORRIGÉ (Uniformisé) */
   .t-volt { background: linear-gradient(135deg, #f1c40f, #f39c12); }
   .v-volt { background-image: url("VoltLink.gif"); }
   
@@ -387,11 +396,11 @@
   }
   updateGreeting();
 
-  // --- 2. SCORES (CORRIGÉ : PLUS DE SUFFIXE SPÉCIAL) ---
+  // --- 2. SCORES ---
   const games = [
     { id: 'tetris', label: 'score-tetris' },
     { id: 'arkanoid', label: 'score-arkanoid' },
-    { id: 'volt', label: 'score-volt' }, /* CORRECTION: Suffix retiré */
+    { id: 'volt', label: 'score-volt' },
     { id: 'bubble', label: 'score-bubble' }
   ];
 
@@ -416,21 +425,46 @@
     });
   }
 
-  // --- 3. PARALLAX ---
+  // --- 3. PARALLAX & ANIMATION D'ENTREE ---
   const bgLayer = document.getElementById('bg-layer');
   const mainWrapper = document.getElementById('main-wrapper');
   
+  // Fonction pour afficher le hub proprement (Fix erratic display + Fix back button)
+  function showHub() {
+    mainWrapper.classList.add('loaded');
+  }
+
+  // Au chargement initial
+  window.addEventListener('load', showHub);
+
+  // **CORRECTION POUR LE BOUTON RETOUR DU NAVIGATEUR (BFCACHE)**
+  window.addEventListener('pageshow', (event) => {
+    // Si la page est chargée depuis le cache (bouton retour), on force l'affichage
+    if (event.persisted || performance.navigation.type === 2) {
+      mainWrapper.classList.add('loaded');
+      mainWrapper.style.opacity = "1";
+      mainWrapper.style.transform = "scale(1)";
+    }
+  });
+
   document.addEventListener('mousemove', (e) => {
+    // On ne bouge que si le hub est chargé pour éviter les sauts
+    if(!mainWrapper.classList.contains('loaded')) return;
+
     const x = (window.innerWidth / 2 - e.pageX) / 60;
     const y = (window.innerHeight / 2 - e.pageY) / 60;
     bgLayer.style.transform = `translate(${x}px, ${y}px) scale(1.05)`;
+    // Note: on utilise la classe .loaded pour le scale, ici on applique juste la rotation
     mainWrapper.style.transform = `perspective(1200px) rotateY(${x * -0.05}deg) rotateX(${y * 0.05}deg)`;
   });
 
   // --- 4. NAVIGATION ---
   function goTo(url) {
-    mainWrapper.style.transform = "scale(0.95) opacity(0)";
-    mainWrapper.style.opacity = "0";
+    // Animation de sortie
+    mainWrapper.classList.remove('loaded'); // Retire la classe pour déclencher le fade out CSS
+    mainWrapper.style.opacity = "0"; 
+    mainWrapper.style.transform = "scale(0.95)";
+    
     setTimeout(() => { window.location.href = url; }, 200);
   }
 
