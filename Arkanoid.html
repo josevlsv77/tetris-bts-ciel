@@ -16,12 +16,14 @@
     background-color: #2c3e50; background-size: cover; color: #000;
     font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     display: flex; justify-content: center; align-items: center; position: relative;
+    cursor: not-allowed; 
   }
   #main {
     background: rgba(255, 255, 255, 0.65); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
     border-radius: 16px; padding: 10px; display: flex; flex-direction: column; align-items: center;
     gap: 5px; box-sizing: border-box; box-shadow: 0 20px 50px rgba(0,0,0,0.5), inset 0 0 0 1px rgba(255,255,255,0.5);
     width: 98%; height: 98%; max-width: 1000px; justify-content: center; position: relative; z-index: 5;
+    cursor: default; 
   }
 
   @keyframes shake {
@@ -47,7 +49,7 @@
     transition: opacity 0.1s ease-out;
   }
 
-  #header-group { text-align: center; margin-bottom: 5px; }
+  #header-group { text-align: center; margin-bottom: 5px; cursor: default; }
   #logo { width: 60px; height: auto; display: block; margin: 0 auto; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2)); }
   #title { font-size: 20px; font-weight: 900; color: #222; margin: 0; letter-spacing: -0.5px; text-shadow: 0 1px 0 rgba(255,255,255,0.8); }
   #subtitle { font-size: 11px; color: #444; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
@@ -61,7 +63,7 @@
     display: none; flex-direction: column; justify-content: center; align-items: center;
     z-index: 50; color: white; font-weight: 900; font-size: 40px;
     text-shadow: 0 4px 10px rgba(0,0,0,0.5); border-radius: 4px; pointer-events: none; 
-    opacity: 0; transition: opacity 0.2s ease;
+    opacity: 0; transition: opacity 0.2s ease; cursor: default;
   }
   #pause-overlay.visible { opacity: 1; pointer-events: auto; }
   #pause-overlay span { font-size: 14px; font-weight: normal; margin-top: 10px; opacity: 0.8; letter-spacing: 1px; }
@@ -69,14 +71,15 @@
     border: 4px solid #34495e; background: transparent; display: block;
     box-shadow: inset 0 0 30px rgba(0,0,0,0.2), 0 10px 20px rgba(0,0,0,0.3);
     height: 100%; width: auto; aspect-ratio: 3/4; border-radius: 6px;
-    position: relative; z-index: 5; image-rendering: auto; touch-action: none; cursor: none; 
+    position: relative; z-index: 5; image-rendering: auto; touch-action: none; 
+    cursor: none; 
   }
   #side-panel {
     display: flex; flex-direction: column; gap: 10px;
     background: rgba(255,255,255,0.8); padding: 15px; border-radius: 12px;
     min-width: 180px; border: 1px solid rgba(0,0,0,0.1); box-sizing: border-box;
     height: 100%; justify-content: flex-start; box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-    overflow-y: auto; 
+    overflow-y: auto; cursor: default; 
   }
   #score-box, #level-box, #lives-box {
     text-align: center; margin-bottom: 5px; 
@@ -158,7 +161,64 @@
 </style>
 </head>
 <body>
+<style>
+  /* Style du bouton Hub */
+  .hub-back-button {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    z-index: 9999;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
 
+    /* Effet Glassmorphism */
+    background: rgba(255, 255, 255, 0.25);
+    backdrop-filter: blur(15px) saturate(120%);
+    -webkit-backdrop-filter: blur(15px) saturate(120%);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1), inset 0 1px 1px rgba(255,255,255,0.4);
+    
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  }
+
+  .hub-back-button svg {
+    width: 24px;
+    height: 24px;
+    fill: #1d1d1f;
+    opacity: 0.7;
+    transition: all 0.3s ease;
+  }
+
+  /* Effets au survol */
+  .hub-back-button:hover {
+    transform: scale(1.1) translateY(-2px);
+    background: rgba(255, 255, 255, 0.4);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+  }
+
+  .hub-back-button:hover svg {
+    fill: #0071e3; /* Bleu CIEL */
+    opacity: 1;
+  }
+  
+  .hub-back-button:active { transform: scale(0.95); }
+
+  @media (max-width: 600px) {
+    .hub-back-button { top: 10px; left: 10px; width: 40px; height: 40px; }
+    .hub-back-button svg { width: 20px; height: 20px; }
+  }
+</style>
+
+<a href="Accueil.html" class="hub-back-button" title="Retour au Hub">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+    <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
+  </svg>
+</a>
 <div id="main">
 
   <div id="header-group">
@@ -515,7 +575,8 @@
   const paddle = { 
       x: GAME_WIDTH/2 - PADDLE_WIDTH/2, y: GAME_HEIGHT - 60, 
       width: PADDLE_WIDTH, height: PADDLE_HEIGHT, dx: 0,
-      sticky: false, laser: false
+      sticky: false, laser: false,
+      prevX: GAME_WIDTH/2 - PADDLE_WIDTH/2 // Ajout pour le calcul de vitesse réelle
   };
 
   let balls = [];
@@ -562,12 +623,14 @@
               if (pattern[r][c] === 1) {
                   const imgIndex = (c + r * 2) % FACE_COUNT + 1;
                   
-                  // --- PROGRESSION DE LA DIFFICULTÉ ---
+                  // --- PROGRESSION DE LA DIFFICULTÉ RÉÉQUILIBRÉE ---
                   let solidChance = 0;
-                  if (level > 1) { // Niveau 1 : 0% de briques solides
-                      solidChance = 0.10 + (level * 0.02); // Commence à 12% et augmente doucement
+                  if (level > 1) { 
+                      // Formule adoucie : 5% par niveau au dessus du niveau 1.
+                      // Niveau 1 = 0%, Niveau 2 = 5%, Niveau 3 = 10%.
+                      solidChance = (level - 1) * 0.05; 
                   }
-                  if (solidChance > 0.4) solidChance = 0.4; // Cap à 40%
+                  if (solidChance > 0.3) solidChance = 0.3; // Plafonné à 30% max (contre 40% avant)
 
                   const hp = Math.random() < solidChance ? 2 : 1;
                   bricks[c].push({ 
@@ -613,7 +676,45 @@
       }
   }
 
-  function drawSpaceship(p) {
+  // --- FONCTION DE DESSIN DU REACTEUR ---
+  function drawEngineFlame(x, y, w, h, color, flicker, actualDx) {
+      const tilt = -actualDx * 1.2; 
+      const speedStretch = Math.min(Math.abs(actualDx) * 1.5, 20);
+      const currentH = (h + speedStretch) * flicker;
+
+      // 1. La BUSETTE (Nozzle) - Partie mécanique
+      ctx.fillStyle = "#555";
+      ctx.beginPath();
+      ctx.rect(x, y - 4, w, 4); 
+      ctx.fill();
+
+      ctx.save();
+      ctx.translate(x + w/2, y);
+      
+      // 2. Halo Externe (Glow) - Couleur vibrante
+      ctx.beginPath();
+      ctx.fillStyle = color;
+      ctx.globalAlpha = 0.5 * flicker; // Un peu plus opaque pour mieux voir la couleur
+      ctx.moveTo(-w/2, 0); 
+      ctx.lineTo(tilt, currentH); 
+      ctx.lineTo(w/2, 0);
+      ctx.fill();
+
+      // 3. Cœur de la flamme (Intense)
+      ctx.beginPath();
+      ctx.fillStyle = "#fff"; 
+      ctx.globalAlpha = 0.9 * flicker;
+      const innerW = w * 0.5;
+      ctx.moveTo(-innerW/2, 0);
+      ctx.lineTo(tilt * 0.7, currentH * 0.7); 
+      ctx.lineTo(innerW/2, 0);
+      ctx.fill();
+      
+      ctx.restore();
+      ctx.globalAlpha = 1.0;
+  }
+
+  function drawSpaceship(p, frameVelocity) {
       const x = p.x;
       const y = p.y;
       const w = p.width;
@@ -622,9 +723,15 @@
       const noseY = y;
       const rearY = y + h;
       
-      const engineFlicker = Math.random() * 0.3 + 0.7;
-      const energyColor = p.laser ? "#e74c3c" : (p.sticky ? "#2ecc71" : "#3498db");
+      const engineFlicker = Math.random() * 0.2 + 0.8; 
+      
+      // --- COULEURS PLUS PERTINENTES ET VIBRANTES ---
+      // Laser = Rouge Magma (Surchauffe)
+      // Sticky = Vert Acide/Fluo (Magnétique/Chimique)
+      // Normal = Cyan Électrique (Ionique/Tech)
+      const energyColor = p.laser ? "#ff4400" : (p.sticky ? "#39ff14" : "#00f2ff");
 
+      // Dessin du vaisseau
       ctx.beginPath();
       ctx.moveTo(midX, noseY); ctx.lineTo(x + w, rearY - 2); ctx.lineTo(midX + w * 0.2, rearY); ctx.lineTo(midX, rearY + 5); 
       ctx.lineTo(midX - w * 0.2, rearY); ctx.lineTo(x, rearY - 2); ctx.closePath();
@@ -638,17 +745,17 @@
       ctx.beginPath(); ctx.moveTo(x + 5, rearY - 2); ctx.lineTo(x + w * 0.3, y + h * 0.4); ctx.lineTo(x + w * 0.3, rearY); ctx.fill();
       ctx.beginPath(); ctx.moveTo(x + w - 5, rearY - 2); ctx.lineTo(x + w * 0.7, y + h * 0.4); ctx.lineTo(x + w * 0.7, rearY); ctx.fill();
 
-      const thrusterW = w * 0.15;
-      const thrusterX_L = midX - w * 0.25;
-      const thrusterX_R = midX + w * 0.25 - thrusterW;
+      // --- DESSIN DES RÉACTEURS ---
+      const thrusterW = 12; 
+      const thrusterH = 20; 
+      const thrusterX_L = midX - w * 0.25 - thrusterW/2;
+      const thrusterX_R = midX + w * 0.25 - thrusterW/2;
       
       ctx.globalCompositeOperation = "screen";
-      ctx.fillStyle = energyColor;
-      ctx.globalAlpha = 0.6 * engineFlicker;
-      ctx.beginPath(); ctx.moveTo(thrusterX_L, rearY); ctx.lineTo(thrusterX_L + thrusterW/2, rearY + 15 * engineFlicker); ctx.lineTo(thrusterX_L + thrusterW, rearY); ctx.fill();
-      ctx.beginPath(); ctx.moveTo(thrusterX_R, rearY); ctx.lineTo(thrusterX_R + thrusterW/2, rearY + 15 * engineFlicker); ctx.lineTo(thrusterX_R + thrusterW, rearY); ctx.fill();
-      ctx.globalAlpha = 1.0;
+      drawEngineFlame(thrusterX_L, rearY, thrusterW, thrusterH, energyColor, engineFlicker, frameVelocity);
+      drawEngineFlame(thrusterX_R, rearY, thrusterW, thrusterH, energyColor, engineFlicker, frameVelocity);
       ctx.globalCompositeOperation = "source-over";
+      // ----------------------------
 
       const coreSize = h * 0.6;
       ctx.shadowBlur = 15; ctx.shadowColor = energyColor;
@@ -705,7 +812,7 @@
       ctx.stroke();
   }
 
-  function draw() {
+  function draw(frameVelocity) { // On accepte l'argument frameVelocity
       ctx.clearRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
       drawBackgroundEffect();
       
@@ -743,7 +850,7 @@
           ctx.shadowBlur = 0; ctx.globalAlpha = 1.0;
       }
 
-      drawSpaceship(paddle);
+      drawSpaceship(paddle, frameVelocity);
 
       ctx.strokeStyle = "#00f3ff"; 
       ctx.shadowBlur = 10;
@@ -804,24 +911,36 @@
                       glass.addColorStop(0, "rgba(255,255,255,0.3)"); glass.addColorStop(0.5, "rgba(255,255,255,0)"); glass.addColorStop(1, "rgba(0,0,0,0.1)");
                       ctx.fillStyle = glass; ctx.fillRect(bx+2, by+2, BRICK_WIDTH-4, BRICK_HEIGHT-4);
 
-                      // --- NOUVEAU DESIGN BLINDAGE (SANS JAUNE) ---
+                      // --- ANIMATION DE BRILLANCE (HP=2) ---
                       if (b.hp === 2) {
-                          // Effet verre renforcé (Double Vitrage / Cadre Argenté Interne)
-                          ctx.strokeStyle = "rgba(255, 255, 255, 0.5)"; // Blanc translucide
+                          ctx.strokeStyle = "rgba(255, 255, 255, 0.6)"; 
                           ctx.lineWidth = 2;
-                          // Petit cadre intérieur
-                          ctx.strokeRect(bx + 5, by + 5, BRICK_WIDTH - 10, BRICK_HEIGHT - 10);
+                          ctx.strokeRect(bx + 4, by + 4, BRICK_WIDTH - 8, BRICK_HEIGHT - 8);
                           
-                          // Reflet métallique en diagonale
-                          ctx.fillStyle = "rgba(255, 255, 255, 0.15)";
-                          ctx.beginPath();
-                          ctx.moveTo(bx, by + BRICK_HEIGHT);
-                          ctx.lineTo(bx + BRICK_WIDTH, by);
-                          ctx.lineTo(bx + BRICK_WIDTH, by + 10);
-                          ctx.lineTo(bx + 10, by + BRICK_HEIGHT);
-                          ctx.fill();
+                          const time = Date.now();
+                          const duration = 2000; 
+                          const offset = (c * r * 153) % duration; 
+                          const progress = ((time + offset) % duration) / duration; 
+
+                          if (progress < 0.3) {
+                              ctx.save();
+                              ctx.beginPath();
+                              ctx.rect(bx, by, BRICK_WIDTH, BRICK_HEIGHT);
+                              ctx.clip(); 
+
+                              const shinePos = (progress / 0.3) * (BRICK_WIDTH * 2) - BRICK_WIDTH;
+                              
+                              ctx.fillStyle = "rgba(255, 255, 255, 0.5)"; 
+                              ctx.beginPath();
+                              ctx.moveTo(bx + shinePos, by + BRICK_HEIGHT);
+                              ctx.lineTo(bx + shinePos + 20, by + BRICK_HEIGHT);
+                              ctx.lineTo(bx + shinePos + 50, by);
+                              ctx.lineTo(bx + shinePos + 30, by);
+                              ctx.fill();
+                              ctx.restore();
+                          }
                       } 
-                      // --- SI FISSURÉ (1 PV mais MaxHP était 2) ---
+
                       else if (b.maxHp === 2 && b.hp === 1) {
                           drawCracks(bx, by, BRICK_WIDTH, BRICK_HEIGHT);
                       }
@@ -904,8 +1023,15 @@
   }
 
   function update() {
+      // 1. CALCUL DE LA VITESSE RÉELLE DU VAISSEAU POUR L'ANIMATION
+      let currentX = paddle.x;
+      let frameVelocity = currentX - (paddle.prevX || currentX);
+      paddle.prevX = currentX;
+
       if (gameState === "playing") {
+          // Gestion Clavier (ajout de vitesse)
           paddle.x += paddle.dx;
+          
           if(paddle.x < 0) paddle.x = 0;
           if(paddle.x + paddle.width > GAME_WIDTH) paddle.x = GAME_WIDTH - paddle.width;
 
@@ -1080,7 +1206,7 @@
           if(paddle.x + paddle.width > GAME_WIDTH) paddle.x = GAME_WIDTH - paddle.width;
       }
       
-      draw(); 
+      draw(frameVelocity); // On passe la vitesse calculée au dessin
       updateUI();
       if (gameState !== "paused") animationId = requestAnimationFrame(update);
   }
@@ -1123,7 +1249,7 @@
   
   function levelUp() {
       level++;
-      defaultBallSpeed += 0.5; 
+      defaultBallSpeed += 0.25; // RÉDUIT DE 0.50 pour adoucir la courbe de difficulté
       ballSpeed = defaultBallSpeed; 
       initBricks(); 
       resetBall(false); 
@@ -1216,7 +1342,9 @@
 
   /* --- INPUTS --- */
   pauseOverlay.addEventListener("click", () => { if (gameState === "gameover") resetGame(); });
-  canvas.addEventListener("mousemove", (e) => { if(gameState !== "paused") movePaddleByInput(e.clientX); });
+  window.addEventListener("mousemove", (e) => { 
+      if(gameState !== "paused") movePaddleByInput(e.clientX); 
+  });
   canvas.addEventListener("mousedown", (e) => { launchBall(); e.preventDefault(); });
   document.addEventListener('keydown', e => {
       if(e.code === "ArrowLeft") paddle.dx = -8;

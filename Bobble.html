@@ -18,6 +18,7 @@
   }
 
   body {
+    /* Assurez-vous que l'image est bien présente */
     background: url("fond_lycee.jpg") no-repeat center center fixed;
     background-color: #2c3e50;
     background-size: cover;
@@ -127,16 +128,27 @@
     min-height: 0;
   }
 
+  /* --- MODIFICATION ICI : Effet Glassmorphism Bleu --- */
   #game-area {
     position: relative;
     border-radius: 14px;
-    background: radial-gradient(circle at top,
-      rgba(236,240,241,0.9) 0%,
-      rgba(189,195,199,0.85) 40%,
-      rgba(149,165,166,0.8) 100%);
+    
+    /* Fond bleu transparent dégradé */
+    background: linear-gradient(135deg, 
+      rgba(52, 152, 219, 0.2) 0%,    /* Bleu ciel clair transparent */
+      rgba(44, 62, 80, 0.45) 100%    /* Bleu sombre transparent */
+    );
+
+    /* Le flou d'arrière-plan (Glassmorphism) */
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+
+    /* Ombres et bordures internes pour l'effet de verre */
     box-shadow:
       0 12px 30px rgba(0,0,0,0.3),
-      inset 0 0 0 1px rgba(255,255,255,0.8);
+      inset 0 0 0 1px rgba(255,255,255,0.25), /* Bordure fine blanche */
+      inset 0 0 20px rgba(52, 152, 219, 0.1); /* Lueur interne subtile */
+
     overflow: hidden;
     display: flex;
     align-items: center;
@@ -148,11 +160,11 @@
     background: transparent;
     border-radius: 12px;
     box-shadow:
-      0 0 0 2px rgba(255,255,255,0.4),
-      0 18px 40px rgba(0,0,0,0.6);
-    /* Empêche tout étirement → bulles bien rondes */
+      0 0 0 2px rgba(255,255,255,0.15),
+      0 18px 40px rgba(0,0,0,0.4);
     width: 560px;
     height: 720px;
+    cursor: crosshair;
   }
 
   #center-message {
@@ -164,25 +176,28 @@
     justify-content: center;
     pointer-events: none;
     text-align: center;
+    z-index: 10;
   }
 
   #center-message-inner {
     max-width: 80%;
-    background: rgba(0,0,0,0.65);
+    background: rgba(0,0,0,0.75);
     color: #ecf0f1;
-    padding: 12px 16px;
+    padding: 16px 20px;
     border-radius: 12px;
     box-shadow:
       0 10px 25px rgba(0,0,0,0.4),
       inset 0 0 0 1px rgba(255,255,255,0.2);
-    font-size: 13px;
-    line-height: 1.5;
+    font-size: 14px;
+    line-height: 1.6;
+    backdrop-filter: blur(4px);
   }
 
   #center-message-inner strong {
-    font-size: 14px;
+    font-size: 16px;
     text-transform: uppercase;
-    letter-spacing: 1px;
+    letter-spacing: 1.5px;
+    color: #f1c40f;
   }
 
   #side-panel {
@@ -230,6 +245,7 @@
     font-size: 14px;
     font-weight: 900;
     color: #2c3e50;
+    font-family: "Courier New", Courier, monospace;
     font-variant-numeric: tabular-nums;
   }
 
@@ -257,10 +273,8 @@
     width: 60px;
     height: 60px;
     border-radius: 50%;
-    background: rgba(0,0,0,0.35);
-    box-shadow:
-      0 0 0 2px rgba(255,255,255,0.4),
-      0 10px 20px rgba(0,0,0,0.45);
+    background: rgba(0,0,0,0.2);
+    /* Plus subtil car la bulle est brillante */
   }
 
   #rank-block {
@@ -347,11 +361,17 @@
     justify-content: space-between;
     gap: 6px;
     padding: 2px 0;
+    border-bottom: 1px dashed rgba(0,0,0,0.1);
+  }
+
+  #highscores-list li:last-child {
+      border-bottom: none;
   }
 
   #highscores-list span.place {
-    width: 18px;
+    width: 20px;
     opacity: 0.6;
+    font-weight: bold;
   }
 
   #bottom-info {
@@ -391,6 +411,12 @@
     height: auto;
     display: block;
     filter: drop-shadow(0 10px 20px rgba(0,0,0,0.4));
+    transition: transform 0.3s ease;
+  }
+
+  #proviseur-box:hover #proviseur-img,
+  #prof-box:hover #prof-img {
+      transform: scale(1.05);
   }
 
   .speech-bubble {
@@ -406,6 +432,12 @@
     color: #2c3e50;
     box-shadow: 0 10px 25px rgba(0,0,0,0.25);
     max-width: 260px;
+    animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  }
+
+  @keyframes popIn {
+      from { opacity: 0; transform: scale(0.8) translateY(10px); }
+      to { opacity: 1; transform: scale(1) translateY(0); }
   }
 
   .speech-bubble small {
@@ -495,7 +527,64 @@
 </style>
 </head>
 <body>
+<style>
+  /* Style du bouton Hub */
+  .hub-back-button {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    z-index: 9999;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
 
+    /* Effet Glassmorphism */
+    background: rgba(255, 255, 255, 0.25);
+    backdrop-filter: blur(15px) saturate(120%);
+    -webkit-backdrop-filter: blur(15px) saturate(120%);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1), inset 0 1px 1px rgba(255,255,255,0.4);
+    
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  }
+
+  .hub-back-button svg {
+    width: 24px;
+    height: 24px;
+    fill: #1d1d1f;
+    opacity: 0.7;
+    transition: all 0.3s ease;
+  }
+
+  /* Effets au survol */
+  .hub-back-button:hover {
+    transform: scale(1.1) translateY(-2px);
+    background: rgba(255, 255, 255, 0.4);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+  }
+
+  .hub-back-button:hover svg {
+    fill: #0071e3; /* Bleu CIEL */
+    opacity: 1;
+  }
+  
+  .hub-back-button:active { transform: scale(0.95); }
+
+  @media (max-width: 600px) {
+    .hub-back-button { top: 10px; left: 10px; width: 40px; height: 40px; }
+    .hub-back-button svg { width: 20px; height: 20px; }
+  }
+</style>
+
+<a href="Accueil.html" class="hub-back-button" title="Retour au Hub">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+    <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
+  </svg>
+</a>
 <div id="main">
 
   <div id="header-group">
@@ -551,8 +640,7 @@
         <div id="rank-title">Rang actuel</div>
         <div id="rank-name">Nouvelle recrue réseau</div>
         <div style="font-size:10px; opacity:0.85;">
-          Plus vous nettoyez de bulles en un coup, plus votre rang grimpe. Les clusters pendus non reliés au plafond
-          rapportent un bonus supplémentaire.
+          Plus vous nettoyez de bulles en un coup, plus votre rang grimpe. Les clusters pendus rapportent un bonus !
         </div>
       </div>
 
@@ -580,7 +668,6 @@
   </div>
 </div>
 
-<!-- Personnages -->
 <div id="proviseur-box" class="visible">
   <div id="speech-bubble" class="speech-bubble"></div>
   <img id="proviseur-img" src="proviseur.png" alt="Proviseur">
@@ -628,7 +715,7 @@
   const LAUNCHER_X = GAME_WIDTH / 2;
   const LAUNCHER_Y = GAME_HEIGHT - 40;
 
-  const SHOT_SPEED = 9;
+  const SHOT_SPEED = 14; // Un peu plus rapide pour sensation dynamique
   const MIN_ANGLE = -Math.PI + 0.15;
   const MAX_ANGLE = -0.15;
 
@@ -662,7 +749,7 @@
     faceImages[color] = { img, loaded: false, error: false };
     img.onload = () => {
       faceImages[color].loaded = true;
-      invalidateBubbleSprite(color); // on reconstruit le sprite avec le visage
+      invalidateBubbleSprite(color);
     };
     img.onerror = () => {
       faceImages[color].error = true;
@@ -679,6 +766,9 @@
   let angle = -Math.PI / 2;
   let availableColors = COLORS.slice(0, 4);
 
+  // Variable "Juice" pour déformation de la bulle (Squash & Stretch)
+  let currentBubbleScale = { x: 1, y: 1 };
+
   let score = 0;
   let level = 1;
   let lives = 3;
@@ -687,14 +777,17 @@
 
   let gameState = "intro"; // intro | playing | betweenLevels | paused | gameover
   let lastTime = 0;
-  let elapsed = 0; // pour animations
+  let elapsed = 0;
 
   let highScores = [];
   const MAX_HIGHSCORES = 10;
   const HIGHSCORES_KEY = "puzzlebobble_highscores_ciel";
 
-  let popEffects = [];       // {x,y,color,life}
-  let fallingBubbles = [];   // {x,y,color,vy}
+  // --- "Juice" Effects Arrays ---
+  let particles = [];
+  let floatingTexts = [];
+  let fallingBubbles = [];
+  let shakeIntensity = 0;
 
   // --- DOM elements ---
   const scoreValue = document.getElementById("score-value");
@@ -713,13 +806,8 @@
   const profImg = document.getElementById("prof-img");
 
   const TEACHER_IMAGES = [
-    "Perso1.png",
-    "Perso2.png",
-    "Perso3.png",
-    "Perso4.png",
-    "Perso5.png",
-    "Perso6.png",
-    "Perso7.png"
+    "Perso1.png", "Perso2.png", "Perso3.png", "Perso4.png",
+    "Perso5.png", "Perso6.png", "Perso7.png"
   ];
 
   const CHAR_MESSAGES = {
@@ -805,7 +893,6 @@
     const rowFloat = (y - GRID_TOP) / SPACING_Y;
     let row = Math.round(rowFloat);
     row = clamp(row, 0, GRID_ROWS - 1);
-
     const xOffset = (row % 2 === 1) ? BUBBLE_RADIUS : 0;
     const colFloat = (x - GRID_LEFT - xOffset) / BUBBLE_DIAM;
     let col = Math.round(colFloat);
@@ -860,20 +947,12 @@
     const neighbors = [];
     const isOdd = (row % 2 === 1);
     const dirsEven = [
-      { dr: -1, dc: 0 },
-      { dr: -1, dc: -1 },
-      { dr: 0,  dc: -1 },
-      { dr: 0,  dc: 1 },
-      { dr: 1,  dc: 0 },
-      { dr: 1,  dc: -1 }
+      { dr: -1, dc: 0 }, { dr: -1, dc: -1 }, { dr: 0,  dc: -1 },
+      { dr: 0,  dc: 1 }, { dr: 1,  dc: 0 }, { dr: 1,  dc: -1 }
     ];
     const dirsOdd = [
-      { dr: -1, dc: 0 },
-      { dr: -1, dc: 1 },
-      { dr: 0,  dc: -1 },
-      { dr: 0,  dc: 1 },
-      { dr: 1,  dc: 0 },
-      { dr: 1,  dc: 1 }
+      { dr: -1, dc: 0 }, { dr: -1, dc: 1 }, { dr: 0,  dc: -1 },
+      { dr: 0,  dc: 1 }, { dr: 1,  dc: 0 }, { dr: 1,  dc: 1 }
     ];
     const dirs = isOdd ? dirsOdd : dirsEven;
 
@@ -887,16 +966,12 @@
     return neighbors;
   }
 
-  // --- Personnages ---
+  // --- Personnages & UI ---
 
   function setBubbleText(el, text, footer) {
     if (!el) return;
-    const safe = text.replace(/&/g, "&amp;")
-                     .replace(/</g, "&lt;")
-                     .replace(/>/g, "&gt;");
-    el.innerHTML =
-      safe.replace(/\n/g, "<br>") +
-      (footer ? `<small>${footer}</small>` : "");
+    const safe = text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    el.innerHTML = safe.replace(/\n/g, "<br>") + (footer ? `<small>${footer}</small>` : "");
   }
 
   function showProviseur(messagesKey) {
@@ -904,11 +979,7 @@
     const pool = (CHAR_MESSAGES[messagesKey] && CHAR_MESSAGES[messagesKey].proviseur) || null;
     if (!pool || pool.length === 0) return;
     const msg = randChoice(pool);
-    setBubbleText(
-      proviseurBubble,
-      msg,
-      "Cliquez pour changer le message."
-    );
+    setBubbleText(proviseurBubble, msg, "Cliquez pour changer le message.");
     proviseurBox.classList.remove("hidden");
     proviseurBox.classList.add("visible");
     if (proviseurTimeout) clearTimeout(proviseurTimeout);
@@ -924,11 +995,7 @@
     if (!block || !block.teacher || block.teacher.length === 0) return;
     const msg = randChoice(block.teacher);
     profImg.src = randChoice(TEACHER_IMAGES);
-    setBubbleText(
-      profBubble,
-      msg,
-      "Cliquez pour afficher un autre conseil."
-    );
+    setBubbleText(profBubble, msg, "Cliquez pour afficher un autre conseil.");
     profBox.classList.remove("hidden");
     profBox.classList.add("visible");
     if (profTimeout) clearTimeout(profTimeout);
@@ -948,18 +1015,11 @@
     showTeacher("intro");
   });
 
-  // --- Center message ---
-
   function showCenterMessage(title, text) {
     if (!centerMessageInner) return;
-    const safeTitle = title.replace(/&/g, "&amp;")
-                           .replace(/</g, "&lt;")
-                           .replace(/>/g, "&gt;");
-    const safeText = text.replace(/&/g, "&amp;")
-                         .replace(/</g, "&lt;")
-                         .replace(/>/g, "&gt;");
-    centerMessageInner.innerHTML =
-      `<strong>${safeTitle}</strong><br>${safeText.replace(/\n/g, "<br>")}`;
+    const safeTitle = title.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    const safeText = text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    centerMessageInner.innerHTML = `<strong>${safeTitle}</strong><br>${safeText.replace(/\n/g, "<br>")}`;
     centerMessageInner.style.display = "block";
   }
 
@@ -986,17 +1046,13 @@
   function saveHighScores() {
     try {
       localStorage.setItem(HIGHSCORES_KEY, JSON.stringify(highScores));
-    } catch (e) {
-      // ignore
-    }
+    } catch (e) {}
   }
 
   function updateHighScoresDisplay() {
     if (!highscoresList) return;
     highscoresList.innerHTML = "";
-    highScores
-      .slice(0, MAX_HIGHSCORES)
-      .forEach((entry, idx) => {
+    highScores.slice(0, MAX_HIGHSCORES).forEach((entry, idx) => {
         const li = document.createElement("li");
         const spanPlace = document.createElement("span");
         spanPlace.className = "place";
@@ -1023,8 +1079,6 @@
     updateHighScoresDisplay();
   }
 
-  // --- Rank ---
-
   function updateRank() {
     let name = "Nouvelle recrue réseau";
     if (score >= 10000) name = "Architecte système résilient";
@@ -1032,7 +1086,6 @@
     else if (score >= 3000) name = "Admin réseau opérationnel";
     else if (score >= 1500) name = "Technicien support avancé";
     else if (score >= 700) name = "Opérateur supervision réseau";
-
     rankName.textContent = name;
   }
 
@@ -1040,7 +1093,6 @@
 
   function generateLevel(level) {
     grid = createEmptyGrid();
-
     const rows = clamp(4 + level, 4, GRID_ROWS - 2);
     const colorCount = clamp(3 + Math.floor(level / 2), 3, COLORS.length);
     availableColors = COLORS.slice(0, colorCount);
@@ -1048,18 +1100,16 @@
     for (let r = 0; r < rows; r++) {
       for (let c = 0; c < GRID_COLS; c++) {
         if (Math.random() < 0.8) {
-          grid[r][c] = {
-            color: randChoice(availableColors)
-          };
+          grid[r][c] = { color: randChoice(availableColors) };
         }
       }
     }
   }
 
-  // --- Sprites de bulles haute résolution (pré-calculés) ---
+  // --- Sprites & Rendu "Glassy" ---
 
   function buildBubbleSprite(color) {
-    const oversample = 2;
+    const oversample = 2; // Qualité pour écran HD
     const baseR = BUBBLE_RADIUS;
     const r = baseR * oversample;
     const size = r * 2;
@@ -1068,6 +1118,8 @@
     off.width = size;
     off.height = size;
     const octx = off.getContext("2d");
+    
+    // Optimisation & Lissage
     octx.imageSmoothingEnabled = true;
     octx.imageSmoothingQuality = "high";
 
@@ -1078,69 +1130,74 @@
     const hasFace = entry && entry.loaded && !entry.error;
     const img = hasFace ? entry.img : null;
 
-    // cercle + clip
+    // --- 1. Masque circulaire ---
     octx.save();
     octx.beginPath();
     octx.arc(cx, cy, r, 0, Math.PI * 2);
     octx.clip();
 
-    // fond noir
-    octx.fillStyle = "#000000";
-    octx.fillRect(cx - r, cy - r, size, size);
+    // --- 2. Fond (Profondeur) ---
+    // Un fond noir permet de mieux faire ressortir le visage et les reflets
+    octx.fillStyle = "#000";
+    octx.fillRect(0, 0, size, size);
 
-    // visage
+    // --- 3. Image du Visage (Claire et centrée) ---
     if (img && img.width > 0 && img.height > 0) {
       const minSide = Math.min(img.width, img.height);
       const sx = (img.width - minSide) / 2;
       const sy = (img.height - minSide) / 2;
-      const sSize = minSide;
-      const drawSize = r * 2 * 1.3;
-
-      octx.drawImage(
-        img,
-        sx, sy, sSize, sSize,
-        cx - drawSize / 2,
-        cy - drawSize / 2,
-        drawSize,
-        drawSize
-      );
+      // Zoom léger pour que le visage remplisse bien la bulle
+      const drawSize = r * 2 * 0.95; 
+      octx.drawImage(img, sx, sy, minSide, minSide, cx - drawSize / 2, cy - drawSize / 2, drawSize, drawSize);
     }
 
-    // teinte colorée
+    // --- 4. "Glass Body" (Teinte et Volume) ---
+    // C'est ici qu'on accentue la couleur sur les bords tout en gardant le centre clair
+    const volumeGrad = octx.createRadialGradient(cx, cy, r * 0.35, cx, cy, r);
+    volumeGrad.addColorStop(0, "rgba(0,0,0,0)"); // Centre 100% transparent pour le visage
+    volumeGrad.addColorStop(0.75, colorToRgba(color, 0.5)); // Couleur visible
+    volumeGrad.addColorStop(1, colorToRgba(color, 0.9)); // Bord sombre et saturé
+    
+    octx.fillStyle = volumeGrad;
     octx.beginPath();
     octx.arc(cx, cy, r, 0, Math.PI * 2);
-    const tintGrad = octx.createRadialGradient(
-      cx - r * 0.4, cy - r * 0.4, r * 0.1,
-      cx, cy, r
-    );
-    tintGrad.addColorStop(0, colorToRgba(color, 0.35));
-    tintGrad.addColorStop(0.5, colorToRgba(color, 0.55));
-    tintGrad.addColorStop(1, colorToRgba(color, 0.8));
-    octx.fillStyle = tintGrad;
     octx.fill();
 
-    // reflet
+    // --- 5. "Rim Light" (Lumière rasante interne) ---
+    // Ajoute un effet "bijou" en bas de la bulle et accentue la couleur
+    octx.save();
     octx.beginPath();
-    octx.arc(cx - r * 0.4, cy - r * 0.4, r * 0.4, 0, Math.PI * 2);
-    const highlight = octx.createRadialGradient(
-      cx - r * 0.45, cy - r * 0.45, 0,
-      cx - r * 0.4, cy - r * 0.4, r * 0.4
-    );
-    highlight.addColorStop(0, "rgba(255,255,255,0.9)");
-    highlight.addColorStop(1, "rgba(255,255,255,0)");
-    octx.fillStyle = highlight;
-    octx.fill();
+    octx.arc(cx, cy, r - 1.5*oversample, 0, Math.PI * 2);
+    const rimGrad = octx.createLinearGradient(0, 0, 0, size);
+    rimGrad.addColorStop(0, "rgba(255,255,255,0)");
+    rimGrad.addColorStop(1, colorToRgba(color, 0.9)); // Reflet très coloré en bas
+    octx.strokeStyle = rimGrad;
+    octx.lineWidth = 1.5 * oversample;
+    octx.stroke();
     octx.restore();
 
-    // contour + glow
+    // --- 6. Reflets de surface (Gloss) ---
+    // Donne l'aspect mouillé/verre
+    const surfaceGrad = octx.createLinearGradient(0, 0, size, size);
+    surfaceGrad.addColorStop(0, "rgba(255,255,255,0.4)");
+    surfaceGrad.addColorStop(0.5, "rgba(255,255,255,0)");
+    octx.fillStyle = surfaceGrad;
+    octx.fill();
+
+    octx.restore(); // Fin du clip principal
+
+    // --- 7. Spéculaire (Point lumineux net) ---
+    // Le reflet de la lumière principale (Haut Gauche)
     octx.save();
-    octx.shadowColor = color;
-    octx.shadowBlur = 16 * oversample;
     octx.beginPath();
-    octx.arc(cx, cy, r, 0, Math.PI * 2);
-    octx.strokeStyle = "rgba(255,255,255,0.95)";
-    octx.lineWidth = 2 * oversample;
-    octx.stroke();
+    octx.ellipse(cx - r * 0.35, cy - r * 0.35, r * 0.25, r * 0.15, Math.PI / 4, 0, Math.PI * 2);
+    const glare = octx.createLinearGradient(cx - r, cy - r, cx, cy);
+    glare.addColorStop(0, "rgba(255,255,255,1)");
+    glare.addColorStop(1, "rgba(255,255,255,0.2)");
+    octx.fillStyle = glare;
+    octx.shadowColor = "rgba(255,255,255,0.5)";
+    octx.shadowBlur = 4;
+    octx.fill();
     octx.restore();
 
     bubbleSprites[color] = { canvas: off, radius: baseR };
@@ -1149,16 +1206,13 @@
 
   function drawBubble(x, y, color, scale = 1) {
     let sprite = bubbleSprites[color];
-    if (!sprite) {
-      sprite = buildBubbleSprite(color);
-    }
+    if (!sprite) sprite = buildBubbleSprite(color);
     const r = sprite.radius;
-
     ctx.save();
     ctx.imageSmoothingEnabled = true;
     ctx.imageSmoothingQuality = "high";
     ctx.translate(x, y);
-    ctx.scale(scale, scale); // uniforme → toujours cercle
+    ctx.scale(scale, scale);
     ctx.drawImage(sprite.canvas, -r, -r, r * 2, r * 2);
     ctx.restore();
   }
@@ -1166,15 +1220,11 @@
   function drawNextBubblePreview() {
     nextCtx.clearRect(0, 0, nextCanvas.width, nextCanvas.height);
     if (!nextBubbleColor) return;
-
     let sprite = bubbleSprites[nextBubbleColor];
-    if (!sprite) {
-      sprite = buildBubbleSprite(nextBubbleColor);
-    }
+    if (!sprite) sprite = buildBubbleSprite(nextBubbleColor);
     const r = sprite.radius;
     const x = nextCanvas.width / 2;
     const y = nextCanvas.height / 2;
-
     nextCtx.save();
     nextCtx.imageSmoothingEnabled = true;
     nextCtx.imageSmoothingQuality = "high";
@@ -1183,20 +1233,14 @@
     nextCtx.restore();
   }
 
-  // --- Initialisation bulles niveau ---
-
   function initBubblesForLevel() {
     const pool = getColorPool();
-    currentBubble = {
-      x: LAUNCHER_X,
-      y: LAUNCHER_Y,
-      color: randChoice(pool)
-    };
+    currentBubble = { x: LAUNCHER_X, y: LAUNCHER_Y, color: randChoice(pool) };
     nextBubbleColor = randChoice(pool);
     drawNextBubblePreview();
   }
 
-  // --- Game state helpers ---
+  // --- Game Control ---
 
   function resetGame() {
     score = 0;
@@ -1207,14 +1251,14 @@
     generateLevel(level);
     initBubblesForLevel();
     shot = null;
-    popEffects = [];
+    particles = [];
     fallingBubbles = [];
+    floatingTexts = [];
+    shakeIntensity = 0;
+    currentBubbleScale = { x: 1, y: 1 };
     updateHUD();
     gameState = "intro";
-    showCenterMessage(
-      "Puzzle Bobble – BTS CIEL",
-      "Alignez au moins 3 bulles de même couleur pour les supprimer.\nLes bulles non reliées au plafond tombent aussi.\n\nESPACE pour commencer."
-    );
+    showCenterMessage("Puzzle Bobble – BTS CIEL", "Alignez au moins 3 bulles.\nNettoyez le réseau.\n\nESPACE pour commencer.");
     showProviseur("intro");
     showTeacher("intro");
   }
@@ -1224,8 +1268,11 @@
     generateLevel(level);
     initBubblesForLevel();
     shot = null;
-    popEffects = [];
+    particles = [];
     fallingBubbles = [];
+    floatingTexts = [];
+    shakeIntensity = 0;
+    currentBubbleScale = { x: 1, y: 1 };
     updateHUD();
     gameState = "playing";
     hideCenterMessage();
@@ -1237,14 +1284,12 @@
     updateHUD();
     showProviseur("levelUp");
     gameState = "betweenLevels";
-    showCenterMessage(
-      "Niveau terminé",
-      "Vous avez nettoyé la topologie de bulles.\n\nESPACE pour passer au niveau " + level + "."
-    );
+    showCenterMessage("Niveau terminé", "Le réseau est propre.\n\nESPACE pour le niveau " + level + ".");
   }
 
   function loseLife() {
     lives--;
+    shakeIntensity = 15;
     if (lives < 0) lives = 0;
     showProviseur("lifeLost");
     showTeacher("lifeLost");
@@ -1255,25 +1300,20 @@
       generateLevel(level);
       initBubblesForLevel();
       shot = null;
-      popEffects = [];
+      particles = [];
       fallingBubbles = [];
       updateHUD();
-      showCenterMessage(
-        "Attention",
-        "Le réseau a saturé.\nOn recharge le niveau " + level + "."
-      );
+      showCenterMessage("Attention", "Saturation détectée.\nRechargement du niveau " + level + ".");
       gameState = "intro";
     }
   }
 
   function gameOver() {
     gameState = "gameover";
+    shakeIntensity = 20;
     tryInsertHighScore(score, level);
     showProviseur("gameOver");
-    showCenterMessage(
-      "Game Over",
-      "Réseau saturé.\n\nR pour recommencer · ESC pour revenir au hub."
-    );
+    showCenterMessage("Game Over", "Réseau saturé.\nR pour recommencer.");
   }
 
   function updateHUD() {
@@ -1283,7 +1323,7 @@
     updateRank();
   }
 
-  // --- Tir & collisions ---
+  // --- Gameplay Logic ---
 
   function fire() {
     if (gameState === "intro") {
@@ -1304,24 +1344,22 @@
       color: currentBubble.color
     };
 
+    // Squash & Stretch: Étirement au départ (l'axe Y est l'axe de mouvement dans la rotation)
+    currentBubbleScale = { x: 0.75, y: 1.3 };
+
     const pool = getColorPool();
-    const nextColorInLauncher =
-      nextBubbleColor && pool.includes(nextBubbleColor)
-        ? nextBubbleColor
-        : randChoice(pool);
-
-    currentBubble = {
-      x: LAUNCHER_X,
-      y: LAUNCHER_Y,
-      color: nextColorInLauncher
-    };
-
+    const nextColorInLauncher = nextBubbleColor && pool.includes(nextBubbleColor) ? nextBubbleColor : randChoice(pool);
+    currentBubble = { x: LAUNCHER_X, y: LAUNCHER_Y, color: nextColorInLauncher };
     nextBubbleColor = randChoice(pool);
     drawNextBubblePreview();
   }
 
   function updateShot(dt) {
     if (!shot) return;
+
+    // Rétablissement forme (élasticité)
+    currentBubbleScale.x += (1 - currentBubbleScale.x) * 0.15 * dt;
+    currentBubbleScale.y += (1 - currentBubbleScale.y) * 0.15 * dt;
 
     shot.x += shot.vx * dt;
     shot.y += shot.vy * dt;
@@ -1332,28 +1370,28 @@
     if (shot.x <= leftLimit) {
       shot.x = leftLimit;
       shot.vx *= -1;
+      // Impact mur: on "squash" sur la longueur (y dans le repère local)
+      currentBubbleScale = { x: 1.2, y: 0.8 };
     } else if (shot.x >= rightLimit) {
       shot.x = rightLimit;
       shot.vx *= -1;
+      currentBubbleScale = { x: 1.2, y: 0.8 };
     }
 
-    // collision plafond
     if (shot.y - BUBBLE_RADIUS <= GRID_TOP) {
       attachShotToGrid(shot.x, shot.y);
       return;
     }
 
-    // collision avec les bulles existantes
     let collided = false;
-    const collisionDist2 = Math.pow(BUBBLE_DIAM * 0.93, 2); // seuil un peu réduit → plus facile de se glisser dans les trous
+    const collisionDist2 = Math.pow(BUBBLE_DIAM * 0.93, 2);
     for (let r = 0; r < GRID_ROWS && !collided; r++) {
       for (let c = 0; c < GRID_COLS; c++) {
         if (!grid[r][c]) continue;
         const pos = gridToPixel(r, c);
         const dx = pos.x - shot.x;
         const dy = pos.y - shot.y;
-        const dist2 = dx * dx + dy * dy;
-        if (dist2 <= collisionDist2) {
+        if (dx * dx + dy * dy <= collisionDist2) {
           collided = true;
           break;
         }
@@ -1367,93 +1405,94 @@
     }
   }
 
-  // nouveau placement : on parcourt TOUTES les cases vides
   function findBestCellForShot(x, y) {
     let best = null;
     let bestDist2 = Infinity;
-
     for (let r = 0; r < GRID_ROWS; r++) {
       for (let c = 0; c < GRID_COLS; c++) {
-        if (grid[r][c]) continue; // déjà occupé
-
-        // condition de flottement : la case doit être reliée
-        // soit au plafond (r === 0), soit avoir au moins un voisin
+        if (grid[r][c]) continue;
         if (r > 0) {
           const neighbors = getNeighbors(r, c);
-          if (!neighbors.some(n => grid[n.row][n.col])) {
-            continue; // pas de voisin → on évite les bulles "en l'air"
-          }
+          if (!neighbors.some(n => grid[n.row][n.col])) continue;
         }
-
         const pos = gridToPixel(r, c);
         const dx = pos.x - x;
         const dy = pos.y - y;
         const dist2 = dx * dx + dy * dy;
-
         if (dist2 < bestDist2) {
           bestDist2 = dist2;
           best = { row: r, col: c };
         }
       }
     }
-
-    // fallback au cas où (très improbable)
     if (!best) {
       const approx = pixelToGridApprox(x, y);
-      best = {
-        row: clamp(approx.row, 0, GRID_ROWS - 1),
-        col: clamp(approx.col, 0, GRID_COLS - 1)
-      };
+      best = { row: clamp(approx.row, 0, GRID_ROWS - 1), col: clamp(approx.col, 0, GRID_COLS - 1) };
     }
-
     return best;
   }
 
   function attachShotToGrid(x, y) {
+    shakeIntensity = 3;
     const cell = findBestCellForShot(x, y);
-    const bestRow = cell.row;
-    const bestCol = cell.col;
-
-    grid[bestRow][bestCol] = { color: shot.color };
+    grid[cell.row][cell.col] = { color: shot.color };
     shot = null;
     shotsSinceDrop++;
-
-    handleMatches(bestRow, bestCol);
+    handleMatches(cell.row, cell.col);
     checkGridHeight();
-
-    if (!gridHasBubbles()) {
-      levelCleared();
-    } else {
-      if (shotsSinceDrop >= SHOTS_PER_DROP) {
-        dropGrid();
-        shotsSinceDrop = 0;
-      }
+    if (!gridHasBubbles()) levelCleared();
+    else if (shotsSinceDrop >= SHOTS_PER_DROP) {
+      dropGrid();
+      shotsSinceDrop = 0;
     }
   }
 
   function floodFillSameColor(sr, sc, color) {
     const visited = [];
-    for (let r = 0; r < GRID_ROWS; r++) {
-      visited[r] = new Array(GRID_COLS).fill(false);
-    }
+    for (let r = 0; r < GRID_ROWS; r++) visited[r] = new Array(GRID_COLS).fill(false);
     const stack = [{ row: sr, col: sc }];
     visited[sr][sc] = true;
     const res = [];
-
     while (stack.length > 0) {
       const { row, col } = stack.pop();
       res.push({ row, col });
-
       const neighbors = getNeighbors(row, col);
       for (const n of neighbors) {
-        if (visited[n.row][n.col]) continue;
-        if (!grid[n.row][n.col]) continue;
-        if (grid[n.row][n.col].color !== color) continue;
+        if (visited[n.row][n.col] || !grid[n.row][n.col] || grid[n.row][n.col].color !== color) continue;
         visited[n.row][n.col] = true;
         stack.push({ row: n.row, col: n.col });
       }
     }
     return res;
+  }
+
+  // --- Effects Functions (JUICE) ---
+
+  function createExplosion(x, y, color) {
+    const count = 12;
+    for (let i = 0; i < count; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const speed = Math.random() * 3 + 2;
+      particles.push({
+        x: x,
+        y: y,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed,
+        life: 1.0,
+        color: color,
+        size: Math.random() * 4 + 2
+      });
+    }
+  }
+
+  function addFloatingText(x, y, text) {
+    floatingTexts.push({
+      x: x,
+      y: y,
+      text: text,
+      life: 1.0,
+      dy: -1.0
+    });
   }
 
   function handleMatches(startRow, startCol) {
@@ -1464,16 +1503,15 @@
     let gained = 0;
 
     if (cluster.length >= 3) {
+      shakeIntensity = Math.min(cluster.length * 1.5, 12);
+
       cluster.forEach(({ row, col }) => {
         const current = grid[row][col];
         if (!current) return;
         const pos = gridToPixel(row, col);
-        popEffects.push({
-          x: pos.x,
-          y: pos.y,
-          color: current.color,
-          life: 0
-        });
+
+        createExplosion(pos.x, pos.y, current.color);
+
         grid[row][col] = null;
         gained += 50;
       });
@@ -1484,18 +1522,18 @@
           const current = grid[row][col];
           if (!current) return;
           const pos = gridToPixel(row, col);
-          fallingBubbles.push({
-            x: pos.x,
-            y: pos.y,
-            color: current.color,
-            vy: 0
-          });
+          fallingBubbles.push({ x: pos.x, y: pos.y, color: current.color, vy: 0 });
           grid[row][col] = null;
           gained += 30;
         });
+        shakeIntensity += 5;
       }
 
       score += gained;
+
+      const firstPos = gridToPixel(cluster[0].row, cluster[0].col);
+      addFloatingText(firstPos.x, firstPos.y, "+" + gained);
+
       if (cluster.length >= 5 || (hanging && hanging.length >= 5)) {
         showTeacher("combo");
       }
@@ -1505,42 +1543,33 @@
 
   function findHangingBubbles() {
     const visited = [];
-    for (let r = 0; r < GRID_ROWS; r++) {
-      visited[r] = new Array(GRID_COLS).fill(false);
-    }
-
+    for (let r = 0; r < GRID_ROWS; r++) visited[r] = new Array(GRID_COLS).fill(false);
     const stack = [];
-
     for (let c = 0; c < GRID_COLS; c++) {
       if (grid[0][c]) {
         visited[0][c] = true;
         stack.push({ row: 0, col: c });
       }
     }
-
     while (stack.length > 0) {
       const { row, col } = stack.pop();
       const neighbors = getNeighbors(row, col);
       for (const n of neighbors) {
-        if (visited[n.row][n.col]) continue;
-        if (!grid[n.row][n.col]) continue;
+        if (visited[n.row][n.col] || !grid[n.row][n.col]) continue;
         visited[n.row][n.col] = true;
         stack.push({ row: n.row, col: n.col });
       }
     }
-
     const hanging = [];
     for (let r = 0; r < GRID_ROWS; r++) {
       for (let c = 0; c < GRID_COLS; c++) {
-        if (grid[r][c] && !visited[r][c]) {
-          hanging.push({ row: r, col: c });
-        }
+        if (grid[r][c] && !visited[r][c]) hanging.push({ row: r, col: c });
       }
     }
     return hanging;
   }
 
-  function maxBubbleY() {
+  function checkGridHeight() {
     let maxY = -Infinity;
     for (let r = 0; r < GRID_ROWS; r++) {
       for (let c = 0; c < GRID_COLS; c++) {
@@ -1549,12 +1578,6 @@
         if (pos.y > maxY) maxY = pos.y;
       }
     }
-    return maxY;
-  }
-
-  function checkGridHeight() {
-    const maxY = maxBubbleY();
-    if (!isFinite(maxY)) return;
     if (maxY >= GRID_BOTTOM_LIMIT) {
       showProviseur("warning");
       loseLife();
@@ -1562,6 +1585,7 @@
   }
 
   function dropGrid() {
+    shakeIntensity = 5;
     for (let r = GRID_ROWS - 1; r > 0; r--) {
       grid[r] = grid[r - 1].slice();
     }
@@ -1569,84 +1593,51 @@
     const localColors = COLORS.slice(0, colorCount);
     const newRow = new Array(GRID_COLS).fill(null);
     for (let c = 0; c < GRID_COLS; c++) {
-      if (Math.random() < 0.6) {
-        newRow[c] = { color: randChoice(localColors) };
-      }
+      if (Math.random() < 0.6) newRow[c] = { color: randChoice(localColors) };
     }
     grid[0] = newRow;
     checkGridHeight();
   }
 
-  // --- Effets visuels ---
+  // --- Visuals Updates & Render ---
 
   function updateEffects(dt) {
-    for (let i = popEffects.length - 1; i >= 0; i--) {
-      const p = popEffects[i];
-      p.life += 0.06 * dt;
-      if (p.life >= 1) {
-        popEffects.splice(i, 1);
-      }
+    for (let i = particles.length - 1; i >= 0; i--) {
+      let p = particles[i];
+      p.x += p.vx * dt;
+      p.y += p.vy * dt;
+      p.vy += 0.15 * dt;
+      p.life -= 0.03 * dt;
+      if (p.life <= 0) particles.splice(i, 1);
+    }
+
+    for (let i = floatingTexts.length - 1; i >= 0; i--) {
+      let t = floatingTexts[i];
+      t.y += t.dy * dt;
+      t.life -= 0.02 * dt;
+      if (t.life <= 0) floatingTexts.splice(i, 1);
     }
 
     for (let i = fallingBubbles.length - 1; i >= 0; i--) {
       const f = fallingBubbles[i];
       f.vy += 0.6 * dt;
       f.y += f.vy * dt;
-      if (f.y - BUBBLE_RADIUS > GAME_HEIGHT + 40) {
-        fallingBubbles.splice(i, 1);
-      }
+      if (f.y - BUBBLE_RADIUS > GAME_HEIGHT + 40) fallingBubbles.splice(i, 1);
+    }
+
+    if (shakeIntensity > 0) {
+      shakeIntensity -= 0.8 * dt;
+      if (shakeIntensity < 0) shakeIntensity = 0;
     }
   }
-
-  function drawPopEffects() {
-    if (!popEffects.length) return;
-    ctx.save();
-    for (const p of popEffects) {
-      const a = 1 - p.life;
-      if (a <= 0) continue;
-
-      const rInner = BUBBLE_RADIUS * (0.4 + 0.4 * p.life);
-      const rOuter = rInner + 6 + 8 * p.life;
-
-      const grad = ctx.createRadialGradient(
-        p.x, p.y, rInner,
-        p.x, p.y, rOuter
-      );
-      grad.addColorStop(0, "rgba(255,255,255," + (0.5 * a) + ")");
-      grad.addColorStop(0.3, colorToRgba(p.color, 0.5 * a));
-      grad.addColorStop(1, "rgba(0,0,0,0)");
-      ctx.fillStyle = grad;
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, rOuter, 0, Math.PI * 2);
-      ctx.fill();
-
-      const shardCount = 6;
-      for (let i = 0; i < shardCount; i++) {
-        const ang = (Math.PI * 2 / shardCount) * i;
-        const dist = rInner + 6 + 12 * p.life;
-        const sx = p.x + Math.cos(ang) * dist;
-        const sy = p.y + Math.sin(ang) * dist;
-        ctx.beginPath();
-        ctx.arc(sx, sy, 2.5 * (1 - p.life), 0, Math.PI * 2);
-        ctx.fillStyle = colorToRgba(p.color, 0.8 * a);
-        ctx.fill();
-      }
-    }
-    ctx.restore();
-  }
-
-  // --- Laser bleu ---
 
   function computeLaserSegments() {
     const segments = [];
     const leftLimit = GRID_LEFT + BUBBLE_RADIUS;
     const rightLimit = GRID_LEFT + GRID_WIDTH - BUBBLE_RADIUS;
     const maxBounces = 3;
-
-    let x0 = LAUNCHER_X;
-    let y0 = LAUNCHER_Y;
-    let dx = Math.cos(angle);
-    let dy = Math.sin(angle);
+    let x0 = LAUNCHER_X, y0 = LAUNCHER_Y;
+    let dx = Math.cos(angle), dy = Math.sin(angle);
 
     for (let b = 0; b < maxBounces; b++) {
       let tMin = Infinity;
@@ -1654,52 +1645,34 @@
 
       if (dx < 0) {
         const t = (leftLimit - x0) / dx;
-        if (t > 0 && t < tMin) {
-          tMin = t;
-          hit = "left";
-        }
+        if (t > 0 && t < tMin) { tMin = t; hit = "left"; }
       } else if (dx > 0) {
         const t = (rightLimit - x0) / dx;
-        if (t > 0 && t < tMin) {
-          tMin = t;
-          hit = "right";
-        }
+        if (t > 0 && t < tMin) { tMin = t; hit = "right"; }
       }
 
       if (dy < 0) {
         const t = (GRID_TOP - y0) / dy;
-        if (t > 0 && t < tMin) {
-          tMin = t;
-          hit = "top";
-        }
+        if (t > 0 && t < tMin) { tMin = t; hit = "top"; }
       }
 
       if (!isFinite(tMin) || !hit) break;
-
       const x1 = x0 + dx * tMin;
       const y1 = y0 + dy * tMin;
       segments.push({ x0, y0, x1, y1 });
 
       if (hit === "top") break;
-
-      if (hit === "left" || hit === "right") {
-        dx = -dx;
-      }
-
-      x0 = x1;
-      y0 = y1;
+      if (hit === "left" || hit === "right") dx = -dx;
+      x0 = x1; y0 = y1;
     }
-
     return segments;
   }
 
   function drawAimHelper() {
     const segments = computeLaserSegments();
     if (!segments.length) return;
-
     ctx.save();
     for (const seg of segments) {
-      // halo bleu
       ctx.beginPath();
       ctx.moveTo(seg.x0, seg.y0);
       ctx.lineTo(seg.x1, seg.y1);
@@ -1709,7 +1682,6 @@
       ctx.shadowBlur = 16;
       ctx.stroke();
 
-      // noyau blanc/bleuté en pointillé
       ctx.setLineDash([10, 6]);
       ctx.lineDashOffset = -(elapsed * 0.08);
       ctx.shadowBlur = 0;
@@ -1719,33 +1691,22 @@
       ctx.moveTo(seg.x0, seg.y0);
       ctx.lineTo(seg.x1, seg.y1);
       ctx.stroke();
-
       ctx.setLineDash([]);
     }
     ctx.restore();
   }
 
-  // --- Lanceur bleu ---
-
   function drawLauncher() {
     ctx.save();
     ctx.translate(LAUNCHER_X, LAUNCHER_Y);
-
-    // Ombre
     ctx.fillStyle = "rgba(0,0,0,0.55)";
     ctx.beginPath();
     ctx.ellipse(0, 20, 42, 14, 0, 0, Math.PI * 2);
     ctx.fill();
-
     ctx.rotate(angle);
 
     const baseR = 18;
-
-    // Corps circulaire métal bleu
-    const emitterGrad = ctx.createRadialGradient(
-      -4, -6, 4,
-      0, 0, baseR
-    );
+    const emitterGrad = ctx.createRadialGradient(-4, -6, 4, 0, 0, baseR);
     emitterGrad.addColorStop(0, "#edf5ff");
     emitterGrad.addColorStop(0.4, "#a9cce3");
     emitterGrad.addColorStop(1, "#2e4053");
@@ -1757,7 +1718,6 @@
     ctx.strokeStyle = "rgba(255,255,255,0.9)";
     ctx.stroke();
 
-    // Anneau bleu lumineux
     ctx.beginPath();
     ctx.arc(0, 0, baseR - 6, 0, Math.PI * 2);
     ctx.strokeStyle = "rgba(52,152,219,0.95)";
@@ -1767,14 +1727,12 @@
     ctx.stroke();
     ctx.shadowBlur = 0;
 
-    // LED bleues
     ctx.fillStyle = "#5dade2";
     ctx.beginPath();
     ctx.arc(-6, -7, 2.2, 0, Math.PI * 2);
     ctx.arc(7, 4, 2.2, 0, Math.PI * 2);
     ctx.fill();
 
-    // Tube du lanceur
     const tubeLen = 52;
     ctx.beginPath();
     ctx.roundRect(0, -7, tubeLen, 14, 6);
@@ -1783,14 +1741,10 @@
     tubeGrad.addColorStop(1, "#5d6d7e");
     ctx.fillStyle = tubeGrad;
     ctx.fill();
-    ctx.lineWidth = 2;
-    ctx.strokeStyle = "rgba(255,255,255,0.9)";
     ctx.stroke();
 
-    // Flèche bleue
     const arrowBaseX = tubeLen;
     const arrowTipX = tubeLen + 20;
-
     ctx.beginPath();
     ctx.moveTo(arrowTipX, 0);
     ctx.lineTo(arrowBaseX, -9);
@@ -1805,23 +1759,13 @@
     ctx.lineWidth = 2;
     ctx.stroke();
 
-    // Reflet interne sur la flèche
-    ctx.beginPath();
-    ctx.moveTo(arrowBaseX + 3, -5);
-    ctx.lineTo(arrowBaseX + 10, 0);
-    ctx.lineTo(arrowBaseX + 3, 5);
-    ctx.strokeStyle = "rgba(255,255,255,0.85)";
-    ctx.lineWidth = 1.5;
-    ctx.stroke();
-
     ctx.restore();
   }
-
-  // --- Rendu principal ---
 
   function render() {
     ctx.clearRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
 
+    // Fond
     ctx.save();
     ctx.globalAlpha = 0.88;
     const grad = ctx.createLinearGradient(0, 0, 0, GAME_HEIGHT);
@@ -1832,6 +1776,15 @@
     ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
     ctx.restore();
 
+    // Appliquer le Shake
+    ctx.save();
+    if (shakeIntensity > 0) {
+      const dx = (Math.random() - 0.5) * shakeIntensity;
+      const dy = (Math.random() - 0.5) * shakeIntensity;
+      ctx.translate(dx, dy);
+    }
+
+    // Grille
     ctx.save();
     ctx.strokeStyle = "rgba(255,255,255,0.06)";
     ctx.lineWidth = 1;
@@ -1839,6 +1792,7 @@
     ctx.strokeRect(GRID_LEFT, GRID_TOP, GRID_WIDTH, rectHeight);
     ctx.restore();
 
+    // Bulles fixes
     for (let r = 0; r < GRID_ROWS; r++) {
       for (let c = 0; c < GRID_COLS; c++) {
         if (!grid[r][c]) continue;
@@ -1847,25 +1801,56 @@
       }
     }
 
+    // Bulles tombantes
     for (const f of fallingBubbles) {
       drawBubble(f.x, f.y, f.color, 1);
     }
 
+    // Particules
+    for (const p of particles) {
+      ctx.globalAlpha = p.life;
+      ctx.fillStyle = p.color;
+      ctx.beginPath();
+      ctx.rect(p.x, p.y, p.size, p.size);
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+
+    // Tir avec déformation (Squash & Stretch)
     if (shot) {
-      drawBubble(shot.x, shot.y, shot.color, 1);
+      ctx.save();
+      ctx.translate(shot.x, shot.y);
+      // On tourne le repère pour que Y soit l'axe du mouvement
+      const angleTraj = Math.atan2(shot.vy, shot.vx);
+      ctx.rotate(angleTraj + Math.PI / 2);
+      ctx.scale(currentBubbleScale.x, currentBubbleScale.y);
+      drawBubble(0, 0, shot.color, 1);
+      ctx.restore();
     }
 
-    drawPopEffects();
     drawAimHelper();
     drawLauncher();
 
     if (currentBubble) {
-      // on garde une petite pulsation mais uniforme
       const t = elapsed / 1000;
       const pulse = 1 + 0.02 * Math.sin(t * 4);
       drawBubble(currentBubble.x, currentBubble.y, currentBubble.color, pulse);
     }
 
+    // Textes flottants
+    for (const t of floatingTexts) {
+      ctx.save();
+      ctx.globalAlpha = t.life;
+      ctx.font = "900 20px system-ui";
+      ctx.fillStyle = "#ffffff";
+      ctx.shadowColor = "rgba(0,0,0,0.8)";
+      ctx.shadowBlur = 4;
+      ctx.textAlign = "center";
+      ctx.fillText(t.text, t.x, t.y);
+      ctx.restore();
+    }
+
+    // Vignette
     ctx.save();
     const vignette = ctx.createRadialGradient(
       GAME_WIDTH / 2, GAME_HEIGHT * 0.45, GAME_WIDTH * 0.1,
@@ -1874,8 +1859,10 @@
     vignette.addColorStop(0, "rgba(0,0,0,0)");
     vignette.addColorStop(1, "rgba(0,0,0,0.35)");
     ctx.fillStyle = vignette;
-    ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+    ctx.fillRect(-20, -20, GAME_WIDTH + 40, GAME_HEIGHT + 40);
     ctx.restore();
+
+    ctx.restore(); // Fin du shake
   }
 
   function step(timestamp) {
@@ -1884,46 +1871,33 @@
     lastTime = timestamp;
     elapsed += deltaMs;
 
-    if (gameState === "playing") {
-      updateShot(dt);
-    }
+    if (gameState === "playing") updateShot(dt);
     updateEffects(dt);
-
     render();
     requestAnimationFrame(step);
   }
 
   // --- Input ---
-
   canvas.addEventListener("mousemove", function (e) {
     const rect = canvas.getBoundingClientRect();
     const scaleX = canvas.width / rect.width;
     const scaleY = canvas.height / rect.height;
-
     const mx = (e.clientX - rect.left) * scaleX;
     const my = (e.clientY - rect.top) * scaleY;
-
     const dx = mx - LAUNCHER_X;
     const dy = my - LAUNCHER_Y;
-
-    let a = Math.atan2(dy, dx);
-    a = clamp(a, MIN_ANGLE, MAX_ANGLE);
-    angle = a;
+    angle = clamp(Math.atan2(dy, dx), MIN_ANGLE, MAX_ANGLE);
   });
 
-  canvas.addEventListener("click", function () {
-    fire();
-  });
+  canvas.addEventListener("click", fire);
 
   document.addEventListener("keydown", function (e) {
     const key = e.key.toLowerCase();
     if (key === "arrowleft" || key === "q") {
-      angle -= 0.07;
-      angle = clamp(angle, MIN_ANGLE, MAX_ANGLE);
+      angle = clamp(angle - 0.07, MIN_ANGLE, MAX_ANGLE);
       e.preventDefault();
     } else if (key === "arrowright" || key === "d") {
-      angle += 0.07;
-      angle = clamp(angle, MIN_ANGLE, MAX_ANGLE);
+      angle = clamp(angle + 0.07, MIN_ANGLE, MAX_ANGLE);
       e.preventDefault();
     } else if (key === " " || key === "spacebar") {
       fire();
@@ -1937,21 +1911,14 @@
         hideCenterMessage();
       }
       e.preventDefault();
-    } else if (key === "r") {
-      if (gameState === "gameover") {
-        resetGame();
-      }
-    } else if (key === "escape") {
-      // window.location.href = "Accueil.html";
+    } else if (key === "r" && gameState === "gameover") {
+      resetGame();
     }
-
     if (gameState === "betweenLevels" && key === " ") {
       startLevel();
       e.preventDefault();
     }
   });
-
-  // --- Musique ---
 
   let musicStarted = false;
   function tryStartMusic() {
@@ -1964,8 +1931,6 @@
   }
   canvas.addEventListener("click", tryStartMusic);
   document.addEventListener("keydown", tryStartMusic);
-
-  // --- Init ---
 
   loadHighScores();
   updateHighScoresDisplay();

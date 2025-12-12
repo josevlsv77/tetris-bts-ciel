@@ -7,6 +7,10 @@
 
 <link rel="icon" type="image/jpeg" href="logo 2.png">
 
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet">
+
 <style>
   html, body {
     height: 100%;
@@ -21,28 +25,27 @@
     background-color: #2c3e50; 
     background-size: cover;
     color: #000;
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    font-family: 'Roboto Mono', monospace;
     display: flex;
     justify-content: center;
     align-items: center;
     position: relative;
   }
 
-  /* --- MODIFICATION CADRE PRINCIPAL (COPIE D'ARKANOID) --- */
   #main {
-    /* Effet verre dépoli plus qualitatif et transparent */
-    background: rgba(255, 255, 255, 0.65); 
-    backdrop-filter: blur(12px); 
-    -webkit-backdrop-filter: blur(12px);
-    border-radius: 16px;
+    /* Effet Glassmorphism Global (Conteneur principal) */
+    background: rgba(255, 255, 255, 0.3); 
+    backdrop-filter: blur(20px); 
+    -webkit-backdrop-filter: blur(20px);
+    border-radius: 24px;
     padding: 10px;
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: 5px;
     box-sizing: border-box;
-    /* Ombre profonde + bordure interne blanche pour l'effet vitre */
-    box-shadow: 0 20px 50px rgba(0,0,0,0.5), inset 0 0 0 1px rgba(255,255,255,0.5);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    box-shadow: 0 20px 50px rgba(0,0,0,0.3);
     width: 98%;
     height: 98%;
     max-width: 1000px;
@@ -51,15 +54,14 @@
     z-index: 1;
   }
 
-  /* --- EFFET DE SECOUSSE (SHAKE) --- */
   @keyframes shake {
-    10%, 90% { transform: translate3d(-1px, 0, 0); }
-    20%, 80% { transform: translate3d(2px, 0, 0); }
-    30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
-    40%, 60% { transform: translate3d(4px, 0, 0); }
+    10%, 90% { transform: translate3d(-2px, 0, 0); }
+    20%, 80% { transform: translate3d(4px, 0, 0); }
+    30%, 50%, 70% { transform: translate3d(-8px, 0, 0); }
+    40%, 60% { transform: translate3d(8px, 0, 0); }
   }
   .shake-effect {
-    animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+    animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both;
   }
 
   #header-group {
@@ -72,20 +74,24 @@
     height: auto;
     display: block;
     margin: 0 auto;
+    filter: drop-shadow(0 4px 6px rgba(0,0,0,0.2));
   }
 
   #title {
     font-size: 20px;
     font-weight: 900;
-    color: #222;
+    color: #1a1a1a;
     margin: 0;
-    letter-spacing: -0.5px;
+    font-family: 'Orbitron', sans-serif;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    text-shadow: 0 2px 0 rgba(255,255,255,0.5);
   }
 
   #subtitle {
     font-size: 11px;
-    color: #555;
-    font-weight: 600;
+    color: #333;
+    font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 1px;
   }
@@ -100,34 +106,46 @@
     position: relative;
   }
 
-  /* Overlay de pause */
   #pause-overlay {
     position: absolute;
     top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0,0,0,0.6);
-    backdrop-filter: blur(4px);
+    background: rgba(0,0,0,0.4);
+    backdrop-filter: blur(10px);
     display: none;
     flex-direction: column;
     justify-content: center;
     align-items: center;
     z-index: 50;
     color: white;
+    font-family: 'Orbitron', sans-serif;
     font-weight: 900;
     font-size: 40px;
-    text-shadow: 0 2px 10px rgba(0,0,0,0.5);
-    border-radius: 4px;
+    text-shadow: 0 4px 20px rgba(0,0,0,0.5);
+    border-radius: 12px;
   }
-  #pause-overlay span { font-size: 14px; font-weight: normal; margin-top: 10px; opacity: 0.8; }
+  #pause-overlay span { font-size: 14px; font-weight: normal; margin-top: 10px; opacity: 0.9; font-family: 'Roboto Mono', monospace; }
 
+  /* --- MODIFICATION ICI : DÉFINITION DU CANVAS GLASSMORPHIC --- */
   canvas#tetris {
-    border: 4px solid #333;
-    background: linear-gradient(180deg, #fff 0%, #f4f4f4 100%);
+    /* Fond bleu sombre mais transparent (Alpha 0.6) */
+    background: rgba(20, 30, 48, 0.65); 
+    
+    /* Le flou qui crée l'effet verre dépoli sur ce qui est derrière */
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    
+    border-radius: 16px;
+    
+    /* Ombres internes pour donner de la profondeur au verre */
+    box-shadow: inset 0 0 40px rgba(0,0,0,0.3), 0 15px 40px rgba(0,0,0,0.4);
+    
+    /* Bordure subtile semi-transparente */
+    border: 1px solid rgba(255,255,255,0.15);
+    
     display: block;
-    box-shadow: inset 0 0 20px rgba(0,0,0,0.1), 5px 5px 15px rgba(0,0,0,0.3);
     height: 100%; 
     width: auto; 
     aspect-ratio: 1/2;
-    border-radius: 4px;
     position: relative;
     z-index: 5;
   }
@@ -135,74 +153,76 @@
   #side-panel {
     display: flex;
     flex-direction: column;
-    gap: 8px;
-    background: rgba(255,255,255,0.7);
+    gap: 12px;
+    background: rgba(255,255,255,0.4);
+    backdrop-filter: blur(15px);
     padding: 15px;
-    border-radius: 10px;
+    border-radius: 16px;
     min-width: 180px;
-    border: 2px solid #333;
+    border: 1px solid rgba(255,255,255,0.5);
     box-sizing: border-box;
     height: 100%;
     justify-content: flex-start;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
     overflow-y: auto; 
   }
 
   .preview-box {
     text-align: center;
-    margin-bottom: 5px;
-    background: rgba(255,255,255,0.5);
-    padding: 5px;
-    border-radius: 6px;
-    border: 1px solid rgba(0,0,0,0.1);
+    background: rgba(255,255,255,0.2);
+    padding: 10px;
+    border-radius: 12px;
+    border: 1px solid rgba(255,255,255,0.3);
+    box-shadow: inset 0 2px 4px rgba(255,255,255,0.4);
   }
   
   canvas.preview-canvas {
-    background: rgba(255,255,255,0.8);
-    border: 2px solid #555;
-    margin-top: 2px;
+    background: transparent;
+    margin-top: 5px;
     width: 60px; 
     height: 60px;
-    border-radius: 4px;
   }
   
   #score-box, #level-box {
     text-align: center;
-    margin-bottom: 5px;
-    background: rgba(255,255,255,0.5);
-    padding: 5px;
-    border-radius: 6px;
-    border: 1px solid rgba(0,0,0,0.1);
+    background: rgba(255,255,255,0.2);
+    padding: 8px;
+    border-radius: 12px;
+    border: 1px solid rgba(255,255,255,0.3);
   }
 
   .label-text {
     font-size: 10px;
     text-transform: uppercase;
-    color: #666;
+    color: #444;
     font-weight: 800;
-    letter-spacing: 0.5px;
+    letter-spacing: 1px;
+    margin-bottom: 2px;
   }
 
   #score {
-    font-size: 20px;
+    font-size: 22px;
     font-weight: 900;
     color: #2c3e50;
-    font-variant-numeric: tabular-nums;
+    font-family: 'Orbitron', sans-serif;
+    text-shadow: 0 1px 0 rgba(255,255,255,0.8);
   }
 
   #level {
     font-size: 18px;
     font-weight: bold;
     color: #2c3e50;
+    font-family: 'Orbitron', sans-serif;
   }
     
   #rank-name {
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 900;
     color: #d32f2f;
     margin-top: 2px;
     min-height: 20px;
     line-height: 1.2;
+    font-family: 'Roboto Mono', monospace;
   }
 
   #highscore-title {
@@ -211,59 +231,74 @@
     margin-top: 5px;
     text-decoration: underline;
     text-transform: uppercase;
+    font-family: 'Orbitron', sans-serif;
   }
 
   #highscore-list {
     padding-left: 18px; 
     margin: 5px 0; 
-    font-size: 12px;
+    font-size: 11px;
     max-height: 80px;
     overflow-y: auto;
-    font-family: monospace;
+    font-family: 'Roboto Mono', monospace;
   }
   
-  #highscore-list li {
-    margin-bottom: 2px;
-  }
+  #highscore-list li { margin-bottom: 2px; }
 
   button {
-    padding: 10px;
-    border-radius: 6px;
-    border: 2px solid #333;
-    background: #fff;
+    padding: 12px;
+    border-radius: 12px;
+    border: 1px solid rgba(255,255,255,0.6);
+    background: rgba(255,255,255,0.7);
     font-weight: bold;
     font-size: 12px;
     cursor: pointer;
-    transition: all 0.1s;
+    transition: all 0.2s;
     margin-top: 5px;
-    box-shadow: 0 2px 0 #333;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    font-family: 'Orbitron', sans-serif;
+    backdrop-filter: blur(4px);
   }
-  button:hover { background: #f0f0f0; transform: translateY(-1px); }
-  button:active { background: #ccc; transform: translateY(2px); box-shadow: none; }
+  button:hover { 
+    background: #fff; 
+    transform: translateY(-2px); 
+    box-shadow: 0 6px 15px rgba(0,0,0,0.15);
+  }
+  button:active { transform: translateY(1px); box-shadow: none; }
   button:focus { outline: none; }
 
   #controls-info {
-    font-size: 9px;
-    line-height: 1.4;
+    font-size: 10px;
+    line-height: 1.5;
     margin-top: auto;
     color: #444;
-    background: rgba(0,0,0,0.05);
-    padding: 5px;
-    border-radius: 4px;
-    border: 1px dashed #999;
+    background: rgba(255,255,255,0.3);
+    padding: 8px;
+    border-radius: 8px;
+    border: 1px solid rgba(255,255,255,0.4);
   }
 
   #message-center {
-    font-size: 18px;
+    position: absolute;
+    top: 50%; left: 50%; transform: translate(-50%, -50%);
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(12px);
+    padding: 20px 40px;
+    border-radius: 20px;
+    border: 1px solid rgba(255,255,255,0.8);
+    box-shadow: 0 15px 40px rgba(0,0,0,0.25);
+    font-size: 20px;
     font-weight: 900;
     text-align: center;
     color: #d32f2f;
-    min-height: 24px;
-    margin-top: 5px;
-    text-shadow: 0 1px 0 rgba(255,255,255,0.8);
-    animation: pulse 2s infinite;
+    font-family: 'Orbitron', sans-serif;
+    cursor: pointer;
+    z-index: 200;
+    white-space: nowrap;
+    animation: float 3s ease-in-out infinite;
   }
-  @keyframes pulse { 0% { opacity: 0.8; } 50% { opacity: 1; } 100% { opacity: 0.8; } }
+  @keyframes float { 0% { transform: translate(-50%, -50%); } 50% { transform: translate(-50%, -55%); } 100% { transform: translate(-50%, -50%); } }
+  #message-center:empty { display: none; }
 
   #mobile-controls {
     display: none;
@@ -273,7 +308,6 @@
     gap: 10px;
     padding-bottom: 5px;
     touch-action: none;
-    /* Ajout Z-index pour être sûr que c'est au dessus */
     z-index: 100;
     position: relative;
   }
@@ -283,126 +317,126 @@
   .mob-btn {
     width: 55px; height: 55px; font-size: 24px;
     display: flex; justify-content: center; align-items: center;
-    background: linear-gradient(145deg, #ffffff, #e6e6e6);
-    border: 2px solid #333; border-radius: 50%;
-    box-shadow: 0 4px 0 #333;
-    /* IMPORTANT : empêche le navigateur de zoomer/scroller sur les boutons */
+    background: rgba(255,255,255,0.7);
+    backdrop-filter: blur(6px);
+    border: 1px solid rgba(255,255,255,0.4);
+    border-radius: 50%;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.15);
     touch-action: none; 
     user-select: none;
     -webkit-tap-highlight-color: transparent;
+    font-family: 'Orbitron', sans-serif;
+    color: #333;
   }
-  .mob-btn:active { transform: translateY(4px); box-shadow: none; background: #ddd; }
-  .mob-btn.big { width: 65px; height: 65px; background: linear-gradient(145deg, #ffeba7, #ffdf80); }
-  .mob-btn.hold-btn { background: #e0f7fa; font-size: 14px; font-weight: bold; width: 45px; height: 45px; }
+  .mob-btn:active { transform: scale(0.95); background: rgba(255,255,255,0.9); }
+  .mob-btn.big { width: 65px; height: 65px; background: rgba(255, 235, 167, 0.8); }
+  .mob-btn.hold-btn { background: rgba(224, 247, 250, 0.8); font-size: 12px; font-weight: bold; width: 45px; height: 45px; }
 
-  /* --- ANIMATION POP-IN COMMUNE --- */
   @keyframes popIn { from { transform: scale(0) translateY(50px); } to { transform: scale(1) translateY(0); } }
 
-  /* --- PROVISEUR (DROITE) --- */
-  #proviseur-box {
-    position: absolute;
-    left: calc(50% + 400px); 
-    bottom: 10px;
-    display: none;
-    cursor: pointer;
-    z-index: 10;
+  #proviseur-box, #prof-box {
+    position: absolute; bottom: 10px; display: none; cursor: pointer; z-index: 10;
     transition: transform 0.3s ease-out;
   }
-  #proviseur-box.pop-in { animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-  #proviseur-img {
-    height: auto; max-height: 50vh;
-    filter: drop-shadow(5px 5px 10px rgba(0,0,0,0.4));
-  }
-  #speech-bubble {
-    position: absolute; left: 100%; bottom: 65%;
-    margin-left: 15px; max-width: 250px;
-    background: #ffffff; border: 2px solid #2c3e50; 
-    border-radius: 12px; padding: 12px 15px;
-    font-size: 14px; line-height: 1.4; font-weight: 600; color: #2c3e50;
-    box-shadow: 0 8px 20px rgba(0,0,0,0.15);
-  }
-  #speech-bubble::after {
-    content: ""; position: absolute; right: 100%; bottom: 20%;
-    border-width: 10px; border-style: solid;
-    border-color: transparent #2c3e50 transparent transparent;
-  }
-  #speech-bubble::before {
-    content: ""; position: absolute; right: 100%; bottom: 20%;
-    margin-right: -3px; border-width: 10px; border-style: solid;
-    border-color: transparent #fff transparent transparent; z-index: 2;
-  }
-
-  /* --- PROFESSEURS (GAUCHE) --- */
-  #prof-box {
-    position: absolute;
-    right: calc(50% + 400px); /* Symétrie par rapport au centre */
-    bottom: 10px;
-    display: none;
-    cursor: pointer;
-    z-index: 10;
-    transition: transform 0.3s ease-out;
-  }
-  #prof-box.pop-in { animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+  #proviseur-box { left: calc(50% + 400px); }
+  #prof-box { right: calc(50% + 400px); }
   
-  #prof-img {
-    height: auto; max-height: 50vh;
-    filter: drop-shadow(-5px 5px 10px rgba(0,0,0,0.4));
-  }
+  #proviseur-box.pop-in, #prof-box.pop-in { animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
   
-  /* Bulle Professeur (pointe vers la droite, vers le jeu) */
-  #prof-bubble {
-    position: absolute; right: 100%; bottom: 65%;
-    margin-right: 15px; max-width: 250px;
-    background: #ffffff; border: 2px solid #2c3e50; 
-    border-radius: 12px; padding: 12px 15px;
-    font-size: 14px; line-height: 1.4; font-weight: 600; color: #2c3e50;
-    box-shadow: 0 8px 20px rgba(0,0,0,0.15);
-    text-align: right;
+  #proviseur-img, #prof-img { height: auto; max-height: 50vh; filter: drop-shadow(0 10px 20px rgba(0,0,0,0.3)); }
+  
+  .bubble {
+    position: absolute; bottom: 65%; max-width: 250px;
+    background: rgba(255, 255, 255, 0.9);
+    border: 1px solid rgba(0,0,0,0.1);
+    border-radius: 16px; padding: 15px;
+    font-size: 13px; line-height: 1.4; font-weight: 600; color: #2c3e50;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+    font-family: system-ui, sans-serif;
+    backdrop-filter: blur(5px);
   }
-  #prof-bubble::after {
-    content: ""; position: absolute; left: 100%; bottom: 20%;
-    border-width: 10px; border-style: solid;
-    border-color: transparent transparent transparent #2c3e50;
-  }
-  #prof-bubble::before {
-    content: ""; position: absolute; left: 100%; bottom: 20%;
-    margin-left: -3px; border-width: 10px; border-style: solid;
-    border-color: transparent transparent transparent #fff; z-index: 2;
-  }
+  #speech-bubble { left: 100%; margin-left: 15px; }
+  #prof-bubble { right: 100%; margin-right: 15px; text-align: right; }
 
   @media (max-width: 800px) {
-    #main { 
-        width: 100%; height: 100%; padding: 5px; border-radius: 0; justify-content: space-between;
-    }
+    #main { width: 100%; height: 100%; padding: 5px; border-radius: 0; justify-content: space-between; border: none; }
     #header-group { display: none; }
     #game-container { height: 60vh; align-items: center; width: 100%; gap: 5px; }
     #side-panel { display: none; } 
     #mobile-header { 
         display: flex; flex-direction: column; align-items: center; width: 95%; 
         font-weight: bold; font-size: 14px; margin-top: 5px;
-        background: rgba(255,255,255,0.8); padding: 5px; border-radius: 8px;
-        border: 1px solid rgba(0,0,0,0.1);
+        background: rgba(255,255,255,0.5); padding: 5px; border-radius: 12px;
+        border: 1px solid rgba(255,255,255,0.4); backdrop-filter: blur(8px);
     }
-    #mobile-header-row { display: flex; justify-content: space-between; width: 100%; }
-    #mob-rank { color: #d32f2f; font-size: 12px; margin-top: 2px; font-weight: 900;}
-
-    #mobile-controls { 
-      display: flex; padding: 0 10px 20px 10px; box-sizing: border-box; flex-wrap: wrap; justify-content: center;
-    }
-    #message-center { font-size: 14px; margin-bottom: 5px; }
-
-    /* Cache les persos sur mobile pour ne pas gêner le jeu */
+    #mobile-header-row { display: flex; justify-content: space-between; width: 100%; font-family: 'Orbitron', sans-serif; }
+    #mob-rank { color: #d32f2f; font-size: 12px; margin-top: 2px; font-weight: 900; font-family: 'Roboto Mono', monospace;}
+    #mobile-controls { display: flex; padding: 0 10px 20px 10px; box-sizing: border-box; flex-wrap: wrap; justify-content: center; }
+    #message-center { font-size: 16px; padding: 15px 30px; }
     #proviseur-box, #prof-box { display: none !important; }
   }
-    
-  @media (min-width: 801px) {
-    #mobile-header { display: none; }
-  }
-
+  @media (min-width: 801px) { #mobile-header { display: none; } }
 </style>
 </head>
 <body>
+<style>
+  /* Style du bouton Hub */
+  .hub-back-button {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    z-index: 9999;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
 
+    /* Effet Glassmorphism */
+    background: rgba(255, 255, 255, 0.25);
+    backdrop-filter: blur(15px) saturate(120%);
+    -webkit-backdrop-filter: blur(15px) saturate(120%);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1), inset 0 1px 1px rgba(255,255,255,0.4);
+    
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  }
+
+  .hub-back-button svg {
+    width: 24px;
+    height: 24px;
+    fill: #1d1d1f;
+    opacity: 0.7;
+    transition: all 0.3s ease;
+  }
+
+  /* Effets au survol */
+  .hub-back-button:hover {
+    transform: scale(1.1) translateY(-2px);
+    background: rgba(255, 255, 255, 0.4);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+  }
+
+  .hub-back-button:hover svg {
+    fill: #0071e3; /* Bleu CIEL */
+    opacity: 1;
+  }
+  
+  .hub-back-button:active { transform: scale(0.95); }
+
+  @media (max-width: 600px) {
+    .hub-back-button { top: 10px; left: 10px; width: 40px; height: 40px; }
+    .hub-back-button svg { width: 20px; height: 20px; }
+  }
+</style>
+
+<a href="Accueil.html" class="hub-back-button" title="Retour au Hub">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+    <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
+  </svg>
+</a>
 <div id="main">
 
   <div id="header-group">
@@ -428,7 +462,6 @@
     </div>
 
     <div id="side-panel">
-      
       <div class="preview-box">
         <div class="label-text">Suivante</div>
         <canvas id="next" class="preview-canvas" width="120" height="120"></canvas>
@@ -480,17 +513,17 @@
     </div>
   </div>
 
-  <div id="message-center">APPUYEZ SUR ESPACE POUR DÉMARRER</div>
+  <div id="message-center">TOUCHER POUR DÉMARRER</div>
 </div>
 
 <div id="proviseur-box">
   <img id="proviseur-img" src="proviseur.png" alt="Proviseur du lycée">
-  <div id="speech-bubble"></div>
+  <div id="speech-bubble" class="bubble"></div>
 </div>
 
 <div id="prof-box">
   <img id="prof-img" src="Perso1.png" alt="Professeur">
-  <div id="prof-bubble"></div>
+  <div id="prof-bubble" class="bubble"></div>
 </div>
 
 <audio id="bg-music" loop>
@@ -515,35 +548,27 @@
   const scoreElem = document.getElementById("score");
   const levelElem = document.getElementById("level");
   const rankElem = document.getElementById("rank-name");
-  
   const pauseOverlay = document.getElementById("pause-overlay");
-
   const mobScoreElem = document.getElementById("mob-score");
   const mobLevelElem = document.getElementById("mob-level");
   const mobRankElem = document.getElementById("mob-rank");
-
   const messageCenter = document.getElementById("message-center");
   const startBtn = document.getElementById("start-btn");
   const muteBtn = document.getElementById("mute-btn");
   const highscoreList = document.getElementById("highscore-list");
-  
   const gameContainer = document.getElementById("game-container");
   
-  // Audio Element
   const bgMusic = document.getElementById("bg-music");
-  bgMusic.volume = 0.3; // Volume musique à 30%
+  bgMusic.volume = 0.3;
 
-  /* --- GESTION PERSONNAGES (PROVISEUR ET PROFS) --- */
   const proviseurBox = document.getElementById("proviseur-box");
   const speechBubble = document.getElementById("speech-bubble");
-  
   const profBox = document.getElementById("prof-box");
   const profImg = document.getElementById("prof-img");
   const profBubble = document.getElementById("prof-bubble");
 
   let charTimeout = null;
 
-  // Masquer au clic
   proviseurBox.addEventListener("click", () => hideCharacters());
   profBox.addEventListener("click", () => hideCharacters());
 
@@ -554,8 +579,6 @@
       profBox.style.display = "none";
   }
 
-  // --- CONFIG PROFESSEURS ---
-  // On utilise bien .png
   const profs = [
       { img: 'Perso1.png', type: 'chimie' }, 
       { img: 'Perso2.png', type: 'strict' }, 
@@ -567,114 +590,49 @@
   ];
 
   const profDialogues = {
-      chimie: [
-          "La pureté de cette ligne est de 99.1%.",
-          "Attention, réaction en chaîne imminente !",
-          "Je suis celui qui emboîte."
-      ],
-      strict: [
-          "Ce n'est pas aligné ! Recommencez !",
-          "Une erreur de plus et c'est la retenue.",
-          "Je vous ai à l'œil, jeune CIEL."
-      ],
-      sport: [
-          "Musclez votre jeu !",
-          "Allez, on ne lâche rien, compris ?!",
-          "C'est ça ! un mental de champion !"
-      ],
-      cool: [
-          "Tranquille, pas de pression.",
-          "C'est carré comme en Corée.",
-          "Joli move, ça mérite un café."
-      ],
-      geek: [
-          "Avez-vous essayé de redémarrer...la pièce ?",
-          "C'est un bug ou une feature ce trou ?",
-          "Optimisation du stack : validée."
-      ],
-      histoire: [
-          "Aussi beau que U=RI.",
-          "Isaac Newton n'aurait pas fait mieux.",
-          "Ce mouvement fera date dans les annales de la dynamique."
-      ],
-      style: [
-          "Ce placement... c'est de l'art !",
-          "Un peu de couleur dans ce monde de gris.",
-          "La classe à l'état pur, bravo !"
-      ],
-      generic: [
-          "Continuez comme ça !",
-          "Le BTS est dans la poche à ce rythme.",
-          "Focus !"
-      ]
+      chimie: [ "La pureté de cette ligne est de 99.1%.", "Attention, réaction en chaîne imminente !", "Je suis celui qui emboîte." ],
+      strict: [ "Ce n'est pas aligné ! Recommencez !", "Une erreur de plus et c'est la retenue.", "Je vous ai à l'œil, jeune CIEL." ],
+      sport: [ "Musclez votre jeu !", "Allez, on ne lâche rien, compris ?!", "C'est ça ! un mental de champion !" ],
+      cool: [ "Tranquille, pas de pression.", "C'est carré comme en Corée.", "Joli move, ça mérite un café." ],
+      geek: [ "Avez-vous essayé de redémarrer...la pièce ?", "C'est un bug ou une feature ce trou ?", "Optimisation du stack : validée." ],
+      histoire: [ "Aussi beau que U=RI.", "Isaac Newton n'aurait pas fait mieux.", "Ce mouvement fera date dans les annales de la dynamique." ],
+      style: [ "Ce placement... c'est de l'art !", "Un peu de couleur dans ce monde de gris.", "La classe à l'état pur, bravo !" ],
+      generic: [ "Continuez comme ça !", "Le BTS est dans la poche à ce rythme.", "Focus !" ]
   };
 
   const proviseurDialogues = {
-    start: [
-      "Bienvenue en BTS CIEL. Essayez de faire mieux que vos bulletins.",
-      "On s’échauffe : comme à la rentrée, mais avec moins de paperasse."
-    ],
-    line: [
-      "Une ligne propre. Si seulement vos copies étaient aussi alignées.",
-      "Pas mal. Continuez comme ça et je signe la mention."
-    ],
-    tetris: [
-      "4 lignes d'un coup ?! C'est la mention Très Bien assurée !",
-      "Incroyable ! Vous nettoyez le tableau mieux que le service d'entretien."
-    ],
-    level: [
-      "Changement de niveau : comme le passage en 2e année !",
-      "Vous montez d’un cran. Gardez ce rythme au conseil de classe."
-    ],
-    gameover: [
-      "GAME OVER… mais au lycée, on n’a pas de bouton Recommencer.",
-      "Conseil du proviseur : révisez la stratégie avant la prochaine partie."
-    ],
-    // --- NOUVEAUX DIALOGUES PIECES SPECIALES ---
-    bomb: [
-        "Un nettoyage radical ! On dirait que vous avez vidé le cache du serveur.",
-        "L'art de faire disparaître les preuves. Bien joué."
-    ],
-    patch: [
-        "Ce petit bloc vous sauve la mise. Une excellente initiative !",
-        "La perfection est dans les détails. Bravo pour ce patch."
-    ]
+    start: [ "Bienvenue en BTS CIEL. Essayez de faire mieux que vos bulletins.", "On s’échauffe : comme à la rentrée, mais avec moins de paperasse." ],
+    line: [ "Une ligne propre. Si seulement vos copies étaient aussi alignées.", "Pas mal. Continuez comme ça et je signe la mention." ],
+    tetris: [ "4 lignes d'un coup ?! C'est la mention Très Bien assurée !", "Incroyable ! Vous nettoyez le tableau mieux que le service d'entretien." ],
+    level: [ "Changement de niveau : comme le passage en 2e année !", "Vous montez d’un cran. Gardez ce rythme au conseil de classe." ],
+    gameover: [ "GAME OVER… mais au lycée, on n’a pas de bouton Recommencer.", "Conseil du proviseur : révisez la stratégie avant la prochaine partie." ],
+    bomb: [ "Un nettoyage radical ! On dirait que vous avez vidé le cache du serveur.", "L'art de faire disparaître les preuves. Bien joué." ],
+    patch: [ "Ce petit bloc vous sauve la mise. Une excellente initiative !", "La perfection est dans les détails. Bravo pour ce patch." ]
   };
 
   function triggerCharacterEvent(reason) {
       if (charTimeout) clearTimeout(charTimeout);
       hideCharacters();
 
-      // 50% de chance Proviseur (Droite), 50% de chance Prof (Gauche)
-      // Sauf pour Game Over où le Proviseur a la priorité (70%)
       let isProviseur = Math.random() > 0.5;
-      if (reason === "gameover" || reason === "bomb") isProviseur = Math.random() > 0.3; // Proviseur plus présent pour les gros évènements
+      if (reason === "gameover" || reason === "bomb") isProviseur = Math.random() > 0.3;
 
       if (isProviseur) {
-          // --- AFFICHER PROVISEUR ---
           const pool = proviseurDialogues[reason] || proviseurDialogues.line;
           const text = pool[Math.floor(Math.random() * pool.length)];
           speechBubble.textContent = text;
           proviseurBox.style.display = "block";
           proviseurBox.classList.add('pop-in');
       } else {
-          // --- AFFICHER PROF ---
-          // Choisir un prof au hasard
           const randomProf = profs[Math.floor(Math.random() * profs.length)];
           profImg.src = randomProf.img;
-          
-          // Choisir dialogue selon type ou generic
           const specificPool = profDialogues[randomProf.type] || profDialogues.generic;
-          // Mélanger avec des dialogues génériques pour varier
           const finalPool = Math.random() > 0.3 ? specificPool : profDialogues.generic;
-          
           const text = finalPool[Math.floor(Math.random() * finalPool.length)];
-          
           profBubble.textContent = text;
           profBox.style.display = "block";
           profBox.classList.add('pop-in');
       }
-
       charTimeout = setTimeout(() => hideCharacters(), 5000);
   }
 
@@ -682,22 +640,20 @@
   const COLS = 10;
   const ROWS = 20;
   const TILE = 80; 
-  const PREVIEW_TILE = 30; // Taille plus petite pour Hold/Next
+  const PREVIEW_TILE = 30;
   const BASE_DROP = 800;
   
-  // --- CONSTANTES PIECES SPECIALES ---
-  const BOMB_ID = 200; // rm -rf
-  const PATCH_ID = 100; // Patch 1x1
+  const BOMB_ID = 200;
+  const PATCH_ID = 100;
 
   let gameState = "waiting"; 
   let dropInterval = BASE_DROP;
   let dropCounter = 0;
   let lastTime = 0;
   let nextPieceMatrix = null; 
-  
-  // VARIABLES HOLD (RESERVE)
   let holdPieceMatrix = null;
-  let holdUsed = false; // Pour empêcher d'échanger 2 fois de suite
+  let holdUsed = false; 
+  let dropEffect = null;
 
   let muted = false;
   let audioCtx = null;
@@ -720,7 +676,6 @@
       return cielRanks[level - 1];
   }
 
-  /* --- AUDIO --- */
   function initAudioContext() {
     if (!audioCtx) {
       const AC = window.AudioContext || window.webkitAudioContext;
@@ -729,7 +684,6 @@
     if (audioCtx && audioCtx.state === 'suspended') {
       audioCtx.resume();
     }
-    // Lancer la musique si pas mute
     if (!muted) bgMusic.play().catch(e => console.log("Clic requis pour musique"));
   }
 
@@ -743,7 +697,6 @@
     if (endFreq && endFreq !== startFreq) {
         osc.frequency.exponentialRampToValueAtTime(endFreq, audioCtx.currentTime + duration);
     }
-
     gain.gain.setValueAtTime(0, audioCtx.currentTime);
     gain.gain.linearRampToValueAtTime(vol, audioCtx.currentTime + 0.01);
     gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
@@ -754,26 +707,12 @@
     osc.stop(audioCtx.currentTime + duration);
   }
 
-  function sMove() { 
-      if (muted || !audioCtx) return;
-      const osc = audioCtx.createOscillator();
-      const gain = audioCtx.createGain();
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(200, audioCtx.currentTime);
-      gain.gain.setValueAtTime(0.05, audioCtx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
-      osc.connect(gain);
-      gain.connect(audioCtx.destination);
-      osc.start();
-      osc.stop(audioCtx.currentTime + 0.1);
-  }
-
+  function sMove() { playModernTone('sine', 200, 200, 0.1, 0.05); }
   function sStart() { 
       playModernTone('sine', 523.25, 523.25, 0.6, 0.1);
       setTimeout(() => playModernTone('sine', 659.25, 659.25, 0.6, 0.1), 100);
       setTimeout(() => playModernTone('sine', 783.99, 783.99, 0.8, 0.1), 200);
   }
-
   function sRotate() { playModernTone('sine', 300, 500, 0.15, 0.08); }
   function sDrop() { playModernTone('sine', 180, 50, 0.2, 0.15); }
   function sLine() { 
@@ -788,13 +727,9 @@
       setTimeout(() => playModernTone('triangle', 1046.50, 1046.50, 1.2, 0.15), 240);
   }
   function sGameOver() { playModernTone('triangle', 400, 50, 1.5, 0.2); }
-  
-  // Petit son pour le Hold
   function sHold() { playModernTone('sine', 400, 600, 0.1, 0.1); }
-  // Son pour la bombe (plus grave)
   function sBomb() { playModernTone('sawtooth', 100, 20, 0.5, 0.3); }
 
-  /* --- VISUELS --- */
   const FACE_COUNT = 11; 
   const tileImages = [null];
   for (let i = 1; i <= FACE_COUNT; i++) {
@@ -805,12 +740,21 @@
 
   const colors = [
     null, '#FF0D72', '#0DC2FF', '#0DFF72', '#F538FF', '#FF8E0D', '#FFE138', '#3877FF', 
-    // Couleurs pour pièces spéciales
-    '#D32F2F', // BOMB (Index 8)
-    '#00BCD4'  // PATCH (Index 9)
+    '#D32F2F', '#00BCD4'
   ];
 
-  /* --- PARTICULES --- */
+  function hexToRgba(hex, alpha) {
+      if(!hex) return `rgba(255,255,255,${alpha})`;
+      let c;
+      if(/^#([A-Fa-f0-9]{3}){1,2}$/.test(hex)){
+          c= hex.substring(1).split('');
+          if(c.length== 3){ c= [c[0], c[0], c[1], c[1], c[2], c[2]]; }
+          c= '0x'+c.join('');
+          return 'rgba('+[(c>>16)&255, (c>>8)&255, c&255].join(',')+','+alpha+')';
+      }
+      return `rgba(255,255,255,${alpha})`;
+  }
+
   let particles = [];
   function spawnParticles(x, y, color, amount = 10) {
     for (let i = 0; i < amount; i++) {
@@ -834,7 +778,6 @@
     }
   }
 
-  /* --- LOGIQUE TETRIS --- */
   function createMatrix(w, h) {
     const m = [];
     for (let y = 0; y < h; y++) m.push(new Array(w).fill(0));
@@ -843,20 +786,14 @@
 
   const piecesTypes = 'ILJOTSZ'; 
 
-  // NOUVELLE FONCTION: Choisit entre une pièce standard, la bombe (B) ou le patch (P)
   function generateNextPiece() {
       const r = Math.random();
-      // 85% chance pour les pièces standard
       if (r < 0.85) {
           const standardTypes = 'ILJOTSZ';
           return createPiece(standardTypes[standardTypes.length * Math.random() | 0]);
-      } 
-      // 10% chance pour le Patch (aide)
-      else if (r < 0.95) {
+      } else if (r < 0.95) {
           return createPiece('P');
-      }
-      // 5% chance pour la Bombe (outil puissant)
-      else {
+      } else {
           return createPiece('B');
       }
   }
@@ -864,20 +801,15 @@
   function createPiece(type) {
     const id = 1 + (Math.random() * FACE_COUNT | 0);
     let shape = [];
-    
     if (type === 'B') {
         const specialId = BOMB_ID; 
         shape = [[0, specialId, 0],[specialId, specialId, specialId],[0, specialId, 0]]; 
-        shape.typeIdx = 8; 
-        shape.char = 'B';
-        shape.special = 'bomb';
+        shape.typeIdx = 8; shape.char = 'B'; shape.special = 'bomb';
     }
     else if (type === 'P') {
         const specialId = PATCH_ID;
         shape = [[specialId]];
-        shape.typeIdx = 9; 
-        shape.char = 'P';
-        shape.special = 'patch';
+        shape.typeIdx = 9; shape.char = 'P'; shape.special = 'patch';
     }
     else {
         switch (type) {
@@ -907,7 +839,7 @@
   let flashPhase = 0; 
 
   function drawGrid() {
-    ctx.strokeStyle = "rgba(0, 0, 0, 0.08)";
+    ctx.strokeStyle = "rgba(255, 255, 255, 0.03)"; 
     ctx.lineWidth = 1; 
     for (let x = 1; x < COLS; x++) {
       ctx.beginPath(); ctx.moveTo(x*TILE, 0); ctx.lineTo(x*TILE, ROWS*TILE); ctx.stroke();
@@ -917,89 +849,191 @@
     }
   }
 
-  function drawBeveledRect(ctx, x, y, size, color) {
-      ctx.fillStyle = color;
-      ctx.fillRect(x, y, size, size);
-      ctx.lineWidth = size / 8;
-      ctx.strokeStyle = "rgba(255,255,255,0.4)";
-      ctx.beginPath(); ctx.moveTo(x, y+size); ctx.lineTo(x, y); ctx.lineTo(x+size, y); ctx.stroke();
-      ctx.strokeStyle = "rgba(0,0,0,0.3)";
-      ctx.beginPath(); ctx.moveTo(x+size, y); ctx.lineTo(x+size, y+size); ctx.lineTo(x, y+size); ctx.stroke();
-      ctx.fillStyle = "rgba(255,255,255,0.1)";
-      ctx.fillRect(x + size/4, y + size/4, size/2, size/2);
+  function drawRoundedRect(ctx, x, y, width, height, radius) {
+    ctx.beginPath();
+    ctx.moveTo(x + radius, y);
+    ctx.lineTo(x + width - radius, y);
+    ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+    ctx.lineTo(x + width, y + height - radius);
+    ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+    ctx.lineTo(x + radius, y + height);
+    ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+    ctx.lineTo(x, y + radius);
+    ctx.quadraticCurveTo(x, y, x + radius, y);
+    ctx.closePath();
   }
 
-  function drawMatrix(matrix, offset, context = ctx, tileSize = TILE) {
+  function drawSpecialIcon(ctx, x, y, size, type) {
+      ctx.save();
+      const cx = x + size/2;
+      const cy = y + size/2;
+      
+      if (type === 'bomb') {
+          const time = Date.now();
+          const flash = Math.abs(Math.sin(time / 100)); 
+          
+          ctx.fillStyle = `rgb(${20 + 200 * flash}, 20, 20)`; 
+          ctx.beginPath();
+          ctx.arc(cx, cy + 2, size * 0.25, 0, Math.PI * 2);
+          ctx.fill();
+          
+          ctx.strokeStyle = "#fff";
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(cx, cy - size * 0.15);
+          ctx.quadraticCurveTo(cx + size * 0.1, cy - size * 0.3, cx + size * 0.15, cy - size * 0.25);
+          ctx.stroke();
+
+          ctx.fillStyle = flash > 0.5 ? "#FFFF00" : "#FFA500";
+          ctx.beginPath();
+          ctx.arc(cx + size * 0.15, cy - size * 0.25, 2 + 2 * flash, 0, Math.PI * 2);
+          ctx.fill();
+      } 
+      else if (type === 'patch') {
+          ctx.fillStyle = "#fff";
+          const thickness = size * 0.15;
+          const len = size * 0.5;
+          ctx.fillRect(cx - thickness/2, cy - len/2, thickness, len);
+          ctx.fillRect(cx - len/2, cy - thickness/2, len, thickness);
+      }
+      ctx.restore();
+  }
+
+  function drawModernGlassBlock(ctx, x, y, size, color, isGhost, specialType) {
+      const gap = isGhost ? 1 : 2; 
+      const w = size - gap;
+      const radius = w * 0.18; 
+      const cx = x + gap/2;
+      const cy = y + gap/2;
+
+      ctx.save();
+      
+      if (specialType === 'bomb') {
+           const pulse = (Math.sin(Date.now() / 100) + 1) / 2; 
+           const r = 150 + (105 * pulse);
+           const gb = 0 + (100 * pulse); 
+           color = `rgba(${r}, ${gb}, ${gb}, 0.9)`;
+           
+           ctx.shadowColor = `rgba(255, 50, 50, ${0.5 + 0.5 * pulse})`;
+           ctx.shadowBlur = 15 * pulse + 5;
+      }
+
+      drawRoundedRect(ctx, cx, cy, w, w, radius);
+
+      if (isGhost) {
+          ctx.fillStyle = hexToRgba(color, 0.15); 
+          ctx.fill();
+          ctx.lineWidth = 2;
+          ctx.strokeStyle = hexToRgba(color, 0.5);
+          ctx.stroke();
+          ctx.shadowColor = color;
+          ctx.shadowBlur = 10;
+          ctx.stroke(); 
+      } else {
+          ctx.shadowColor = "rgba(0,0,0,0.3)";
+          ctx.shadowBlur = 6;
+          ctx.shadowOffsetY = 4;
+          
+          ctx.fillStyle = color;
+          if (!specialType) ctx.fillStyle = hexToRgba(color, 0.85);
+
+          ctx.fill();
+          
+          let grad = ctx.createLinearGradient(cx, cy, cx + w, cy + w);
+          grad.addColorStop(0, "rgba(255,255,255,0.7)");
+          grad.addColorStop(0.5, "rgba(255,255,255,0.1)");
+          grad.addColorStop(1, "rgba(255,255,255,0)");
+          ctx.fillStyle = grad;
+          ctx.fill();
+
+          ctx.lineWidth = 1.5;
+          let borderGrad = ctx.createLinearGradient(cx, cy, cx, cy + w);
+          borderGrad.addColorStop(0, "rgba(255,255,255,0.9)");
+          borderGrad.addColorStop(1, "rgba(255,255,255,0.1)");
+          ctx.strokeStyle = borderGrad;
+          ctx.stroke();
+
+          if (specialType) {
+              drawSpecialIcon(ctx, cx, cy, w, specialType);
+          }
+      }
+      ctx.restore();
+  }
+
+  function drawImageWithGlassOverlay(ctx, img, x, y, size) {
+      const gap = 2;
+      const w = size - gap;
+      const radius = w * 0.18;
+      const cx = x + gap/2;
+      const cy = y + gap/2;
+
+      ctx.save();
+      drawRoundedRect(ctx, cx, cy, w, w, radius);
+      ctx.clip();
+      ctx.drawImage(img, cx, cy, w, w);
+      
+      let grad = ctx.createLinearGradient(cx, cy, cx, cy + w);
+      grad.addColorStop(0, "rgba(255,255,255,0.4)");
+      grad.addColorStop(0.4, "rgba(255,255,255,0)");
+      grad.addColorStop(1, "rgba(0,0,0,0.1)"); 
+      ctx.fillStyle = grad;
+      ctx.fill();
+
+      ctx.lineWidth = 1;
+      ctx.strokeStyle = "rgba(255,255,255,0.5)";
+      ctx.stroke();
+      ctx.restore();
+  }
+
+  function drawMatrix(matrix, offset, context = ctx, tileSize = TILE, isGhost = false) {
     matrix.forEach((row, y) => {
       row.forEach((value, x) => {
         if (value !== 0) {
           const px = (x + offset.x) * tileSize;
           const py = (y + offset.y) * tileSize;
 
-          // --- GESTION DE LA LUEUR (GLOW EFFECT) ---
-          if (value === BOMB_ID || value === PATCH_ID) {
-              context.save();
-              context.shadowBlur = tileSize * 0.5; // Lueur proportionnelle à la taille du bloc
-              context.shadowColor = (value === BOMB_ID) ? 'rgba(255, 50, 50, 1)' : 'rgba(0, 200, 255, 1)';
-          }
-          // ------------------------------------------
-
-          if (value === 99) {
-            const progress = flashPhase / 10; 
-            const scale = 1 - progress; 
-            const center = tileSize / 2;
-            context.fillStyle = `rgba(255, 215, 0, ${1 - progress})`;
-            context.fillRect(px, py, tileSize, tileSize);
-            context.save();
-            context.translate(px + center, py + center);
-            context.scale(scale, scale);
-            context.fillStyle = "#fff"; 
-            context.fillRect(-center, -center, tileSize, tileSize);
-            context.restore();
-            return;
-          }
+          if (value === 99) return;
 
           const imgIndex = ((value - 1 + FACE_COUNT) % FACE_COUNT) + 1;
           const img = tileImages[imgIndex];
           const fallbackColor = colors[(matrix.typeIdx || (value % 7) + 1)] || '#888';
+          const specialColor = (value === BOMB_ID) ? '#FF3333' : (value === PATCH_ID) ? colors[9] : fallbackColor;
           
-          // Couleur spécifique pour les blocs spéciaux sans image
-          const specialColor = (value === BOMB_ID) ? colors[8] : (value === PATCH_ID) ? colors[9] : fallbackColor;
+          let specialType = null;
+          if (value === BOMB_ID) specialType = 'bomb';
+          if (value === PATCH_ID) specialType = 'patch';
 
-
-          if (img && img.complete && img.naturalWidth !== 0) {
-            context.drawImage(img, px, py, tileSize, tileSize);
-            context.fillStyle = "rgba(255,255,255,0.1)";
-            context.fillRect(px, py, tileSize, tileSize/2);
-            context.strokeStyle = "rgba(0,0,0,0.2)";
-            context.strokeRect(px, py, tileSize, tileSize);
-          } else {
-            drawBeveledRect(context, px, py, tileSize, specialColor);
-          }
-
-          if (value === BOMB_ID || value === PATCH_ID) {
-              context.restore(); // Enlever l'effet de lueur après le dessin
+          if (isGhost) {
+              drawModernGlassBlock(context, px, py, tileSize, specialColor, true, specialType);
+          } 
+          else {
+              if (specialType) {
+                  drawModernGlassBlock(context, px, py, tileSize, specialColor, false, specialType);
+              } 
+              else if (img && img.complete && img.naturalWidth !== 0) {
+                drawImageWithGlassOverlay(context, img, px, py, tileSize);
+              } 
+              else {
+                drawModernGlassBlock(context, px, py, tileSize, specialColor, false, null);
+              }
           }
         }
       });
     });
   }
 
-  // Fonction générique pour dessiner Next et Hold
   function drawPreview(matrix, context, canvasElem) {
     context.clearRect(0,0, canvasElem.width, canvasElem.height);
     if (!matrix) return;
-    const boxSize = 4; // Max taille piece
+    const boxSize = 4;
     const offsetX = (boxSize - matrix[0].length) / 2;
     const offsetY = (boxSize - matrix.length) / 2;
     drawMatrix(matrix, {x: offsetX, y: offsetY}, context, PREVIEW_TILE);
   }
 
   function drawNextPiece() { drawPreview(nextPieceMatrix, nextCtx, nextCanvas); }
-  
   function drawHoldPiece() { 
       drawPreview(holdPieceMatrix, holdCtx, holdCanvas); 
-      // Si utilisé, griser un peu le canvas
       holdCanvas.style.opacity = holdUsed ? "0.5" : "1";
   }
 
@@ -1007,7 +1041,6 @@
     player.matrix.forEach((row, y) => {
       row.forEach((value, x) => {
         if (value !== 0) {
-          // Si c'est un patch, on ne le marque pas avec l'ID spécial
           const finalValue = (value === PATCH_ID) ? (1 + (Math.random() * FACE_COUNT | 0)) : value;
           arena[y + player.pos.y][x + player.pos.x] = finalValue;
         }
@@ -1020,8 +1053,7 @@
     const o = player.pos;
     for (let y = 0; y < m.length; ++y) {
       for (let x = 0; x < m[y].length; ++x) {
-        if (m[y][x] !== 0 &&
-           (arena[y + o.y] && arena[y + o.y][x + o.x]) !== 0) {
+        if (m[y][x] !== 0 && (arena[y + o.y] && arena[y + o.y][x + o.x]) !== 0) {
           return true;
         }
       }
@@ -1036,31 +1068,28 @@
       setTimeout(() => { gameContainer.classList.remove("shake-effect"); }, 500);
   }
 
-  // NOUVELLE FONCTION: Gère l'explosion de la Bombe
   function handleBombExplosion(px, py, matrix) {
       sBomb();
       triggerCharacterEvent("bomb");
-
-      // Le centre de la bombe est le bloc central de la matrice 3x3
+      
       const centerOffsetX = 1;
       const centerOffsetY = 1;
-
       const centerX = px + centerOffsetX;
       const centerY = py + centerOffsetY;
-      const radius = 1; // Explosion 3x3 (1 bloc autour du centre)
+      
+      const radius = 2.5; 
 
-      for (let y = -radius; y <= radius; y++) {
-          for (let x = -radius; x <= radius; x++) {
-              const targetY = centerY + y;
-              const targetX = centerX + x;
-
-              // Vérifie les limites de l'arène
-              if (targetY >= 0 && targetY < ROWS && targetX >= 0 && targetX < COLS) {
-                  if (arena[targetY][targetX] !== 0) {
-                      // Particles et nettoyage
-                      const color = colors[arena[targetY][targetX] % 7 + 1] || '#FF5733';
-                      spawnParticles(targetX * TILE, targetY * TILE, color, 10);
-                      arena[targetY][targetX] = 0;
+      for (let y = -3; y <= 3; y++) {
+          for (let x = -3; x <= 3; x++) {
+              if (Math.sqrt(x*x + y*y) <= radius) {
+                  const targetY = centerY + y;
+                  const targetX = centerX + x;
+                  if (targetY >= 0 && targetY < ROWS && targetX >= 0 && targetX < COLS) {
+                      if (arena[targetY][targetX] !== 0) {
+                          const color = colors[arena[targetY][targetX] % 7 + 1] || '#FF5733';
+                          spawnParticles(targetX * TILE, targetY * TILE, color, 12);
+                          arena[targetY][targetX] = 0;
+                      }
                   }
               }
           }
@@ -1068,35 +1097,33 @@
       triggerShake();
   }
 
+  let clearingRows = [];
+
   function arenaSweep() {
     if (gameState === "lineflash" || gameState === "animating") return;
 
-    const rowsToClear = [];
+    clearingRows = [];
     for (let y = arena.length - 1; y >= 0; --y) {
       let full = true;
       for (let x = 0; x < arena[y].length; ++x) {
         if (arena[y][x] === 0) { full = false; break; }
       }
-      if (full) rowsToClear.push(y);
+      if (full) clearingRows.push(y);
     }
 
-    if (rowsToClear.length === 0) {
+    if (clearingRows.length === 0) {
       if (Math.random() < 0.05) triggerCharacterEvent("generic");
       return;
     }
 
     gameState = "lineflash";
-    const isTetris = (rowsToClear.length === 4);
+    const isTetris = (clearingRows.length === 4);
     if (isTetris) { 
         triggerShake(); 
         triggerCharacterEvent("tetris"); 
     }
 
-    rowsToClear.forEach(y => {
-        for(let x=0; x<COLS; x++) {
-            const pColor = (isTetris && Math.random() > 0.5) ? '#0DC2FF' : '#FFD700'; 
-            spawnParticles(x*TILE, y*TILE, pColor, isTetris ? 8 : 4);
-        }
+    clearingRows.forEach(y => {
         arena[y].fill(99);
     });
 
@@ -1106,13 +1133,16 @@
       flashPhase = frame; 
       draw(); 
 
-      if (frame >= 8) {
+      if (frame >= 12) { 
         clearInterval(flashInterval);
-        rowsToClear.sort((a, b) => b - a);
-        rowsToClear.forEach(y => arena.splice(y, 1));
-        while (arena.length < ROWS) arena.unshift(new Array(COLS).fill(0));
+        
+        const newArena = arena.filter(row => !row.every(val => val === 99));
+        while (newArena.length < ROWS) {
+            newArena.unshift(new Array(COLS).fill(0));
+        }
+        arena = newArena;
 
-        const lines = rowsToClear.length;
+        const lines = clearingRows.length;
         if (isTetris) sTetris(); else sLine();
 
         const linePoints = [0, 40, 100, 300, 1200];
@@ -1128,9 +1158,10 @@
 
         updateScore();
         gameState = "playing";
+        clearingRows = [];
         draw(); 
       }
-    }, 40);
+    }, 30);
   }
 
   function updateScore() {
@@ -1145,14 +1176,12 @@
 
   function playerReset() {
     if (nextPieceMatrix === null) {
-        // UTILISATION DE LA NOUVELLE FONCTION
         nextPieceMatrix = generateNextPiece();
     }
     player.matrix = nextPieceMatrix;
-    nextPieceMatrix = generateNextPiece(); // ET ICI
+    nextPieceMatrix = generateNextPiece();
     drawNextPiece();
     
-    // Reset de l'état "déjà utilisé" du Hold
     holdUsed = false;
     drawHoldPiece();
 
@@ -1164,49 +1193,38 @@
     }
   }
 
-  // --- LOGIQUE HOLD (RESERVE) ---
   function playerHold() {
       if (gameState !== "playing" || holdUsed) return;
-      
       sHold();
-      
-      // Si la réserve est vide
       if (holdPieceMatrix === null) {
           holdPieceMatrix = player.matrix;
-          playerReset(); // On prend la suivante
+          playerReset(); 
       } else {
-          // Echange
           const temp = player.matrix;
           player.matrix = holdPieceMatrix;
           holdPieceMatrix = temp;
-          
-          // Repositionner en haut
           player.pos.y = 0;
           player.pos.x = (arena[0].length / 2 | 0) - (player.matrix[0].length / 2 | 0);
       }
-      
-      holdUsed = true; // Verrouille pour ce tour
+      holdUsed = true; 
       drawHoldPiece();
   }
 
   function playerDrop() {
     player.pos.y++;
     if (collide(arena, player)) {
-      player.pos.y--; // Retour à la position avant collision
+      player.pos.y--; 
 
-      // --- LOGIQUE PIÈCE SPÉCIALE À L'ATTERRISSAGE ---
       if (player.matrix.special === 'bomb') {
           handleBombExplosion(player.pos.x, player.pos.y, player.matrix);
           playerReset(); 
-          arenaSweep(); // Vérifie les lignes après explosion
-          return; // La bombe ne merge PAS elle-même
+          arenaSweep(); 
+          return;
       } 
       
       if (player.matrix.special === 'patch') {
           triggerCharacterEvent("patch");
-          // Le patch se merge normalement, on continue
       }
-      // ------------------------------------------------
 
       merge(arena, player);
       sDrop();
@@ -1227,7 +1245,13 @@
     }
     player.pos.y--; 
 
-    // --- LOGIQUE PIÈCE SPÉCIALE À L'ATTERRISSAGE ---
+    dropEffect = {
+        x: player.pos.x,
+        y: player.pos.y,
+        matrix: player.matrix,
+        alpha: 0.8
+    };
+
     if (player.matrix.special === 'bomb') {
         handleBombExplosion(player.pos.x, player.pos.y, player.matrix);
         playerReset(); 
@@ -1238,11 +1262,10 @@
     if (player.matrix.special === 'patch') {
         triggerCharacterEvent("patch");
     }
-    // ------------------------------------------------
     
     merge(arena, player);
     sDrop();
-    player.score += droppedBlocks * player.level; // Score bonus pour Hard Drop
+    player.score += droppedBlocks * player.level; 
     player.matrix.forEach((row, y) => row.forEach((v, x) => {
           if(v) spawnParticles((player.pos.x+x)*TILE, (player.pos.y+y)*TILE, "#fff", 5);
     }));
@@ -1280,6 +1303,51 @@
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     drawGrid();
     drawMatrix(arena, {x:0, y:0}); 
+
+    if (dropEffect) {
+        ctx.save();
+        ctx.globalAlpha = dropEffect.alpha;
+        ctx.fillStyle = "rgba(255, 255, 255, 0.3)";
+        dropEffect.matrix.forEach((row, y) => {
+            row.forEach((value, x) => {
+                if (value !== 0) {
+                    ctx.fillRect((x + dropEffect.x) * TILE, 0, TILE, (y + dropEffect.y) * TILE);
+                }
+            });
+        });
+        ctx.restore();
+        dropEffect.alpha -= 0.1;
+        if (dropEffect.alpha <= 0) dropEffect = null;
+    }
+    
+    if (gameState === "lineflash" && clearingRows.length > 0) {
+        const progress = flashPhase / 12; 
+        
+        clearingRows.forEach(y => {
+            const py = y * TILE;
+            
+            ctx.save();
+            ctx.globalCompositeOperation = 'lighter'; 
+
+            const h = TILE * (1 - progress);
+            const yOffset = (TILE - h) / 2;
+            
+            ctx.fillStyle = `rgba(255, 255, 255, ${1 - progress})`;
+            ctx.shadowColor = "white";
+            ctx.shadowBlur = 20;
+            ctx.fillRect(0, py + yOffset, canvas.width, h);
+            
+            ctx.fillStyle = "#00FFFF";
+            ctx.fillRect(0, py + TILE/2 - 2, canvas.width * progress * 1.5, 4);
+
+            ctx.fillStyle = "rgba(255, 0, 0, 0.5)";
+            const glitchOffset = (Math.random() - 0.5) * 20;
+            ctx.fillRect(glitchOffset, py + yOffset, canvas.width, h);
+
+            ctx.restore();
+        });
+    }
+
     updateAndDrawParticles(ctx);
 
     if (gameState === "playing" || gameState === "lineflash") {
@@ -1288,27 +1356,13 @@
         pos: {x: player.pos.x, y: player.pos.y}
       };
       
-      // On ne dessine pas l'ombre pour la bombe, ça n'aurait pas de sens
       if (player.matrix.special !== 'bomb') {
           while (!collide(arena, ghost)) {
             ghost.pos.y++;
           }
           ghost.pos.y--;
           
-          ctx.save();
-          ctx.globalAlpha = 0.2;
-          const ghostColor = colors[player.matrix.typeIdx || 1];
-          ghost.matrix.forEach((row, y) => {
-            row.forEach((value, x) => {
-              if (value !== 0) {
-                 ctx.fillStyle = ghostColor;
-                 ctx.fillRect((x + ghost.pos.x) * TILE, (y + ghost.pos.y) * TILE, TILE, TILE);
-                 ctx.strokeStyle = "#000";
-                 ctx.strokeRect((x + ghost.pos.x) * TILE, (y + ghost.pos.y) * TILE, TILE, TILE);
-              }
-            });
-          });
-          ctx.restore();
+          drawMatrix(ghost.matrix, ghost.pos, ctx, TILE, true);
       }
 
       drawMatrix(player.matrix, player.pos);
@@ -1329,28 +1383,21 @@
     requestAnimationFrame(update);
   }
 
-  /* --- GESTION DU CLAVIER --- */
   document.addEventListener('keydown', event => {
     if (event.keyCode === 32 && gameState === "waiting") {
-        startGame();
-        return;
+        startGame(); return;
     }
-    if (event.keyCode === 80) { // P
-        togglePause();
-        return;
-    }
-
+    if (event.keyCode === 80) { togglePause(); return; }
     if (gameState !== "playing") return;
 
     if (event.keyCode === 37) { player.pos.x--; if (collide(arena, player)) player.pos.x++; else sMove(); }
     else if (event.keyCode === 39) { player.pos.x++; if (collide(arena, player)) player.pos.x--; else sMove(); }
     else if (event.keyCode === 40) { playerDrop(); }
     else if (event.keyCode === 38) { hardDrop(); }
-    else if (event.keyCode === 32) { playerRotate(1); } // Espace pour tourner
-    else if (event.keyCode === 67 || event.keyCode === 16) { playerHold(); } // C ou Shift
+    else if (event.keyCode === 32) { playerRotate(1); } 
+    else if (event.keyCode === 67 || event.keyCode === 16) { playerHold(); } 
   });
 
-  /* --- GESTION MOBILE / SOURIS (CORRIGÉE) --- */
   const btnLeft = document.getElementById("btn-left");
   const btnRight = document.getElementById("btn-right");
   const btnDown = document.getElementById("btn-down");
@@ -1358,55 +1405,34 @@
   const btnDrop = document.getElementById("btn-drop");
   const btnHold = document.getElementById("btn-hold");
 
-  // Fonction pour gérer les actions répétitives (gauche, droite, bas)
   function addRepeatAction(btn, action) {
       let interval, timeout;
-      
       const start = () => {
           if (gameState !== "playing") return;
           action();
-          // Délai avant le début de la répétition
-          timeout = setTimeout(() => {
-              interval = setInterval(action, 100);
-          }, 200);
+          timeout = setTimeout(() => { interval = setInterval(action, 100); }, 200);
       };
-
       const stop = (e) => {
-          // Empêcher le comportement souris fantôme si c'est du tactile
           if (e && e.cancelable && e.type !== 'mouseleave') e.preventDefault(); 
-          clearTimeout(timeout); 
-          clearInterval(interval);
+          clearTimeout(timeout); clearInterval(interval);
       };
-
-      // Écouteur tactile avec { passive: false } CRUCIAL pour bloquer le scroll
-      btn.addEventListener("touchstart", (e) => {
-          if (e.cancelable) e.preventDefault();
-          start();
-      }, { passive: false });
-
+      btn.addEventListener("touchstart", (e) => { if (e.cancelable) e.preventDefault(); start(); }, { passive: false });
       btn.addEventListener("touchend", stop);
-      btn.addEventListener("touchcancel", stop); // Sécurité si le doigt sort de l'écran
-
-      // Souris (PC)
+      btn.addEventListener("touchcancel", stop); 
       btn.addEventListener("mousedown", (e) => { start(); });
       btn.addEventListener("mouseup", stop);
       btn.addEventListener("mouseleave", stop);
   }
 
-  // Fonction pour les actions simples (Rotation, Drop, Hold)
   function addSimpleAction(btn, action) {
       const handler = (e) => {
-          // Bloquer le scroll/zoom et l'émulation souris sur mobile
           if (e.cancelable && e.type === "touchstart") e.preventDefault();
           if (gameState === "playing") action();
       };
-      
-      // { passive: false } est indispensable sur mobile moderne
       btn.addEventListener("touchstart", handler, { passive: false });
       btn.addEventListener("mousedown", handler);
   }
 
-  // Assignation des contrôles corrigés
   addRepeatAction(btnLeft, () => { player.pos.x--; if (collide(arena, player)) player.pos.x++; else sMove(); });
   addRepeatAction(btnRight, () => { player.pos.x++; if (collide(arena, player)) player.pos.x--; else sMove(); });
   addRepeatAction(btnDown, () => playerDrop());
@@ -1415,26 +1441,19 @@
   addSimpleAction(btnDrop, () => hardDrop());
   addSimpleAction(btnHold, () => playerHold());
 
-  // Gestion du Start / Mute
   messageCenter.addEventListener("click", () => {
      if(gameState==="waiting" || gameState==="gameover") startGame();
   });
   
   startBtn.addEventListener("click", () => {
-     startGame();
-     startBtn.blur();
+     startGame(); startBtn.blur();
   });
   
   muteBtn.addEventListener("click", () => {
      muted = !muted;
      muteBtn.textContent = muted ? "Son : OFF" : "Son : ON";
      try { localStorage.setItem("tetris_muted", muted); } catch(e){}
-     if(!muted) { 
-         initAudioContext();
-         bgMusic.play().catch(()=>{});
-     } else {
-         bgMusic.pause();
-     }
+     if(!muted) { initAudioContext(); bgMusic.play().catch(()=>{}); } else { bgMusic.pause(); }
      muteBtn.blur();
   });
 
@@ -1476,12 +1495,9 @@
     sGameOver();
     messageCenter.innerHTML = "GAME OVER<br>Score: " + player.score;
     triggerCharacterEvent("gameover");
-    
-    // Vérification du highscore et demande du pseudo
     checkAndSaveHighscore(player.score);
   }
 
-  /* --- HIGHSCORES --- */
   function getHighScores() {
       try {
         const stored = localStorage.getItem("tetris_highscores");
@@ -1491,21 +1507,15 @@
   
   function checkAndSaveHighscore(score) {
       let scores = getHighScores();
-      // On regarde le score le plus bas du top 5 (ou 0 si moins de 5 scores)
       const lowestScore = scores.length < 5 ? 0 : scores[scores.length - 1].score;
-      
       if (score > lowestScore) {
-          // Petit délai pour laisser le message Game Over s'afficher
           setTimeout(() => {
               let name = prompt("Nouveau Record ! Entrez votre pseudo :", "Joueur");
-              // Si annulation ou vide, nom par défaut
               if (!name) name = "Anonyme"; 
-              
               const date = new Date().toLocaleDateString('fr-FR', {day:'2-digit', month:'2-digit'});
               scores.push({ name: name, score: score, date: date });
               scores.sort((a, b) => b.score - a.score);
               scores = scores.slice(0, 5); 
-              
               try { localStorage.setItem("tetris_highscores", JSON.stringify(scores)); } catch(e){}
               updateHighScores();
           }, 300);
@@ -1519,7 +1529,6 @@
       ).join('');
   }
 
-  // Init
   updateHighScores();
   playerReset();
   draw();
