@@ -131,32 +131,33 @@
     justify-items: center;
   }
 
-  /* --- MODIFICATION : Suppression totale du fond et des effets du rectangle intermédiaire --- */
   #game-area {
     position: relative;
-    /* On enlève le border-radius, le fond, le flou et l'ombre */
-    background: transparent; 
+    background: transparent;
     box-shadow: none;
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
-
     overflow: hidden;
     display: flex;
     align-items: center;
     justify-content: center;
-    
     width: 100%;
-    max-width: 660px; 
+    max-width: 660px;
   }
 
+  /* --- MODIFICATION ICI : Fond bleu léger et suppression du cadre --- */
   #game-canvas {
     display: block;
-    background: transparent;
-    /* On garde le border-radius et l'ombre du canvas lui-même pour qu'il ressorte */
+    
+    /* Fond bleu transparent (au lieu de gris) */
+    background: rgba(52, 152, 219, 0.12);
+    
+    /* Suppression du cadre CSS, on garde juste l'arrondi et l'ombre portée pour le volume */
+    border: none;
     border-radius: 12px;
+    
     box-shadow:
-      0 0 0 2px rgba(255,255,255,0.1),
-      0 18px 40px rgba(0,0,0,0.4);
+      0 18px 40px rgba(0,0,0,0.3);
     
     width: 100%;
     height: auto;
@@ -510,7 +511,7 @@
     }
     
     #game-area {
-      box-shadow: none; /* S'assurer qu'il n'y a pas d'ombre sur mobile non plus */
+      box-shadow: none;
     }
     
     #side-panel {
@@ -1792,12 +1793,21 @@
       ctx.translate(dx, dy);
     }
 
-    // Grille
+    // Grille / Murs (RENDUS VISIBLES ICI)
     ctx.save();
-    ctx.strokeStyle = "rgba(255,255,255,0.06)";
-    ctx.lineWidth = 1;
+    
+    // Ombre "glow" pour les murs
+    ctx.shadowColor = "rgba(52, 152, 219, 0.8)";
+    ctx.shadowBlur = 15;
+    
+    ctx.strokeStyle = "rgba(255, 255, 255, 0.5)"; // Plus visible
+    ctx.lineWidth = 3; // Plus épais
+    
     const rectHeight = (GRID_BOTTOM_LIMIT - GRID_TOP) + BUBBLE_RADIUS;
+    
+    // On dessine le rectangle des limites de jeu (murs)
     ctx.strokeRect(GRID_LEFT, GRID_TOP, GRID_WIDTH, rectHeight);
+    
     ctx.restore();
 
     // Bulles fixes
