@@ -15,12 +15,10 @@
     padding: 0;
     overflow: hidden;
     overscroll-behavior: none;
-    /* Empêche le rebond élastique sur mobile */
-    touch-action: none; 
+    touch-action: none;
   }
 
   body {
-    /* Assurez-vous que l'image est bien présente */
     background: url("fond_lycee.jpg") no-repeat center center fixed;
     background-color: #2c3e50;
     background-size: cover;
@@ -46,11 +44,10 @@
       inset 0 0 0 1px rgba(255,255,255,0.6);
     width: 98%;
     height: 98%;
-    max-width: 1100px;
+    max-width: 1200px;
     position: relative;
     z-index: 5;
-    /* Permet le scroll interne si l'écran est vraiment petit en hauteur */
-    overflow-y: auto; 
+    overflow-y: auto;
   }
 
   #header-group {
@@ -59,7 +56,7 @@
     justify-content: space-between;
     gap: 12px;
     margin-bottom: 4px;
-    flex-shrink: 0; /* Empêche le header de s'écraser */
+    flex-shrink: 0;
   }
 
   #title-block {
@@ -128,69 +125,48 @@
   #game-layout {
     flex: 1;
     display: grid;
-    grid-template-columns: minmax(0, 3fr) minmax(260px, 1.2fr);
+    grid-template-columns: minmax(0, 3.5fr) minmax(260px, 1.2fr);
     gap: 12px;
     min-height: 0;
-    /* Pour gérer le centrage */
-    justify-items: center; 
+    justify-items: center;
   }
 
-  /* --- MODIFICATION ICI : Effet Glassmorphism Bleu --- */
+  /* --- MODIFICATION : Suppression totale du fond et des effets du rectangle intermédiaire --- */
   #game-area {
     position: relative;
-    border-radius: 14px;
-    
-    /* Fond bleu transparent dégradé */
-    background: linear-gradient(135deg, 
-      rgba(52, 152, 219, 0.2) 0%,    /* Bleu ciel clair transparent */
-      rgba(44, 62, 80, 0.45) 100%    /* Bleu sombre transparent */
-    );
-
-    /* Le flou d'arrière-plan (Glassmorphism) */
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-
-    /* Ombres et bordures internes pour l'effet de verre */
-    box-shadow:
-      0 12px 30px rgba(0,0,0,0.3),
-      inset 0 0 0 1px rgba(255,255,255,0.25), /* Bordure fine blanche */
-      inset 0 0 20px rgba(52, 152, 219, 0.1); /* Lueur interne subtile */
+    /* On enlève le border-radius, le fond, le flou et l'ombre */
+    background: transparent; 
+    box-shadow: none;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
 
     overflow: hidden;
     display: flex;
     align-items: center;
     justify-content: center;
     
-    /* MODIF MOBILE : Largeur flexible */
     width: 100%;
-    max-width: 580px; /* Un peu plus large que le canvas pour le padding */
+    max-width: 660px; 
   }
 
   #game-canvas {
     display: block;
     background: transparent;
+    /* On garde le border-radius et l'ombre du canvas lui-même pour qu'il ressorte */
     border-radius: 12px;
     box-shadow:
-      0 0 0 2px rgba(255,255,255,0.15),
+      0 0 0 2px rgba(255,255,255,0.1),
       0 18px 40px rgba(0,0,0,0.4);
     
-    /* --- CORRECTION MOBILE --- */
-    /* On remplace la taille fixe par une taille fluide */
     width: 100%;
     height: auto;
-    
-    /* On garde les proportions originales (560/720) */
-    aspect-ratio: 560 / 720;
-    
-    /* On limite la taille max pour PC */
-    max-width: 560px;
-    
-    /* On s'assure que ça rentre en hauteur sur mobile */
-    max-height: 75vh;
+    aspect-ratio: 644 / 828;
+    max-width: 644px;
+    max-height: 80vh; 
     object-fit: contain;
 
     cursor: crosshair;
-    touch-action: none; /* Important pour le tactile */
+    touch-action: none;
   }
 
   #center-message {
@@ -237,7 +213,7 @@
     flex-direction: column;
     gap: 10px;
     min-height: 0;
-    width: 100%; /* S'assure qu'il prend la largeur dispo */
+    width: 100%;
     box-sizing: border-box;
   }
 
@@ -302,7 +278,6 @@
     height: 60px;
     border-radius: 50%;
     background: rgba(0,0,0,0.2);
-    /* Plus subtil car la bulle est brillante */
   }
 
   #rank-block {
@@ -409,8 +384,6 @@
     letter-spacing: 1px;
     text-align: center;
   }
-
-  /* Personnages */
 
   #proviseur-box,
   #prof-box {
@@ -529,21 +502,19 @@
     transform: translateY(0);
   }
 
-  /* MEDIA QUERIES MODIFIES POUR MOBILE */
   @media (max-width: 900px) {
     #game-layout {
       grid-template-columns: 1fr;
-      grid-template-rows: auto auto; /* Le jeu prend sa place naturelle, le reste suit */
-      overflow-y: auto; /* Permet de scroller vers les scores si besoin */
+      grid-template-rows: auto auto;
+      overflow-y: auto;
     }
     
     #game-area {
-      /* Réduit un peu les ombres/bords sur mobile pour gagner de la place */
-      box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+      box-shadow: none; /* S'assurer qu'il n'y a pas d'ombre sur mobile non plus */
     }
     
     #side-panel {
-        max-width: 580px; /* Aligne la largeur du panel avec le jeu */
+        max-width: 644px; 
     }
 
     #prof-box {
@@ -554,12 +525,12 @@
   @media (max-width: 720px) {
     #header-group {
       flex-direction: column;
-      align-items: center; /* Centre le header */
+      align-items: center;
       text-align: center;
       gap: 6px;
     }
     #header-right {
-      align-items: center; /* Centre les pills */
+      align-items: center;
     }
     #title-block {
         justify-content: center;
@@ -568,14 +539,13 @@
       display: none;
     }
     #main {
-        padding: 8px; /* Réduit le padding global sur petit écran */
+        padding: 8px;
     }
   }
 </style>
 </head>
 <body>
 <style>
-  /* Style du bouton Hub */
   .hub-back-button {
     position: fixed;
     top: 20px;
@@ -588,14 +558,11 @@
     align-items: center;
     justify-content: center;
     text-decoration: none;
-
-    /* Effet Glassmorphism */
     background: rgba(255, 255, 255, 0.25);
     backdrop-filter: blur(15px) saturate(120%);
     -webkit-backdrop-filter: blur(15px) saturate(120%);
     border: 1px solid rgba(255, 255, 255, 0.4);
     box-shadow: 0 4px 15px rgba(0,0,0,0.1), inset 0 1px 1px rgba(255,255,255,0.4);
-    
     transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
   }
 
@@ -607,7 +574,6 @@
     transition: all 0.3s ease;
   }
 
-  /* Effets au survol */
   .hub-back-button:hover {
     transform: scale(1.1) translateY(-2px);
     background: rgba(255, 255, 255, 0.4);
@@ -615,7 +581,7 @@
   }
 
   .hub-back-button:hover svg {
-    fill: #0071e3; /* Bleu CIEL */
+    fill: #0071e3;
     opacity: 1;
   }
   
@@ -733,12 +699,13 @@
 (function () {
   "use strict";
 
-  // --- Canvas & dimensions ---
+  // --- Canvas & dimensions (+15% d'agrandissement) ---
   const canvas = document.getElementById("game-canvas");
   const ctx = canvas.getContext("2d");
 
-  const GAME_WIDTH = 560;
-  const GAME_HEIGHT = 720;
+  // Ancienne taille: 560x720. Nouvelle taille (+15%): ~644x828
+  const GAME_WIDTH = 644;
+  const GAME_HEIGHT = 828;
   canvas.width = GAME_WIDTH;
   canvas.height = GAME_HEIGHT;
 
@@ -748,9 +715,11 @@
   // --- Grille en nid d’abeille (hex) ---
   const GRID_ROWS = 18;
   const GRID_COLS = 12;
-  const BUBBLE_RADIUS = 18;
+  
+  // Rayon augmenté de 18 à 21 (+15%)
+  const BUBBLE_RADIUS = 21; 
   const BUBBLE_DIAM = BUBBLE_RADIUS * 2;
-  const SPACING_Y = BUBBLE_RADIUS * Math.sqrt(3); // espacement hex vertical
+  const SPACING_Y = BUBBLE_RADIUS * Math.sqrt(3);
 
   const GRID_TOP = 40;
   const GRID_WIDTH = GRID_COLS * BUBBLE_DIAM + BUBBLE_RADIUS;
@@ -760,9 +729,9 @@
     GRID_TOP + (GRID_ROWS - 1) * SPACING_Y + BUBBLE_RADIUS;
 
   const LAUNCHER_X = GAME_WIDTH / 2;
-  const LAUNCHER_Y = GAME_HEIGHT - 40;
+  const LAUNCHER_Y = GAME_HEIGHT - 45; // Ajusté légèrement pour la taille
 
-  const SHOT_SPEED = 14; // Un peu plus rapide pour sensation dynamique
+  const SHOT_SPEED = 15; // Ajusté pour la nouvelle taille
   const MIN_ANGLE = -Math.PI + 0.15;
   const MAX_ANGLE = -0.15;
 
@@ -785,7 +754,7 @@
   };
 
   const faceImages = {};
-  const bubbleSprites = {}; // cache sprites bulles (par couleur)
+  const bubbleSprites = {};
 
   function invalidateBubbleSprite(color) {
     delete bubbleSprites[color];
@@ -809,11 +778,10 @@
   let grid = createEmptyGrid();
   let currentBubble = null;
   let nextBubbleColor = null;
-  let shot = null; // {x,y,vx,vy,color}
+  let shot = null;
   let angle = -Math.PI / 2;
   let availableColors = COLORS.slice(0, 4);
 
-  // Variable "Juice" pour déformation de la bulle (Squash & Stretch)
   let currentBubbleScale = { x: 1, y: 1 };
 
   let score = 0;
@@ -822,7 +790,7 @@
   let shotsSinceDrop = 0;
   const SHOTS_PER_DROP = 10;
 
-  let gameState = "intro"; // intro | playing | betweenLevels | paused | gameover
+  let gameState = "intro";
   let lastTime = 0;
   let elapsed = 0;
 
@@ -830,7 +798,6 @@
   const MAX_HIGHSCORES = 10;
   const HIGHSCORES_KEY = "puzzlebobble_highscores_ciel";
 
-  // --- "Juice" Effects Arrays ---
   let particles = [];
   let floatingTexts = [];
   let fallingBubbles = [];
@@ -845,7 +812,6 @@
   const centerMessageInner = document.getElementById("center-message-inner");
   const musicEl = document.getElementById("music");
 
-  // --- Characters DOM ---
   const proviseurBox = document.getElementById("proviseur-box");
   const proviseurBubble = document.getElementById("speech-bubble");
   const profBox = document.getElementById("prof-box");
@@ -1156,7 +1122,8 @@
   // --- Sprites & Rendu "Glassy" ---
 
   function buildBubbleSprite(color) {
-    const oversample = 2; // Qualité pour écran HD
+    // MODIFICATION 3 : Qualité HD (Oversample x4 au lieu de x2)
+    const oversample = 4;
     const baseR = BUBBLE_RADIUS;
     const r = baseR * oversample;
     const size = r * 2;
@@ -1166,7 +1133,6 @@
     off.height = size;
     const octx = off.getContext("2d");
     
-    // Optimisation & Lissage
     octx.imageSmoothingEnabled = true;
     octx.imageSmoothingQuality = "high";
 
@@ -1177,69 +1143,62 @@
     const hasFace = entry && entry.loaded && !entry.error;
     const img = hasFace ? entry.img : null;
 
-    // --- 1. Masque circulaire ---
     octx.save();
     octx.beginPath();
     octx.arc(cx, cy, r, 0, Math.PI * 2);
     octx.clip();
 
-    // --- 2. Fond (Profondeur) ---
-    // Un fond noir permet de mieux faire ressortir le visage et les reflets
+    // Fond noir pour contraste
     octx.fillStyle = "#000";
     octx.fillRect(0, 0, size, size);
 
-    // --- 3. Image du Visage (Claire et centrée) ---
     if (img && img.width > 0 && img.height > 0) {
       const minSide = Math.min(img.width, img.height);
       const sx = (img.width - minSide) / 2;
       const sy = (img.height - minSide) / 2;
-      // Zoom léger pour que le visage remplisse bien la bulle
+      // On dessine le visage
       const drawSize = r * 2 * 0.95; 
       octx.drawImage(img, sx, sy, minSide, minSide, cx - drawSize / 2, cy - drawSize / 2, drawSize, drawSize);
     }
 
-    // --- 4. "Glass Body" (Teinte et Volume) ---
-    // C'est ici qu'on accentue la couleur sur les bords tout en gardant le centre clair
+    // "Glass Body" - Plus subtil pour mieux voir le visage en HD
     const volumeGrad = octx.createRadialGradient(cx, cy, r * 0.35, cx, cy, r);
-    volumeGrad.addColorStop(0, "rgba(0,0,0,0)"); // Centre 100% transparent pour le visage
-    volumeGrad.addColorStop(0.75, colorToRgba(color, 0.5)); // Couleur visible
-    volumeGrad.addColorStop(1, colorToRgba(color, 0.9)); // Bord sombre et saturé
+    volumeGrad.addColorStop(0, "rgba(0,0,0,0)");
+    volumeGrad.addColorStop(0.70, colorToRgba(color, 0.4)); // Moins opaque au centre
+    volumeGrad.addColorStop(1, colorToRgba(color, 0.9));
     
     octx.fillStyle = volumeGrad;
     octx.beginPath();
     octx.arc(cx, cy, r, 0, Math.PI * 2);
     octx.fill();
 
-    // --- 5. "Rim Light" (Lumière rasante interne) ---
-    // Ajoute un effet "bijou" en bas de la bulle et accentue la couleur
+    // Rim Light
     octx.save();
     octx.beginPath();
     octx.arc(cx, cy, r - 1.5*oversample, 0, Math.PI * 2);
     const rimGrad = octx.createLinearGradient(0, 0, 0, size);
     rimGrad.addColorStop(0, "rgba(255,255,255,0)");
-    rimGrad.addColorStop(1, colorToRgba(color, 0.9)); // Reflet très coloré en bas
+    rimGrad.addColorStop(1, colorToRgba(color, 0.9));
     octx.strokeStyle = rimGrad;
     octx.lineWidth = 1.5 * oversample;
     octx.stroke();
     octx.restore();
 
-    // --- 6. Reflets de surface (Gloss) ---
-    // Donne l'aspect mouillé/verre
+    // Gloss
     const surfaceGrad = octx.createLinearGradient(0, 0, size, size);
-    surfaceGrad.addColorStop(0, "rgba(255,255,255,0.4)");
+    surfaceGrad.addColorStop(0, "rgba(255,255,255,0.35)");
     surfaceGrad.addColorStop(0.5, "rgba(255,255,255,0)");
     octx.fillStyle = surfaceGrad;
     octx.fill();
 
-    octx.restore(); // Fin du clip principal
+    octx.restore();
 
-    // --- 7. Spéculaire (Point lumineux net) ---
-    // Le reflet de la lumière principale (Haut Gauche)
+    // Spéculaire
     octx.save();
     octx.beginPath();
     octx.ellipse(cx - r * 0.35, cy - r * 0.35, r * 0.25, r * 0.15, Math.PI / 4, 0, Math.PI * 2);
     const glare = octx.createLinearGradient(cx - r, cy - r, cx, cy);
-    glare.addColorStop(0, "rgba(255,255,255,1)");
+    glare.addColorStop(0, "rgba(255,255,255,0.95)");
     glare.addColorStop(1, "rgba(255,255,255,0.2)");
     octx.fillStyle = glare;
     octx.shadowColor = "rgba(255,255,255,0.5)";
@@ -1269,13 +1228,17 @@
     if (!nextBubbleColor) return;
     let sprite = bubbleSprites[nextBubbleColor];
     if (!sprite) sprite = buildBubbleSprite(nextBubbleColor);
-    const r = sprite.radius;
+    const r = sprite.radius; // Attention, radius du jeu principal
+    // Adaptation taille preview
+    const scale = 28 / r; 
+    
     const x = nextCanvas.width / 2;
     const y = nextCanvas.height / 2;
     nextCtx.save();
     nextCtx.imageSmoothingEnabled = true;
     nextCtx.imageSmoothingQuality = "high";
     nextCtx.translate(x, y);
+    nextCtx.scale(scale, scale);
     nextCtx.drawImage(sprite.canvas, -r, -r, r * 2, r * 2);
     nextCtx.restore();
   }
@@ -1748,11 +1711,12 @@
     ctx.translate(LAUNCHER_X, LAUNCHER_Y);
     ctx.fillStyle = "rgba(0,0,0,0.55)";
     ctx.beginPath();
-    ctx.ellipse(0, 20, 42, 14, 0, 0, Math.PI * 2);
+    // Ajustement de la base du canon
+    ctx.ellipse(0, 20, 50, 16, 0, 0, Math.PI * 2);
     ctx.fill();
     ctx.rotate(angle);
 
-    const baseR = 18;
+    const baseR = 21; // = BUBBLE_RADIUS
     const emitterGrad = ctx.createRadialGradient(-4, -6, 4, 0, 0, baseR);
     emitterGrad.addColorStop(0, "#edf5ff");
     emitterGrad.addColorStop(0.4, "#a9cce3");
@@ -1780,9 +1744,9 @@
     ctx.arc(7, 4, 2.2, 0, Math.PI * 2);
     ctx.fill();
 
-    const tubeLen = 52;
+    const tubeLen = 58; // Un peu plus long
     ctx.beginPath();
-    ctx.roundRect(0, -7, tubeLen, 14, 6);
+    ctx.roundRect(0, -8, tubeLen, 16, 6);
     const tubeGrad = ctx.createLinearGradient(0, -7, tubeLen, 7);
     tubeGrad.addColorStop(0, "#d6eaf8");
     tubeGrad.addColorStop(1, "#5d6d7e");
@@ -1791,11 +1755,11 @@
     ctx.stroke();
 
     const arrowBaseX = tubeLen;
-    const arrowTipX = tubeLen + 20;
+    const arrowTipX = tubeLen + 22;
     ctx.beginPath();
     ctx.moveTo(arrowTipX, 0);
-    ctx.lineTo(arrowBaseX, -9);
-    ctx.lineTo(arrowBaseX, 9);
+    ctx.lineTo(arrowBaseX, -10);
+    ctx.lineTo(arrowBaseX, 10);
     ctx.closePath();
     const arrowGrad = ctx.createLinearGradient(arrowBaseX, -9, arrowTipX, 9);
     arrowGrad.addColorStop(0, "#eaf6ff");
@@ -1814,12 +1778,9 @@
 
     // Fond
     ctx.save();
-    ctx.globalAlpha = 0.88;
-    const grad = ctx.createLinearGradient(0, 0, 0, GAME_HEIGHT);
-    grad.addColorStop(0, "#0f2027");
-    grad.addColorStop(0.5, "#203a43");
-    grad.addColorStop(1, "#2c5364");
-    ctx.fillStyle = grad;
+    // On garde un fond très léger ou transparent selon l'envie
+    // Ici un dégradé très subtil pour habiller mais sans "bloc bleu"
+    ctx.fillStyle = "rgba(0,0,0,0.0)"; 
     ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
     ctx.restore();
 
@@ -1888,7 +1849,7 @@
     for (const t of floatingTexts) {
       ctx.save();
       ctx.globalAlpha = t.life;
-      ctx.font = "900 20px system-ui";
+      ctx.font = "900 24px system-ui"; // Plus gros
       ctx.fillStyle = "#ffffff";
       ctx.shadowColor = "rgba(0,0,0,0.8)";
       ctx.shadowBlur = 4;
@@ -1897,14 +1858,14 @@
       ctx.restore();
     }
 
-    // Vignette
+    // Vignette très légère pour le focus
     ctx.save();
     const vignette = ctx.createRadialGradient(
       GAME_WIDTH / 2, GAME_HEIGHT * 0.45, GAME_WIDTH * 0.1,
       GAME_WIDTH / 2, GAME_HEIGHT * 0.5, GAME_WIDTH * 0.7
     );
     vignette.addColorStop(0, "rgba(0,0,0,0)");
-    vignette.addColorStop(1, "rgba(0,0,0,0.35)");
+    vignette.addColorStop(1, "rgba(0,0,0,0.2)");
     ctx.fillStyle = vignette;
     ctx.fillRect(-20, -20, GAME_WIDTH + 40, GAME_HEIGHT + 40);
     ctx.restore();
