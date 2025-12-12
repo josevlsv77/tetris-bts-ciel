@@ -160,7 +160,64 @@
 </style>
 </head>
 <body>
+<style>
+  /* Style du bouton Hub */
+  .hub-back-button {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    z-index: 9999;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
 
+    /* Effet Glassmorphism */
+    background: rgba(255, 255, 255, 0.25);
+    backdrop-filter: blur(15px) saturate(120%);
+    -webkit-backdrop-filter: blur(15px) saturate(120%);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1), inset 0 1px 1px rgba(255,255,255,0.4);
+    
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  }
+
+  .hub-back-button svg {
+    width: 24px;
+    height: 24px;
+    fill: #1d1d1f;
+    opacity: 0.7;
+    transition: all 0.3s ease;
+  }
+
+  /* Effets au survol */
+  .hub-back-button:hover {
+    transform: scale(1.1) translateY(-2px);
+    background: rgba(255, 255, 255, 0.4);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+  }
+
+  .hub-back-button:hover svg {
+    fill: #0071e3; /* Bleu CIEL */
+    opacity: 1;
+  }
+  
+  .hub-back-button:active { transform: scale(0.95); }
+
+  @media (max-width: 600px) {
+    .hub-back-button { top: 10px; left: 10px; width: 40px; height: 40px; }
+    .hub-back-button svg { width: 20px; height: 20px; }
+  }
+</style>
+
+<a href="Accueil.html" class="hub-back-button" title="Retour au Hub">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+    <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
+  </svg>
+</a>
 <div id="lab-container">
   <div id="game-viewport">
     <div id="timer-bar"><div id="timer-fill"></div></div>
@@ -243,7 +300,7 @@ const ctx = canvas.getContext('2d');
 
 const GRID_W = 7;
 const GRID_H = 6;
-const COLS = { wireOff: 'rgba(255, 255, 255, 0.7)', error: '#ef4444', hover: 'rgba(255,255,255,0.3)' };
+const COLS = { wireOff: 'rgba(255, 255, 255, 0.85)', error: '#ef4444', hover: 'rgba(255,255,255,0.3)' };
 
 let state = {
   grid: [], initialGridState: [],
@@ -616,9 +673,23 @@ function drawTile(gx, gy) {
     ctx.fillStyle=clrs[0]; ctx.fillRect(-w/4, -h/2, w/8, h);
     ctx.fillStyle=clrs[1]; ctx.fillRect(-w/10, -h/2, w/8, h);
     ctx.fillStyle=clrs[2]; ctx.fillRect(w/12, -h/2, w/8, h);
-    ctx.rotate(-Math.PI/2); ctx.fillStyle="white"; ctx.font="9px Arial"; ctx.textAlign="center"; 
-    // Si c'est un piège, ne pas afficher 0 ohm pour tricher, afficher les bagues noires
-    ctx.fillText(t.val+"Ω",0,-w/2-2);
+    ctx.rotate(-Math.PI/2); 
+    
+    // --- MODIFICATION POUR LA LISIBILITÉ ---
+    // Texte plus grand, en gras, avec contour noir
+    ctx.font="bold 12px Arial"; 
+    ctx.textAlign="center"; 
+    
+    // Contour noir
+    ctx.lineWidth = 3;
+    ctx.strokeStyle = "black";
+    ctx.strokeText(t.val+"Ω", 0, -w/2-4);
+    
+    // Remplissage blanc
+    ctx.fillStyle = "white"; 
+    ctx.fillText(t.val+"Ω",0,-w/2-4);
+    // ----------------------------------------
+    
   } else if(t.comp===COMP.D) {
     let s=tileSize*0.16; ctx.fillStyle="#cbd5e1"; ctx.beginPath(); ctx.moveTo(-s,-s); ctx.lineTo(-s,s); ctx.lineTo(s,0); ctx.fill();
     ctx.strokeStyle="#dc2626"; ctx.lineWidth=3; ctx.beginPath(); ctx.moveTo(s,-s); ctx.lineTo(s,s); ctx.stroke();
