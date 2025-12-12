@@ -15,6 +15,8 @@
     padding: 0;
     overflow: hidden;
     overscroll-behavior: none;
+    /* Empêche le rebond élastique sur mobile */
+    touch-action: none; 
   }
 
   body {
@@ -47,6 +49,8 @@
     max-width: 1100px;
     position: relative;
     z-index: 5;
+    /* Permet le scroll interne si l'écran est vraiment petit en hauteur */
+    overflow-y: auto; 
   }
 
   #header-group {
@@ -55,6 +59,7 @@
     justify-content: space-between;
     gap: 12px;
     margin-bottom: 4px;
+    flex-shrink: 0; /* Empêche le header de s'écraser */
   }
 
   #title-block {
@@ -126,6 +131,8 @@
     grid-template-columns: minmax(0, 3fr) minmax(260px, 1.2fr);
     gap: 12px;
     min-height: 0;
+    /* Pour gérer le centrage */
+    justify-items: center; 
   }
 
   /* --- MODIFICATION ICI : Effet Glassmorphism Bleu --- */
@@ -153,6 +160,10 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    
+    /* MODIF MOBILE : Largeur flexible */
+    width: 100%;
+    max-width: 580px; /* Un peu plus large que le canvas pour le padding */
   }
 
   #game-canvas {
@@ -162,9 +173,24 @@
     box-shadow:
       0 0 0 2px rgba(255,255,255,0.15),
       0 18px 40px rgba(0,0,0,0.4);
-    width: 560px;
-    height: 720px;
+    
+    /* --- CORRECTION MOBILE --- */
+    /* On remplace la taille fixe par une taille fluide */
+    width: 100%;
+    height: auto;
+    
+    /* On garde les proportions originales (560/720) */
+    aspect-ratio: 560 / 720;
+    
+    /* On limite la taille max pour PC */
+    max-width: 560px;
+    
+    /* On s'assure que ça rentre en hauteur sur mobile */
+    max-height: 75vh;
+    object-fit: contain;
+
     cursor: crosshair;
+    touch-action: none; /* Important pour le tactile */
   }
 
   #center-message {
@@ -211,6 +237,8 @@
     flex-direction: column;
     gap: 10px;
     min-height: 0;
+    width: 100%; /* S'assure qu'il prend la largeur dispo */
+    box-sizing: border-box;
   }
 
   #scores {
@@ -501,11 +529,23 @@
     transform: translateY(0);
   }
 
+  /* MEDIA QUERIES MODIFIES POUR MOBILE */
   @media (max-width: 900px) {
     #game-layout {
       grid-template-columns: 1fr;
-      grid-template-rows: auto auto;
+      grid-template-rows: auto auto; /* Le jeu prend sa place naturelle, le reste suit */
+      overflow-y: auto; /* Permet de scroller vers les scores si besoin */
     }
+    
+    #game-area {
+      /* Réduit un peu les ombres/bords sur mobile pour gagner de la place */
+      box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    }
+    
+    #side-panel {
+        max-width: 580px; /* Aligne la largeur du panel avec le jeu */
+    }
+
     #prof-box {
       display: none;
     }
@@ -514,14 +554,21 @@
   @media (max-width: 720px) {
     #header-group {
       flex-direction: column;
-      align-items: flex-start;
+      align-items: center; /* Centre le header */
+      text-align: center;
       gap: 6px;
     }
     #header-right {
-      align-items: flex-start;
+      align-items: center; /* Centre les pills */
+    }
+    #title-block {
+        justify-content: center;
     }
     #proviseur-box {
       display: none;
+    }
+    #main {
+        padding: 8px; /* Réduit le padding global sur petit écran */
     }
   }
 </style>
