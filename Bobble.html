@@ -2,7 +2,8 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#2c3e50">
 
 <title>Puzzle Bobble – BTS CIEL</title>
 
@@ -145,27 +146,18 @@
     max-width: 660px;
   }
 
-  /* --- MODIFICATION ICI : Fond bleu léger et suppression du cadre --- */
   #game-canvas {
     display: block;
-    
-    /* Fond bleu transparent (au lieu de gris) */
     background: rgba(52, 152, 219, 0.12);
-    
-    /* Suppression du cadre CSS, on garde juste l'arrondi et l'ombre portée pour le volume */
     border: none;
     border-radius: 12px;
-    
-    box-shadow:
-      0 18px 40px rgba(0,0,0,0.3);
-    
+    box-shadow: 0 18px 40px rgba(0,0,0,0.3);
     width: 100%;
     height: auto;
     aspect-ratio: 644 / 828;
     max-width: 644px;
     max-height: 80vh; 
     object-fit: contain;
-
     cursor: crosshair;
     touch-action: none;
   }
@@ -184,7 +176,7 @@
 
   #center-message-inner {
     max-width: 80%;
-    background: rgba(0,0,0,0.75);
+    background: rgba(0,0,0,0.85);
     color: #ecf0f1;
     padding: 16px 20px;
     border-radius: 12px;
@@ -194,6 +186,7 @@
     font-size: 14px;
     line-height: 1.6;
     backdrop-filter: blur(4px);
+    pointer-events: auto;
   }
 
   #center-message-inner strong {
@@ -266,7 +259,9 @@
     box-shadow:
       0 7px 15px rgba(0,0,0,0.45),
       inset 0 0 0 1px rgba(255,255,255,0.2);
+    cursor: pointer;
   }
+  #next-bubble-block:active { transform: scale(0.95); }
 
   #next-bubble-info {
     font-size: 11px;
@@ -503,45 +498,64 @@
     transform: translateY(0);
   }
 
+  /* --- ADAPTATION MOBILE --- */
   @media (max-width: 900px) {
+    #main {
+        width: 100%;
+        height: 100%;
+        border-radius: 0;
+        padding: 8px;
+    }
+
     #game-layout {
-      grid-template-columns: 1fr;
-      grid-template-rows: auto auto;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
       overflow-y: auto;
     }
     
     #game-area {
+      width: 100%;
+      flex-shrink: 0;
+      max-height: 65vh; 
       box-shadow: none;
     }
     
     #side-panel {
-        max-width: 644px; 
+        width: 100%;
+        max-width: none;
+        flex-shrink: 0;
+        flex-direction: row;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
     }
 
-    #prof-box {
-      display: none;
+    #scores { flex: 1; display: flex; gap: 4px; }
+    .score-block { flex: 1; padding: 4px; }
+    
+    #next-bubble-block { flex-shrink: 0; }
+    #next-bubble-info { display: none; }
+
+    #rank-block, #controls, #highscores-block, #bottom-info {
+        display: none; 
+    }
+
+    #prof-box, #proviseur-box {
+      display: none !important;
     }
   }
 
   @media (max-width: 720px) {
     #header-group {
-      flex-direction: column;
+      flex-direction: row;
       align-items: center;
-      text-align: center;
+      text-align: left;
       gap: 6px;
     }
-    #header-right {
-      align-items: center;
-    }
-    #title-block {
-        justify-content: center;
-    }
-    #proviseur-box {
-      display: none;
-    }
-    #main {
-        padding: 8px;
-    }
+    #title { font-size: 16px; }
+    #subtitle { display:none; }
+    #header-right { display:none; }
   }
 </style>
 </head>
@@ -610,8 +624,8 @@
       </div>
     </div>
     <div id="header-right">
-      <div id="hint" class="pill">Visez, anticipez, nettoyez le réseau de bulles</div>
-      <div class="pill">← → pour viser · ESPACE pour tirer · P pour pause</div>
+      <div id="hint" class="pill">Visez, anticipez, nettoyez le réseau</div>
+      <div class="pill">Clic Droit pour échanger la bulle</div>
     </div>
   </div>
 
@@ -642,10 +656,10 @@
         </div>
       </div>
 
-      <div id="next-bubble-block">
+      <div id="next-bubble-block" title="Cliquez pour changer">
         <div id="next-bubble-info">
           Prochaine bulle<br>
-          <span style="opacity:0.8;">Anticipez le coup suivant</span>
+          <span style="opacity:0.8;">Clic pour swap</span>
         </div>
         <canvas id="next-bubble-canvas" width="60" height="60"></canvas>
       </div>
@@ -654,17 +668,17 @@
         <div id="rank-title">Rang actuel</div>
         <div id="rank-name">Nouvelle recrue réseau</div>
         <div style="font-size:10px; opacity:0.85;">
-          Plus vous nettoyez de bulles en un coup, plus votre rang grimpe. Les clusters pendus rapportent un bonus !
+          Plus vous nettoyez de bulles, plus votre rang grimpe. Attention à la saturation !
         </div>
       </div>
 
       <div id="controls">
         <div id="controls-title">Commandes</div>
         <ul>
-          <li>← / → : ajuster l’angle de tir</li>
-          <li>ESPACE ou clic : tirer la bulle</li>
-          <li>P : mettre en pause / reprendre</li>
-          <li>R : relancer la partie après un game over</li>
+          <li>Souris / Touch : Viser</li>
+          <li>Clic Gauche / Tap : Tirer</li>
+          <li>Clic Droit : Échanger bulle</li>
+          <li>P : Pause</li>
         </ul>
       </div>
 
@@ -700,11 +714,88 @@
 (function () {
   "use strict";
 
-  // --- Canvas & dimensions (+15% d'agrandissement) ---
+  // --- AUDIO ENGINE ---
+  let audioCtx = null;
+  let masterGain = null;
+
+  function initAudio() {
+    if (audioCtx) return;
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContext) return;
+    audioCtx = new AudioContext();
+    masterGain = audioCtx.createGain();
+    masterGain.gain.value = 0.3; // Volume global
+    masterGain.connect(audioCtx.destination);
+    
+    const musicEl = document.getElementById("music");
+    if (musicEl && musicEl.play) {
+      musicEl.volume = 0.4;
+      musicEl.play().catch(() => {});
+    }
+  }
+
+  function playSound(type) {
+    if (!audioCtx) initAudio();
+    if (!audioCtx) return;
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+
+    const t = audioCtx.currentTime;
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.connect(gain);
+    gain.connect(masterGain);
+
+    if (type === 'shoot') {
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(600, t);
+      osc.frequency.exponentialRampToValueAtTime(100, t + 0.15);
+      gain.gain.setValueAtTime(0.5, t);
+      gain.gain.exponentialRampToValueAtTime(0.01, t + 0.15);
+      osc.start(t); osc.stop(t + 0.2);
+    } else if (type === 'pop') {
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(400, t);
+      osc.frequency.exponentialRampToValueAtTime(800, t + 0.1);
+      gain.gain.setValueAtTime(0.5, t);
+      gain.gain.exponentialRampToValueAtTime(0.01, t + 0.1);
+      osc.start(t); osc.stop(t + 0.15);
+    } else if (type === 'bounce') {
+      osc.type = 'square';
+      osc.frequency.setValueAtTime(800, t);
+      gain.gain.setValueAtTime(0.1, t);
+      gain.gain.exponentialRampToValueAtTime(0.01, t + 0.05);
+      osc.start(t); osc.stop(t + 0.1);
+    } else if (type === 'hit') {
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(150, t);
+      gain.gain.setValueAtTime(0.5, t);
+      gain.gain.exponentialRampToValueAtTime(0.01, t + 0.1);
+      osc.start(t); osc.stop(t + 0.15);
+    } else if (type === 'swap') {
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(300, t);
+      osc.frequency.linearRampToValueAtTime(500, t+0.1);
+      gain.gain.setValueAtTime(0.2, t);
+      gain.gain.linearRampToValueAtTime(0, t+0.1);
+      osc.start(t); osc.stop(t+0.1);
+    } else if (type === 'warning') {
+      // SON TYPE "KLAXON INDUSTRIEL" (Progressif)
+      osc.type = 'square';
+      osc.frequency.setValueAtTime(150, t);
+      osc.frequency.linearRampToValueAtTime(120, t + 0.8);
+      
+      gain.gain.setValueAtTime(0.1, t);
+      gain.gain.linearRampToValueAtTime(0.3, t + 0.1); // Attack
+      gain.gain.linearRampToValueAtTime(0.3, t + 0.6); // Sustain
+      gain.gain.linearRampToValueAtTime(0.01, t + 0.8); // Release
+      
+      osc.start(t); osc.stop(t + 0.8);
+    }
+  }
+
   const canvas = document.getElementById("game-canvas");
   const ctx = canvas.getContext("2d");
 
-  // Ancienne taille: 560x720. Nouvelle taille (+15%): ~644x828
   const GAME_WIDTH = 644;
   const GAME_HEIGHT = 828;
   canvas.width = GAME_WIDTH;
@@ -713,11 +804,8 @@
   const nextCanvas = document.getElementById("next-bubble-canvas");
   const nextCtx = nextCanvas.getContext("2d");
 
-  // --- Grille en nid d’abeille (hex) ---
   const GRID_ROWS = 18;
   const GRID_COLS = 12;
-  
-  // Rayon augmenté de 18 à 21 (+15%)
   const BUBBLE_RADIUS = 21; 
   const BUBBLE_DIAM = BUBBLE_RADIUS * 2;
   const SPACING_Y = BUBBLE_RADIUS * Math.sqrt(3);
@@ -725,33 +813,19 @@
   const GRID_TOP = 40;
   const GRID_WIDTH = GRID_COLS * BUBBLE_DIAM + BUBBLE_RADIUS;
   const GRID_LEFT = (GAME_WIDTH - GRID_WIDTH) / 2;
-
-  const GRID_BOTTOM_LIMIT =
-    GRID_TOP + (GRID_ROWS - 1) * SPACING_Y + BUBBLE_RADIUS;
+  const GRID_BOTTOM_LIMIT = GRID_TOP + (GRID_ROWS - 1) * SPACING_Y + BUBBLE_RADIUS;
 
   const LAUNCHER_X = GAME_WIDTH / 2;
-  const LAUNCHER_Y = GAME_HEIGHT - 45; // Ajusté légèrement pour la taille
+  const LAUNCHER_Y = GAME_HEIGHT - 45;
 
-  const SHOT_SPEED = 15; // Ajusté pour la nouvelle taille
+  const SHOT_SPEED = 15;
   const MIN_ANGLE = -Math.PI + 0.15;
   const MAX_ANGLE = -0.15;
 
-  const COLORS = [
-    "#e74c3c",
-    "#f1c40f",
-    "#2ecc71",
-    "#3498db",
-    "#9b59b6",
-    "#e67e22"
-  ];
-
+  const COLORS = ["#e74c3c", "#f1c40f", "#2ecc71", "#3498db", "#9b59b6", "#e67e22"];
   const COLOR_FACE_MAP = {
-    "#e74c3c": "visage1.jpg",
-    "#f1c40f": "visage2.jpg",
-    "#2ecc71": "visage3.jpg",
-    "#3498db": "visage4.jpg",
-    "#9b59b6": "visage5.jpg",
-    "#e67e22": "visage6.jpg"
+    "#e74c3c": "visage1.jpg", "#f1c40f": "visage2.jpg", "#2ecc71": "visage3.jpg",
+    "#3498db": "visage4.jpg", "#9b59b6": "visage5.jpg", "#e67e22": "visage6.jpg"
   };
 
   const faceImages = {};
@@ -782,14 +856,15 @@
   let shot = null;
   let angle = -Math.PI / 2;
   let availableColors = COLORS.slice(0, 4);
-
   let currentBubbleScale = { x: 1, y: 1 };
 
   let score = 0;
   let level = 1;
   let lives = 3;
   let shotsSinceDrop = 0;
-  const SHOTS_PER_DROP = 10;
+  
+  let isDropImminent = false; 
+  let gridDropOffset = 0; // Animation descente
 
   let gameState = "intro";
   let lastTime = 0;
@@ -804,14 +879,12 @@
   let fallingBubbles = [];
   let shakeIntensity = 0;
 
-  // --- DOM elements ---
   const scoreValue = document.getElementById("score-value");
   const levelValue = document.getElementById("level-value");
   const livesValue = document.getElementById("lives-value");
   const rankName = document.getElementById("rank-name");
   const highscoresList = document.getElementById("highscores-list");
   const centerMessageInner = document.getElementById("center-message-inner");
-  const musicEl = document.getElementById("music");
 
   const proviseurBox = document.getElementById("proviseur-box");
   const proviseurBubble = document.getElementById("speech-bubble");
@@ -828,56 +901,22 @@
     intro: {
       proviseur: [
         "Bienvenue au laboratoire de bulles.\nIci, on visualise la stabilité d’un réseau en couleurs.",
-        "Votre objectif : éviter la saturation.\nNettoyez les clusters avant qu’ils ne descendent trop bas.",
-        "Chaque tir est une décision d’architecture.\nRegardez loin, pas seulement la première opportunité."
+        "Votre objectif : éviter la saturation.\nNettoyez les clusters avant qu’ils ne descendent trop bas."
       ],
       teacher: [
         "Pense trajectoire : un bon ricochet vaut deux tirs ratés.",
-        "Vise les jonctions, pas seulement les groupes évidents.",
-        "Plus tu relies haut, plus tu peux faire tomber de bulles pendues."
+        "Vise les jonctions, pas seulement les groupes évidents."
       ]
     },
-    combo: {
-      teacher: [
-        "Beau cluster, ça c’est du nettoyage de topologie !",
-        "Joli tir : tu viens de libérer de la bande passante.",
-        "On garde cette énergie pour le prochain TP, hein."
-      ]
-    },
-    warning: {
-      proviseur: [
-        "Attention, le réseau est sous tension.\nEncore quelques erreurs et ça décroche en production.",
-        "La marge de sécurité fond.\nRéagissez avant que les bulles ne touchent le bas."
-      ]
-    },
-    levelUp: {
-      proviseur: [
-        "Niveau validé. La configuration tient la charge.\nPassons à un scénario plus exigeant.",
-        "Bonne maîtrise de la topologie.\nOn augmente la complexité du réseau."
-      ]
-    },
-    lifeLost: {
-      proviseur: [
-        "Réseau saturé.\nEn réel, on aurait coupé le service.",
-        "Voilà ce qui arrive quand on laisse la pile descendre trop bas."
-      ],
-      teacher: [
-        "On apprend plus de ses erreurs que de ses réussites.\nRecalcule ta stratégie de tir.",
-        "Essaie de viser les zones critiques en priorité, pas juste les bonus faciles."
-      ]
-    },
-    gameOver: {
-      proviseur: [
-        "Session terminée.\nAnalysez vos choix, puis relancez une partie propre.",
-        "C’est maintenant que le débrief commence.\nUne nouvelle tentative ?"
-      ]
-    }
+    combo: { teacher: ["Beau cluster, ça c’est du nettoyage de topologie !"] },
+    warning: { proviseur: ["Attention, le réseau est sous tension."] },
+    levelUp: { proviseur: ["Niveau validé. La configuration tient la charge."] },
+    lifeLost: { proviseur: ["Réseau saturé. En réel, on aurait coupé le service."] },
+    gameOver: { proviseur: ["Session terminée. Analysez vos choix."] }
   };
 
   let proviseurTimeout = null;
   let profTimeout = null;
-
-  // --- Utils ---
 
   function createEmptyGrid() {
     const g = [];
@@ -888,13 +927,8 @@
     return g;
   }
 
-  function clamp(v, min, max) {
-    return v < min ? min : v > max ? max : v;
-  }
-
-  function randChoice(arr) {
-    return arr[Math.floor(Math.random() * arr.length)];
-  }
+  function clamp(v, min, max) { return v < min ? min : v > max ? max : v; }
+  function randChoice(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
 
   function gridToPixel(row, col) {
     const xOffset = (row % 2 === 1) ? BUBBLE_RADIUS : 0;
@@ -916,9 +950,7 @@
 
   function gridHasBubbles() {
     for (let r = 0; r < GRID_ROWS; r++) {
-      for (let c = 0; c < GRID_COLS; c++) {
-        if (grid[r][c]) return true;
-      }
+      for (let c = 0; c < GRID_COLS; c++) if (grid[r][c]) return true;
     }
     return false;
   }
@@ -927,9 +959,7 @@
     const set = new Set();
     for (let r = 0; r < GRID_ROWS; r++) {
       for (let c = 0; c < GRID_COLS; c++) {
-        if (grid[r][c]) {
-          set.add(grid[r][c].color);
-        }
+        if (grid[r][c]) set.add(grid[r][c].color);
       }
     }
     return Array.from(set);
@@ -942,14 +972,9 @@
 
   function hexToRgb(hex) {
     let h = hex.replace("#", "");
-    if (h.length === 3) {
-      h = h.split("").map(ch => ch + ch).join("");
-    }
+    if (h.length === 3) h = h.split("").map(ch => ch + ch).join("");
     const int = parseInt(h, 16);
-    const r = (int >> 16) & 255;
-    const g = (int >> 8) & 255;
-    const b = int & 255;
-    return { r, g, b };
+    return { r: (int >> 16) & 255, g: (int >> 8) & 255, b: int & 255 };
   }
 
   function colorToRgba(hex, alpha) {
@@ -958,48 +983,33 @@
   }
 
   function getNeighbors(row, col) {
-    const neighbors = [];
     const isOdd = (row % 2 === 1);
-    const dirsEven = [
-      { dr: -1, dc: 0 }, { dr: -1, dc: -1 }, { dr: 0,  dc: -1 },
-      { dr: 0,  dc: 1 }, { dr: 1,  dc: 0 }, { dr: 1,  dc: -1 }
-    ];
-    const dirsOdd = [
-      { dr: -1, dc: 0 }, { dr: -1, dc: 1 }, { dr: 0,  dc: -1 },
-      { dr: 0,  dc: 1 }, { dr: 1,  dc: 0 }, { dr: 1,  dc: 1 }
-    ];
+    const dirsEven = [{ dr: -1, dc: 0 }, { dr: -1, dc: -1 }, { dr: 0,  dc: -1 }, { dr: 0,  dc: 1 }, { dr: 1,  dc: 0 }, { dr: 1,  dc: -1 }];
+    const dirsOdd = [{ dr: -1, dc: 0 }, { dr: -1, dc: 1 }, { dr: 0,  dc: -1 }, { dr: 0,  dc: 1 }, { dr: 1,  dc: 0 }, { dr: 1,  dc: 1 }];
     const dirs = isOdd ? dirsOdd : dirsEven;
-
+    const neighbors = [];
     for (const d of dirs) {
       const nr = row + d.dr;
       const nc = col + d.dc;
-      if (nr >= 0 && nr < GRID_ROWS && nc >= 0 && nc < GRID_COLS) {
-        neighbors.push({ row: nr, col: nc });
-      }
+      if (nr >= 0 && nr < GRID_ROWS && nc >= 0 && nc < GRID_COLS) neighbors.push({ row: nr, col: nc });
     }
     return neighbors;
   }
 
-  // --- Personnages & UI ---
-
-  function setBubbleText(el, text, footer) {
+  function setBubbleText(el, text) {
     if (!el) return;
-    const safe = text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-    el.innerHTML = safe.replace(/\n/g, "<br>") + (footer ? `<small>${footer}</small>` : "");
+    el.innerHTML = text.replace(/\n/g, "<br>");
   }
 
   function showProviseur(messagesKey) {
     if (!proviseurBox || !proviseurBubble) return;
     const pool = (CHAR_MESSAGES[messagesKey] && CHAR_MESSAGES[messagesKey].proviseur) || null;
     if (!pool || pool.length === 0) return;
-    const msg = randChoice(pool);
-    setBubbleText(proviseurBubble, msg, "Cliquez pour changer le message.");
-    proviseurBox.classList.remove("hidden");
-    proviseurBox.classList.add("visible");
+    setBubbleText(proviseurBubble, randChoice(pool));
+    proviseurBox.classList.remove("hidden"); proviseurBox.classList.add("visible");
     if (proviseurTimeout) clearTimeout(proviseurTimeout);
     proviseurTimeout = setTimeout(() => {
-      proviseurBox.classList.add("hidden");
-      proviseurBox.classList.remove("visible");
+      proviseurBox.classList.add("hidden"); proviseurBox.classList.remove("visible");
     }, 7000);
   }
 
@@ -1007,60 +1017,37 @@
     if (!profBox || !profBubble || !profImg) return;
     const block = CHAR_MESSAGES[messagesKey];
     if (!block || !block.teacher || block.teacher.length === 0) return;
-    const msg = randChoice(block.teacher);
     profImg.src = randChoice(TEACHER_IMAGES);
-    setBubbleText(profBubble, msg, "Cliquez pour afficher un autre conseil.");
-    profBox.classList.remove("hidden");
-    profBox.classList.add("visible");
+    setBubbleText(profBubble, randChoice(block.teacher));
+    profBox.classList.remove("hidden"); profBox.classList.add("visible");
     if (profTimeout) clearTimeout(profTimeout);
     profTimeout = setTimeout(() => {
-      profBox.classList.add("hidden");
-      profBox.classList.remove("visible");
+      profBox.classList.add("hidden"); profBox.classList.remove("visible");
     }, 6000);
   }
 
-  proviseurBox.addEventListener("click", function (e) {
-    e.stopPropagation();
-    showProviseur("intro");
-  });
-
-  profBox.addEventListener("click", function (e) {
-    e.stopPropagation();
-    showTeacher("intro");
-  });
+  proviseurBox.addEventListener("click", e => { e.stopPropagation(); showProviseur("intro"); });
+  profBox.addEventListener("click", e => { e.stopPropagation(); showTeacher("intro"); });
 
   function showCenterMessage(title, text) {
     if (!centerMessageInner) return;
-    const safeTitle = title.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-    const safeText = text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-    centerMessageInner.innerHTML = `<strong>${safeTitle}</strong><br>${safeText.replace(/\n/g, "<br>")}`;
+    centerMessageInner.innerHTML = `<strong>${title}</strong><br>${text.replace(/\n/g, "<br>")}`;
     centerMessageInner.style.display = "block";
   }
 
   function hideCenterMessage() {
-    if (!centerMessageInner) return;
-    centerMessageInner.style.display = "none";
+    if (centerMessageInner) centerMessageInner.style.display = "none";
   }
-
-  // --- Highscores ---
 
   function loadHighScores() {
     try {
       const raw = localStorage.getItem(HIGHSCORES_KEY);
-      if (!raw) {
-        highScores = [];
-      } else {
-        highScores = JSON.parse(raw) || [];
-      }
-    } catch (e) {
-      highScores = [];
-    }
+      highScores = raw ? JSON.parse(raw) : [];
+    } catch (e) { highScores = []; }
   }
 
   function saveHighScores() {
-    try {
-      localStorage.setItem(HIGHSCORES_KEY, JSON.stringify(highScores));
-    } catch (e) {}
+    try { localStorage.setItem(HIGHSCORES_KEY, JSON.stringify(highScores)); } catch (e) {}
   }
 
   function updateHighScoresDisplay() {
@@ -1068,27 +1055,15 @@
     highscoresList.innerHTML = "";
     highScores.slice(0, MAX_HIGHSCORES).forEach((entry, idx) => {
         const li = document.createElement("li");
-        const spanPlace = document.createElement("span");
-        spanPlace.className = "place";
-        spanPlace.textContent = (idx + 1) + ".";
-        const spanScore = document.createElement("span");
-        spanScore.textContent = entry.score;
-        const spanLevel = document.createElement("span");
-        spanLevel.style.opacity = "0.7";
-        spanLevel.textContent = "Niv " + entry.level;
-        li.appendChild(spanPlace);
-        li.appendChild(spanScore);
-        li.appendChild(spanLevel);
+        li.innerHTML = `<span class="place">${idx + 1}.</span><span>${entry.score}</span><span style="opacity:0.7">Niv ${entry.level}</span>`;
         highscoresList.appendChild(li);
-      });
+    });
   }
 
   function tryInsertHighScore(score, level) {
-    highScores.push({ score, level, date: Date.now() });
+    highScores.push({ score, level });
     highScores.sort((a, b) => b.score - a.score);
-    if (highScores.length > MAX_HIGHSCORES) {
-      highScores.length = MAX_HIGHSCORES;
-    }
+    if (highScores.length > MAX_HIGHSCORES) highScores.length = MAX_HIGHSCORES;
     saveHighScores();
     updateHighScoresDisplay();
   }
@@ -1103,109 +1078,76 @@
     rankName.textContent = name;
   }
 
-  // --- Level generation ---
-
   function generateLevel(level) {
     grid = createEmptyGrid();
     const rows = clamp(4 + level, 4, GRID_ROWS - 2);
     const colorCount = clamp(3 + Math.floor(level / 2), 3, COLORS.length);
     availableColors = COLORS.slice(0, colorCount);
-
     for (let r = 0; r < rows; r++) {
       for (let c = 0; c < GRID_COLS; c++) {
-        if (Math.random() < 0.8) {
-          grid[r][c] = { color: randChoice(availableColors) };
-        }
+        if (Math.random() < 0.8) grid[r][c] = { color: randChoice(availableColors) };
       }
     }
   }
 
-  // --- Sprites & Rendu "Glassy" ---
-
+  // --- RENDU GLASSEY (MODIFIÉ POUR MOINS DE COULEUR) ---
   function buildBubbleSprite(color) {
-    // MODIFICATION 3 : Qualité HD (Oversample x4 au lieu de x2)
     const oversample = 4;
     const baseR = BUBBLE_RADIUS;
     const r = baseR * oversample;
     const size = r * 2;
-
     const off = document.createElement("canvas");
-    off.width = size;
-    off.height = size;
+    off.width = size; off.height = size;
     const octx = off.getContext("2d");
+    octx.imageSmoothingEnabled = true; octx.imageSmoothingQuality = "high";
     
-    octx.imageSmoothingEnabled = true;
-    octx.imageSmoothingQuality = "high";
-
-    const cx = size / 2;
-    const cy = size / 2;
-
+    const cx = size / 2, cy = size / 2;
     const entry = faceImages[color];
-    const hasFace = entry && entry.loaded && !entry.error;
-    const img = hasFace ? entry.img : null;
+    const img = (entry && entry.loaded && !entry.error) ? entry.img : null;
 
-    octx.save();
-    octx.beginPath();
-    octx.arc(cx, cy, r, 0, Math.PI * 2);
-    octx.clip();
-
-    // Fond noir pour contraste
-    octx.fillStyle = "#000";
-    octx.fillRect(0, 0, size, size);
-
-    if (img && img.width > 0 && img.height > 0) {
+    if (img) {
+      octx.save();
+      octx.beginPath(); octx.arc(cx, cy, r * 0.9, 0, Math.PI * 2); octx.clip();
       const minSide = Math.min(img.width, img.height);
-      const sx = (img.width - minSide) / 2;
-      const sy = (img.height - minSide) / 2;
-      // On dessine le visage
-      const drawSize = r * 2 * 0.95; 
-      octx.drawImage(img, sx, sy, minSide, minSide, cx - drawSize / 2, cy - drawSize / 2, drawSize, drawSize);
+      const drawSize = r * 2 * 0.85; 
+      octx.drawImage(img, (img.width - minSide) / 2, (img.height - minSide) / 2, minSide, minSide, cx - drawSize / 2, cy - drawSize / 2, drawSize, drawSize);
+      octx.restore();
+    } else {
+      octx.fillStyle = colorToRgba(color, 0.2); // Translucide
+      octx.beginPath(); octx.arc(cx, cy, r * 0.9, 0, Math.PI * 2); octx.fill();
     }
 
-    // "Glass Body" - Plus subtil pour mieux voir le visage en HD
-    const volumeGrad = octx.createRadialGradient(cx, cy, r * 0.35, cx, cy, r);
-    volumeGrad.addColorStop(0, "rgba(0,0,0,0)");
-    volumeGrad.addColorStop(0.70, colorToRgba(color, 0.4)); // Moins opaque au centre
-    volumeGrad.addColorStop(1, colorToRgba(color, 0.9));
-    
-    octx.fillStyle = volumeGrad;
-    octx.beginPath();
-    octx.arc(cx, cy, r, 0, Math.PI * 2);
-    octx.fill();
+    // Gradient "Verre" : Opacité très réduite (Glassy look)
+    const bodyGrad = octx.createRadialGradient(cx, cy, r * 0.4, cx, cy, r);
+    bodyGrad.addColorStop(0, "rgba(255,255,255,0.0)"); 
+    bodyGrad.addColorStop(0.75, colorToRgba(color, 0.2)); 
+    bodyGrad.addColorStop(0.95, colorToRgba(color, 0.4)); 
+    bodyGrad.addColorStop(1, colorToRgba(color, 0.5)); 
 
-    // Rim Light
+    octx.fillStyle = bodyGrad;
+    octx.beginPath(); octx.arc(cx, cy, r, 0, Math.PI * 2); octx.fill();
+
+    // Ombre interne
     octx.save();
-    octx.beginPath();
-    octx.arc(cx, cy, r - 1.5*oversample, 0, Math.PI * 2);
-    const rimGrad = octx.createLinearGradient(0, 0, 0, size);
-    rimGrad.addColorStop(0, "rgba(255,255,255,0)");
-    rimGrad.addColorStop(1, colorToRgba(color, 0.9));
-    octx.strokeStyle = rimGrad;
-    octx.lineWidth = 1.5 * oversample;
-    octx.stroke();
+    octx.beginPath(); octx.arc(cx, cy, r, 0, Math.PI * 2); octx.clip();
+    octx.strokeStyle = "rgba(0,0,0,0.15)"; octx.lineWidth = r * 0.15; octx.stroke();
     octx.restore();
 
-    // Gloss
-    const surfaceGrad = octx.createLinearGradient(0, 0, size, size);
-    surfaceGrad.addColorStop(0, "rgba(255,255,255,0.35)");
-    surfaceGrad.addColorStop(0.5, "rgba(255,255,255,0)");
-    octx.fillStyle = surfaceGrad;
-    octx.fill();
-
-    octx.restore();
-
-    // Spéculaire
+    // Speculaire (Blanc net pour effet verre)
     octx.save();
-    octx.beginPath();
-    octx.ellipse(cx - r * 0.35, cy - r * 0.35, r * 0.25, r * 0.15, Math.PI / 4, 0, Math.PI * 2);
-    const glare = octx.createLinearGradient(cx - r, cy - r, cx, cy);
-    glare.addColorStop(0, "rgba(255,255,255,0.95)");
-    glare.addColorStop(1, "rgba(255,255,255,0.2)");
-    octx.fillStyle = glare;
-    octx.shadowColor = "rgba(255,255,255,0.5)";
-    octx.shadowBlur = 4;
-    octx.fill();
-    octx.restore();
+    octx.beginPath(); octx.ellipse(cx - r * 0.35, cy - r * 0.4, r * 0.4, r * 0.22, Math.PI / 4, 0, Math.PI * 2);
+    const shineGrad = octx.createLinearGradient(cx - r*0.5, cy - r*0.5, cx, cy);
+    shineGrad.addColorStop(0, "rgba(255,255,255,0.95)");
+    shineGrad.addColorStop(1, "rgba(255,255,255,0.15)");
+    octx.fillStyle = shineGrad; octx.fill(); octx.restore();
+
+    // Rim light
+    octx.save();
+    octx.beginPath(); octx.arc(cx, cy, r * 0.92, 0, Math.PI * 2);
+    octx.lineWidth = r * 0.08;
+    const rimGrad = octx.createLinearGradient(cx - r, cy - r, cx + r, cy + r);
+    rimGrad.addColorStop(0, "rgba(255,255,255,0)"); rimGrad.addColorStop(0.8, "rgba(255,255,255,0)"); rimGrad.addColorStop(1, "rgba(255,255,255,0.7)");
+    octx.strokeStyle = rimGrad; octx.stroke(); octx.restore();
 
     bubbleSprites[color] = { canvas: off, radius: baseR };
     return bubbleSprites[color];
@@ -1214,13 +1156,10 @@
   function drawBubble(x, y, color, scale = 1) {
     let sprite = bubbleSprites[color];
     if (!sprite) sprite = buildBubbleSprite(color);
-    const r = sprite.radius;
     ctx.save();
-    ctx.imageSmoothingEnabled = true;
-    ctx.imageSmoothingQuality = "high";
-    ctx.translate(x, y);
-    ctx.scale(scale, scale);
-    ctx.drawImage(sprite.canvas, -r, -r, r * 2, r * 2);
+    ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = "high";
+    ctx.translate(x, y); ctx.scale(scale, scale);
+    ctx.drawImage(sprite.canvas, -sprite.radius, -sprite.radius, sprite.radius * 2, sprite.radius * 2);
     ctx.restore();
   }
 
@@ -1229,18 +1168,11 @@
     if (!nextBubbleColor) return;
     let sprite = bubbleSprites[nextBubbleColor];
     if (!sprite) sprite = buildBubbleSprite(nextBubbleColor);
-    const r = sprite.radius; // Attention, radius du jeu principal
-    // Adaptation taille preview
-    const scale = 28 / r; 
-    
-    const x = nextCanvas.width / 2;
-    const y = nextCanvas.height / 2;
+    const scale = 28 / sprite.radius;
     nextCtx.save();
-    nextCtx.imageSmoothingEnabled = true;
-    nextCtx.imageSmoothingQuality = "high";
-    nextCtx.translate(x, y);
+    nextCtx.translate(nextCanvas.width/2, nextCanvas.height/2);
     nextCtx.scale(scale, scale);
-    nextCtx.drawImage(sprite.canvas, -r, -r, r * 2, r * 2);
+    nextCtx.drawImage(sprite.canvas, -sprite.radius, -sprite.radius, sprite.radius * 2, sprite.radius * 2);
     nextCtx.restore();
   }
 
@@ -1251,39 +1183,22 @@
     drawNextBubblePreview();
   }
 
-  // --- Game Control ---
-
   function resetGame() {
-    score = 0;
-    level = 1;
-    lives = 3;
-    shotsSinceDrop = 0;
+    score = 0; level = 1; lives = 3; shotsSinceDrop = 0; isDropImminent = false; gridDropOffset = 0;
     grid = createEmptyGrid();
     generateLevel(level);
     initBubblesForLevel();
-    shot = null;
-    particles = [];
-    fallingBubbles = [];
-    floatingTexts = [];
-    shakeIntensity = 0;
-    currentBubbleScale = { x: 1, y: 1 };
+    shot = null; particles = []; fallingBubbles = []; floatingTexts = []; shakeIntensity = 0;
     updateHUD();
     gameState = "intro";
-    showCenterMessage("Puzzle Bobble – BTS CIEL", "Alignez au moins 3 bulles.\nNettoyez le réseau.\n\nESPACE pour commencer.");
-    showProviseur("intro");
-    showTeacher("intro");
+    showCenterMessage("Puzzle Bobble – BTS CIEL", "Alignez au moins 3 bulles.\nNettoyez le réseau.\n\nESPACE ou TAP pour commencer.");
+    showProviseur("intro"); showTeacher("intro");
   }
 
   function startLevel() {
-    shotsSinceDrop = 0;
-    generateLevel(level);
-    initBubblesForLevel();
-    shot = null;
-    particles = [];
-    fallingBubbles = [];
-    floatingTexts = [];
-    shakeIntensity = 0;
-    currentBubbleScale = { x: 1, y: 1 };
+    shotsSinceDrop = 0; isDropImminent = false; gridDropOffset = 0;
+    generateLevel(level); initBubblesForLevel();
+    shot = null; particles = []; fallingBubbles = []; floatingTexts = []; shakeIntensity = 0;
     updateHUD();
     gameState = "playing";
     hideCenterMessage();
@@ -1299,20 +1214,14 @@
   }
 
   function loseLife() {
-    lives--;
-    shakeIntensity = 15;
+    lives--; shakeIntensity = 15;
     if (lives < 0) lives = 0;
-    showProviseur("lifeLost");
-    showTeacher("lifeLost");
-    if (lives <= 0) {
-      gameOver();
-    } else {
-      shotsSinceDrop = 0;
-      generateLevel(level);
-      initBubblesForLevel();
-      shot = null;
-      particles = [];
-      fallingBubbles = [];
+    showProviseur("lifeLost"); showTeacher("lifeLost");
+    if (lives <= 0) gameOver();
+    else {
+      shotsSinceDrop = 0; isDropImminent = false; gridDropOffset = 0;
+      generateLevel(level); initBubblesForLevel();
+      shot = null; particles = []; fallingBubbles = [];
       updateHUD();
       showCenterMessage("Attention", "Saturation détectée.\nRechargement du niveau " + level + ".");
       gameState = "intro";
@@ -1320,106 +1229,85 @@
   }
 
   function gameOver() {
-    gameState = "gameover";
-    shakeIntensity = 20;
+    gameState = "gameover"; shakeIntensity = 20;
     tryInsertHighScore(score, level);
     showProviseur("gameOver");
     showCenterMessage("Game Over", "Réseau saturé.\nR pour recommencer.");
   }
 
   function updateHUD() {
-    scoreValue.textContent = score;
-    levelValue.textContent = level;
-    livesValue.textContent = lives;
+    scoreValue.textContent = score; levelValue.textContent = level; livesValue.textContent = lives;
     updateRank();
   }
 
-  // --- Gameplay Logic ---
-
   function fire() {
-    if (gameState === "intro") {
-      gameState = "playing";
-      hideCenterMessage();
-    }
+    if (gameState === "intro") { gameState = "playing"; hideCenterMessage(); initAudio(); }
     if (gameState !== "playing") return;
     if (shot || !currentBubble) return;
 
+    playSound('shoot');
     const vx = Math.cos(angle) * SHOT_SPEED;
     const vy = Math.sin(angle) * SHOT_SPEED;
-
-    shot = {
-      x: currentBubble.x,
-      y: currentBubble.y,
-      vx,
-      vy,
-      color: currentBubble.color
-    };
-
-    // Squash & Stretch: Étirement au départ (l'axe Y est l'axe de mouvement dans la rotation)
+    shot = { x: currentBubble.x, y: currentBubble.y, vx, vy, color: currentBubble.color };
     currentBubbleScale = { x: 0.75, y: 1.3 };
 
     const pool = getColorPool();
-    const nextColorInLauncher = nextBubbleColor && pool.includes(nextBubbleColor) ? nextBubbleColor : randChoice(pool);
-    currentBubble = { x: LAUNCHER_X, y: LAUNCHER_Y, color: nextColorInLauncher };
-    nextBubbleColor = randChoice(pool);
+    currentBubble = { x: LAUNCHER_X, y: LAUNCHER_Y, color: nextBubbleColor };
+    nextBubbleColor = (pool.length > 0) ? randChoice(pool) : randChoice(availableColors);
     drawNextBubblePreview();
+  }
+
+  function swapBubbles() {
+      if (shot || gameState !== "playing") return;
+      playSound('swap');
+      const temp = currentBubble.color;
+      currentBubble.color = nextBubbleColor;
+      nextBubbleColor = temp;
+      drawNextBubblePreview();
   }
 
   function updateShot(dt) {
     if (!shot) return;
+    
+    // Stabilisation dt
+    if(dt > 2) dt = 1; // Anti-lag jump
 
-    // Rétablissement forme (élasticité)
     currentBubbleScale.x += (1 - currentBubbleScale.x) * 0.15 * dt;
     currentBubbleScale.y += (1 - currentBubbleScale.y) * 0.15 * dt;
-
-    shot.x += shot.vx * dt;
-    shot.y += shot.vy * dt;
+    shot.x += shot.vx * dt; shot.y += shot.vy * dt;
 
     const leftLimit = GRID_LEFT + BUBBLE_RADIUS;
     const rightLimit = GRID_LEFT + GRID_WIDTH - BUBBLE_RADIUS;
 
-    if (shot.x <= leftLimit) {
-      shot.x = leftLimit;
-      shot.vx *= -1;
-      // Impact mur: on "squash" sur la longueur (y dans le repère local)
-      currentBubbleScale = { x: 1.2, y: 0.8 };
-    } else if (shot.x >= rightLimit) {
-      shot.x = rightLimit;
-      shot.vx *= -1;
-      currentBubbleScale = { x: 1.2, y: 0.8 };
-    }
+    if (shot.x <= leftLimit) { shot.x = leftLimit; shot.vx *= -1; playSound('bounce'); currentBubbleScale = { x: 1.2, y: 0.8 }; }
+    else if (shot.x >= rightLimit) { shot.x = rightLimit; shot.vx *= -1; playSound('bounce'); currentBubbleScale = { x: 1.2, y: 0.8 }; }
 
-    if (shot.y - BUBBLE_RADIUS <= GRID_TOP) {
-      attachShotToGrid(shot.x, shot.y);
-      return;
-    }
+    if (shot.y - BUBBLE_RADIUS <= GRID_TOP) { attachShotToGrid(shot.x, shot.y); return; }
 
     let collided = false;
-    const collisionDist2 = Math.pow(BUBBLE_DIAM * 0.93, 2);
+    const collisionDist2 = Math.pow(BUBBLE_DIAM * 0.90, 2); // 90% pour éviter clipping
     for (let r = 0; r < GRID_ROWS && !collided; r++) {
       for (let c = 0; c < GRID_COLS; c++) {
         if (!grid[r][c]) continue;
         const pos = gridToPixel(r, c);
+        // Collision précise avec offset
+        const visualY = pos.y + gridDropOffset; 
         const dx = pos.x - shot.x;
-        const dy = pos.y - shot.y;
-        if (dx * dx + dy * dy <= collisionDist2) {
-          collided = true;
-          break;
-        }
+        const dy = visualY - shot.y;
+        if (dx * dx + dy * dy <= collisionDist2) collided = true;
       }
     }
 
-    if (collided) {
-      attachShotToGrid(shot.x, shot.y);
-    } else if (shot.y - BUBBLE_RADIUS > GAME_HEIGHT) {
-      shot = null;
-    }
+    if (collided) attachShotToGrid(shot.x, shot.y);
+    else if (shot.y - BUBBLE_RADIUS > GAME_HEIGHT) shot = null;
   }
 
   function findBestCellForShot(x, y) {
-    let best = null;
-    let bestDist2 = Infinity;
-    for (let r = 0; r < GRID_ROWS; r++) {
+    let best = null; let bestDist2 = Infinity;
+    // On compense le drop visuel pour trouver la vraie case logique
+    const approx = pixelToGridApprox(x, y - gridDropOffset); 
+    
+    for (let r = Math.max(0, approx.row-2); r < Math.min(GRID_ROWS, approx.row+3); r++) {
       for (let c = 0; c < GRID_COLS; c++) {
         if (grid[r][c]) continue;
         if (r > 0) {
@@ -1427,83 +1315,44 @@
           if (!neighbors.some(n => grid[n.row][n.col])) continue;
         }
         const pos = gridToPixel(r, c);
-        const dx = pos.x - x;
-        const dy = pos.y - y;
-        const dist2 = dx * dx + dy * dy;
-        if (dist2 < bestDist2) {
-          bestDist2 = dist2;
-          best = { row: r, col: c };
-        }
+        const d2 = (pos.x - x)**2 + (pos.y + gridDropOffset - y)**2;
+        if (d2 < bestDist2) { bestDist2 = d2; best = { row: r, col: c }; }
       }
     }
-    if (!best) {
-      const approx = pixelToGridApprox(x, y);
-      best = { row: clamp(approx.row, 0, GRID_ROWS - 1), col: clamp(approx.col, 0, GRID_COLS - 1) };
-    }
+    if (!best) best = { row: clamp(approx.row, 0, GRID_ROWS - 1), col: clamp(approx.col, 0, GRID_COLS - 1) };
     return best;
   }
 
   function attachShotToGrid(x, y) {
+    playSound('hit');
     shakeIntensity = 3;
     const cell = findBestCellForShot(x, y);
     grid[cell.row][cell.col] = { color: shot.color };
     shot = null;
     shotsSinceDrop++;
+    
+    const dropLimit = Math.max(5, 12 - Math.floor(level/2));
+    
+    if (shotsSinceDrop === dropLimit - 1) {
+        isDropImminent = true;
+        playSound('warning'); 
+    } else {
+        isDropImminent = false;
+    }
+
+    // 1. Gérer les correspondances
     handleMatches(cell.row, cell.col);
+    
+    // 2. Vérifier Hauteur
     checkGridHeight();
+    
+    // 3. Drop
     if (!gridHasBubbles()) levelCleared();
-    else if (shotsSinceDrop >= SHOTS_PER_DROP) {
+    else if (shotsSinceDrop >= dropLimit) {
       dropGrid();
       shotsSinceDrop = 0;
+      isDropImminent = false;
     }
-  }
-
-  function floodFillSameColor(sr, sc, color) {
-    const visited = [];
-    for (let r = 0; r < GRID_ROWS; r++) visited[r] = new Array(GRID_COLS).fill(false);
-    const stack = [{ row: sr, col: sc }];
-    visited[sr][sc] = true;
-    const res = [];
-    while (stack.length > 0) {
-      const { row, col } = stack.pop();
-      res.push({ row, col });
-      const neighbors = getNeighbors(row, col);
-      for (const n of neighbors) {
-        if (visited[n.row][n.col] || !grid[n.row][n.col] || grid[n.row][n.col].color !== color) continue;
-        visited[n.row][n.col] = true;
-        stack.push({ row: n.row, col: n.col });
-      }
-    }
-    return res;
-  }
-
-  // --- Effects Functions (JUICE) ---
-
-  function createExplosion(x, y, color) {
-    const count = 12;
-    for (let i = 0; i < count; i++) {
-      const angle = Math.random() * Math.PI * 2;
-      const speed = Math.random() * 3 + 2;
-      particles.push({
-        x: x,
-        y: y,
-        vx: Math.cos(angle) * speed,
-        vy: Math.sin(angle) * speed,
-        life: 1.0,
-        color: color,
-        size: Math.random() * 4 + 2
-      });
-    }
-  }
-
-  function addFloatingText(x, y, text) {
-    floatingTexts.push({
-      x: x,
-      y: y,
-      text: text,
-      life: 1.0,
-      dy: -1.0
-    });
   }
 
   function handleMatches(startRow, startCol) {
@@ -1514,70 +1363,127 @@
     let gained = 0;
 
     if (cluster.length >= 3) {
+      playSound('pop');
       shakeIntensity = Math.min(cluster.length * 1.5, 12);
-
+      
+      // Suppression
       cluster.forEach(({ row, col }) => {
-        const current = grid[row][col];
-        if (!current) return;
         const pos = gridToPixel(row, col);
-
-        createExplosion(pos.x, pos.y, current.color);
-
+        createExplosion(pos.x, pos.y + gridDropOffset, grid[row][col].color);
         grid[row][col] = null;
         gained += 50;
       });
 
+      // VÉRIFICATION ATOMIQUE DES FLOTTANTS
+      // On le fait immédiatement après la suppression
       const hanging = findHangingBubbles();
+      
       if (hanging.length > 0) {
+        playSound('pop');
         hanging.forEach(({ row, col }) => {
-          const current = grid[row][col];
-          if (!current) return;
           const pos = gridToPixel(row, col);
-          fallingBubbles.push({ x: pos.x, y: pos.y, color: current.color, vy: 0 });
-          grid[row][col] = null;
+          // On les fait tomber depuis leur position visuelle actuelle
+          fallingBubbles.push({ 
+              x: pos.x, 
+              y: pos.y + gridDropOffset, 
+              color: grid[row][col].color, 
+              vy: 0 
+          });
+          grid[row][col] = null; // Important: suppression logique immédiate
           gained += 30;
         });
         shakeIntensity += 5;
       }
-
+      
       score += gained;
-
       const firstPos = gridToPixel(cluster[0].row, cluster[0].col);
-      addFloatingText(firstPos.x, firstPos.y, "+" + gained);
-
-      if (cluster.length >= 5 || (hanging && hanging.length >= 5)) {
-        showTeacher("combo");
-      }
+      addFloatingText(firstPos.x, firstPos.y + gridDropOffset, "+" + gained);
+      if (cluster.length >= 5) showTeacher("combo");
       updateHUD();
     }
   }
 
+  // ALGORITHME DE PARCOURS CORRIGÉ (ANTI-FREEZE & ROBUSTE)
   function findHangingBubbles() {
-    const visited = [];
-    for (let r = 0; r < GRID_ROWS; r++) visited[r] = new Array(GRID_COLS).fill(false);
+    // Utilisation de Set pour un lookup O(1) et éviter les boucles infinies
+    const visited = new Set();
     const stack = [];
+    
+    // 1. On part de toutes les bulles du plafond
     for (let c = 0; c < GRID_COLS; c++) {
-      if (grid[0][c]) {
-        visited[0][c] = true;
-        stack.push({ row: 0, col: c });
+      if (grid[0][c]) { 
+          const key = `0,${c}`;
+          if (!visited.has(key)) {
+              visited.add(key);
+              stack.push({ row: 0, col: c }); 
+          }
       }
     }
+    
+    // 2. Propagation
     while (stack.length > 0) {
       const { row, col } = stack.pop();
       const neighbors = getNeighbors(row, col);
+      
       for (const n of neighbors) {
-        if (visited[n.row][n.col] || !grid[n.row][n.col]) continue;
-        visited[n.row][n.col] = true;
-        stack.push({ row: n.row, col: n.col });
+        // Si la case contient une bulle et n'a pas été visitée
+        if (grid[n.row][n.col]) {
+            const key = `${n.row},${n.col}`;
+            if (!visited.has(key)) {
+                visited.add(key);
+                stack.push({ row: n.row, col: n.col });
+            }
+        }
       }
     }
+    
+    // 3. Tout ce qui n'est pas dans 'visited' mais qui existe dans 'grid' est suspendu
     const hanging = [];
     for (let r = 0; r < GRID_ROWS; r++) {
       for (let c = 0; c < GRID_COLS; c++) {
-        if (grid[r][c] && !visited[r][c]) hanging.push({ row: r, col: c });
+        if (grid[r][c] && !visited.has(`${r},${c}`)) {
+            hanging.push({ row: r, col: c });
+        }
       }
     }
     return hanging;
+  }
+
+  function floodFillSameColor(sr, sc, color) {
+    const visited = new Set();
+    const stack = [{ row: sr, col: sc }];
+    visited.add(`${sr},${sc}`);
+    
+    const res = [];
+    
+    while (stack.length > 0) {
+      const { row, col } = stack.pop();
+      res.push({ row, col });
+      
+      const neighbors = getNeighbors(row, col);
+      for (const n of neighbors) {
+        if (grid[n.row][n.col] && grid[n.row][n.col].color === color) {
+            const key = `${n.row},${n.col}`;
+            if (!visited.has(key)) {
+                visited.add(key);
+                stack.push({ row: n.row, col: n.col });
+            }
+        }
+      }
+    }
+    return res;
+  }
+
+  function createExplosion(x, y, color) {
+    for (let i = 0; i < 12; i++) {
+      const a = Math.random() * Math.PI * 2;
+      const s = Math.random() * 3 + 2;
+      particles.push({ x: x, y: y, vx: Math.cos(a)*s, vy: Math.sin(a)*s, life: 1.0, color: color, size: Math.random()*4+2 });
+    }
+  }
+
+  function addFloatingText(x, y, text) {
+    floatingTexts.push({ x: x, y: y, text: text, life: 1.0, dy: -1.0 });
   }
 
   function checkGridHeight() {
@@ -1586,259 +1492,188 @@
       for (let c = 0; c < GRID_COLS; c++) {
         if (!grid[r][c]) continue;
         const pos = gridToPixel(r, c);
-        if (pos.y > maxY) maxY = pos.y;
+        if (pos.y + gridDropOffset > maxY) maxY = pos.y + gridDropOffset;
       }
     }
-    if (maxY >= GRID_BOTTOM_LIMIT) {
-      showProviseur("warning");
-      loseLife();
-    }
+    if (maxY >= GRID_BOTTOM_LIMIT) { showProviseur("warning"); loseLife(); }
   }
 
   function dropGrid() {
     shakeIntensity = 5;
-    for (let r = GRID_ROWS - 1; r > 0; r--) {
-      grid[r] = grid[r - 1].slice();
+    // Shift Data
+    for (let r = GRID_ROWS - 1; r > 0; r--) grid[r] = grid[r - 1].slice();
+    const row = new Array(GRID_COLS).fill(null);
+    const pool = collectColorsInGrid();
+    for (let c = 0; c < GRID_COLS; c++) if (Math.random() < 0.6) row[c] = { color: randChoice(pool) };
+    grid[0] = row;
+    
+    // TRANSITION FLUIDE
+    gridDropOffset = -SPACING_Y;
+    
+    // Check gravity after shift just in case
+    const hanging = findHangingBubbles();
+    if(hanging.length > 0) {
+        hanging.forEach(({ row, col }) => {
+          const pos = gridToPixel(row, col);
+          fallingBubbles.push({ x: pos.x, y: pos.y - SPACING_Y, color: grid[row][col].color, vy: 0 });
+          grid[row][col] = null;
+        });
     }
-    const colorCount = clamp(3 + Math.floor(level / 2), 3, COLORS.length);
-    const localColors = COLORS.slice(0, colorCount);
-    const newRow = new Array(GRID_COLS).fill(null);
-    for (let c = 0; c < GRID_COLS; c++) {
-      if (Math.random() < 0.6) newRow[c] = { color: randChoice(localColors) };
-    }
-    grid[0] = newRow;
+
     checkGridHeight();
   }
 
-  // --- Visuals Updates & Render ---
-
   function updateEffects(dt) {
+    // Animation smooth drop
+    if (gridDropOffset < 0) {
+        gridDropOffset += 2 * dt; 
+        if (gridDropOffset > 0) gridDropOffset = 0;
+    }
+
     for (let i = particles.length - 1; i >= 0; i--) {
       let p = particles[i];
-      p.x += p.vx * dt;
-      p.y += p.vy * dt;
-      p.vy += 0.15 * dt;
-      p.life -= 0.03 * dt;
+      p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 0.15 * dt; p.life -= 0.03 * dt;
       if (p.life <= 0) particles.splice(i, 1);
     }
-
     for (let i = floatingTexts.length - 1; i >= 0; i--) {
-      let t = floatingTexts[i];
-      t.y += t.dy * dt;
-      t.life -= 0.02 * dt;
+      let t = floatingTexts[i]; t.y += t.dy * dt; t.life -= 0.02 * dt;
       if (t.life <= 0) floatingTexts.splice(i, 1);
     }
-
     for (let i = fallingBubbles.length - 1; i >= 0; i--) {
-      const f = fallingBubbles[i];
-      f.vy += 0.6 * dt;
-      f.y += f.vy * dt;
+      const f = fallingBubbles[i]; f.vy += 0.6 * dt; f.y += f.vy * dt;
       if (f.y - BUBBLE_RADIUS > GAME_HEIGHT + 40) fallingBubbles.splice(i, 1);
     }
-
-    if (shakeIntensity > 0) {
-      shakeIntensity -= 0.8 * dt;
-      if (shakeIntensity < 0) shakeIntensity = 0;
-    }
+    if (shakeIntensity > 0) { shakeIntensity -= 0.8 * dt; if (shakeIntensity < 0) shakeIntensity = 0; }
   }
 
+  // --- RAYCASTING LASER ---
   function computeLaserSegments() {
     const segments = [];
-    const leftLimit = GRID_LEFT + BUBBLE_RADIUS;
-    const rightLimit = GRID_LEFT + GRID_WIDTH - BUBBLE_RADIUS;
     const maxBounces = 3;
-    let x0 = LAUNCHER_X, y0 = LAUNCHER_Y;
-    let dx = Math.cos(angle), dy = Math.sin(angle);
+    const stepSize = BUBBLE_RADIUS * 0.8; 
+    const maxDist = 2000;
+    let x = LAUNCHER_X, y = LAUNCHER_Y, dx = Math.cos(angle), dy = Math.sin(angle);
+    let currentDist = 0, bounces = 0, startX = x, startY = y;
 
-    for (let b = 0; b < maxBounces; b++) {
-      let tMin = Infinity;
-      let hit = null;
+    while (currentDist < maxDist && bounces < maxBounces) {
+        x += dx * stepSize; y += dy * stepSize; currentDist += stepSize;
+        let hitWall = false, hitCeiling = false, hitBubble = false;
 
-      if (dx < 0) {
-        const t = (leftLimit - x0) / dx;
-        if (t > 0 && t < tMin) { tMin = t; hit = "left"; }
-      } else if (dx > 0) {
-        const t = (rightLimit - x0) / dx;
-        if (t > 0 && t < tMin) { tMin = t; hit = "right"; }
-      }
+        if (x <= GRID_LEFT + BUBBLE_RADIUS) { x = GRID_LEFT + BUBBLE_RADIUS; dx = -dx; hitWall = true; }
+        else if (x >= GRID_LEFT + GRID_WIDTH - BUBBLE_RADIUS) { x = GRID_LEFT + GRID_WIDTH - BUBBLE_RADIUS; dx = -dx; hitWall = true; }
+        
+        if (y <= GRID_TOP + BUBBLE_RADIUS) hitCeiling = true;
+        
+        if (!hitWall && !hitCeiling && y < GRID_BOTTOM_LIMIT + BUBBLE_RADIUS * 2) {
+            const approx = pixelToGridApprox(x, y - gridDropOffset);
+            if (grid[approx.row] && grid[approx.row][approx.col]) { hitBubble = true; x -= dx * stepSize; y -= dy * stepSize; }
+        }
 
-      if (dy < 0) {
-        const t = (GRID_TOP - y0) / dy;
-        if (t > 0 && t < tMin) { tMin = t; hit = "top"; }
-      }
-
-      if (!isFinite(tMin) || !hit) break;
-      const x1 = x0 + dx * tMin;
-      const y1 = y0 + dy * tMin;
-      segments.push({ x0, y0, x1, y1 });
-
-      if (hit === "top") break;
-      if (hit === "left" || hit === "right") dx = -dx;
-      x0 = x1; y0 = y1;
+        if (hitWall) {
+            segments.push({x0:startX, y0:startY, x1:x, y1:y}); startX = x; startY = y; bounces++;
+        } else if (hitCeiling || hitBubble) {
+            segments.push({x0:startX, y0:startY, x1:x, y1:y}); return segments;
+        }
     }
+    segments.push({x0:startX, y0:startY, x1:x, y1:y});
     return segments;
+  }
+
+  function drawReticle(x, y, t) {
+      ctx.save(); ctx.translate(x, y); ctx.rotate(t * 2);
+      ctx.strokeStyle = "rgba(0, 243, 255, 0.8)"; ctx.lineWidth = 2; ctx.shadowColor = "#00f3ff"; ctx.shadowBlur = 8;
+      ctx.beginPath(); ctx.arc(0, 0, 10, 0, Math.PI * 0.5); ctx.stroke();
+      ctx.beginPath(); ctx.arc(0, 0, 10, Math.PI, Math.PI * 1.5); ctx.stroke();
+      ctx.fillStyle = `rgba(255, 255, 255, 0.8)`; ctx.beginPath(); ctx.arc(0, 0, 3, 0, Math.PI * 2); ctx.fill();
+      ctx.restore();
   }
 
   function drawAimHelper() {
     const segments = computeLaserSegments();
     if (!segments.length) return;
+    const t = elapsed / 1000;
     ctx.save();
-    for (const seg of segments) {
-      ctx.beginPath();
-      ctx.moveTo(seg.x0, seg.y0);
-      ctx.lineTo(seg.x1, seg.y1);
-      ctx.strokeStyle = "rgba(52,152,219,0.30)";
-      ctx.lineWidth = 6;
-      ctx.shadowColor = "rgba(52,152,219,0.95)";
-      ctx.shadowBlur = 16;
-      ctx.stroke();
-
-      ctx.setLineDash([10, 6]);
-      ctx.lineDashOffset = -(elapsed * 0.08);
-      ctx.shadowBlur = 0;
-      ctx.lineWidth = 2;
-      ctx.strokeStyle = "rgba(235,245,255,0.95)";
-      ctx.beginPath();
-      ctx.moveTo(seg.x0, seg.y0);
-      ctx.lineTo(seg.x1, seg.y1);
-      ctx.stroke();
-      ctx.setLineDash([]);
+    // Halo
+    ctx.beginPath();
+    for (let i = 0; i < segments.length; i++) {
+        const s = segments[i];
+        if (i === 0) ctx.moveTo(s.x0, s.y0); else ctx.lineTo(s.x0, s.y0); ctx.lineTo(s.x1, s.y1);
     }
+    ctx.lineCap = "round"; ctx.lineJoin = "round";
+    ctx.strokeStyle = "rgba(0, 243, 255, 0.25)"; ctx.lineWidth = 5 + Math.sin(t*5)*1.5; ctx.shadowColor = "rgba(0, 243, 255, 1)"; ctx.shadowBlur = 15; ctx.stroke();
+    // Core
+    ctx.shadowBlur = 0; ctx.strokeStyle = "rgba(200, 250, 255, 0.9)"; ctx.lineWidth = 1.5; ctx.stroke();
+    // Data stream
+    ctx.setLineDash([15, 25]); ctx.lineDashOffset = -(elapsed * 0.15);
+    ctx.strokeStyle = "rgba(255, 255, 255, 1)"; ctx.lineWidth = 2; ctx.globalCompositeOperation = "overlay"; ctx.stroke();
+    ctx.setLineDash([]); ctx.globalCompositeOperation = "source-over";
     ctx.restore();
+    // Target
+    const lastSeg = segments[segments.length - 1];
+    drawReticle(lastSeg.x1, lastSeg.y1, t);
   }
 
   function drawLauncher() {
-    ctx.save();
-    ctx.translate(LAUNCHER_X, LAUNCHER_Y);
-    ctx.fillStyle = "rgba(0,0,0,0.55)";
-    ctx.beginPath();
-    // Ajustement de la base du canon
-    ctx.ellipse(0, 20, 50, 16, 0, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.rotate(angle);
-
-    const baseR = 21; // = BUBBLE_RADIUS
-    const emitterGrad = ctx.createRadialGradient(-4, -6, 4, 0, 0, baseR);
-    emitterGrad.addColorStop(0, "#edf5ff");
-    emitterGrad.addColorStop(0.4, "#a9cce3");
-    emitterGrad.addColorStop(1, "#2e4053");
-    ctx.fillStyle = emitterGrad;
-    ctx.beginPath();
-    ctx.arc(0, 0, baseR, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.lineWidth = 2;
-    ctx.strokeStyle = "rgba(255,255,255,0.9)";
-    ctx.stroke();
-
-    ctx.beginPath();
-    ctx.arc(0, 0, baseR - 6, 0, Math.PI * 2);
-    ctx.strokeStyle = "rgba(52,152,219,0.95)";
-    ctx.lineWidth = 2;
-    ctx.shadowColor = "rgba(52,152,219,0.85)";
-    ctx.shadowBlur = 12;
-    ctx.stroke();
-    ctx.shadowBlur = 0;
-
-    ctx.fillStyle = "#5dade2";
-    ctx.beginPath();
-    ctx.arc(-6, -7, 2.2, 0, Math.PI * 2);
-    ctx.arc(7, 4, 2.2, 0, Math.PI * 2);
-    ctx.fill();
-
-    const tubeLen = 58; // Un peu plus long
-    ctx.beginPath();
-    ctx.roundRect(0, -8, tubeLen, 16, 6);
-    const tubeGrad = ctx.createLinearGradient(0, -7, tubeLen, 7);
-    tubeGrad.addColorStop(0, "#d6eaf8");
-    tubeGrad.addColorStop(1, "#5d6d7e");
-    ctx.fillStyle = tubeGrad;
-    ctx.fill();
-    ctx.stroke();
-
-    const arrowBaseX = tubeLen;
-    const arrowTipX = tubeLen + 22;
-    ctx.beginPath();
-    ctx.moveTo(arrowTipX, 0);
-    ctx.lineTo(arrowBaseX, -10);
-    ctx.lineTo(arrowBaseX, 10);
-    ctx.closePath();
-    const arrowGrad = ctx.createLinearGradient(arrowBaseX, -9, arrowTipX, 9);
-    arrowGrad.addColorStop(0, "#eaf6ff");
-    arrowGrad.addColorStop(1, "#3498db");
-    ctx.fillStyle = arrowGrad;
-    ctx.fill();
-    ctx.strokeStyle = "#f4fdff";
-    ctx.lineWidth = 2;
-    ctx.stroke();
-
-    ctx.restore();
+      ctx.save(); ctx.translate(LAUNCHER_X, LAUNCHER_Y);
+      ctx.fillStyle = "#050505"; ctx.beginPath(); ctx.arc(0, 0, 35, 0, Math.PI * 2); ctx.fill();
+      ctx.shadowColor = "#00f3ff"; ctx.shadowBlur = 15; ctx.strokeStyle = "#00f3ff"; ctx.lineWidth = 3; ctx.stroke(); ctx.shadowBlur = 0;
+      ctx.strokeStyle = "#005555"; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(0, 0, 25, 0, Math.PI * 2); ctx.stroke();
+      ctx.rotate(angle);
+      const railLength = 70, railWidth = 12, railGap = 24; 
+      ctx.fillStyle = "#1a1a1a"; ctx.strokeStyle = "#00f3ff"; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(0, -railGap); ctx.lineTo(railLength, -railGap); ctx.lineTo(railLength - 10, -railGap - railWidth); ctx.lineTo(0, -railGap - railWidth); ctx.closePath(); ctx.fill();
+      ctx.shadowColor = "#00f3ff"; ctx.shadowBlur = 10; ctx.stroke(); ctx.shadowBlur = 0;
+      ctx.fillStyle = "#aeefff"; ctx.fillRect(5, -railGap - 4, railLength - 20, 2);
+      ctx.beginPath(); ctx.moveTo(0, railGap); ctx.lineTo(railLength, railGap); ctx.lineTo(railLength - 10, railGap + railWidth); ctx.lineTo(0, railGap + railWidth); ctx.closePath(); ctx.fillStyle = "#1a1a1a"; ctx.fill();
+      ctx.shadowColor = "#00f3ff"; ctx.shadowBlur = 10; ctx.stroke(); ctx.shadowBlur = 0;
+      ctx.fillStyle = "#aeefff"; ctx.fillRect(5, railGap + 2, railLength - 20, 2);
+      ctx.shadowColor = "#00f3ff"; ctx.shadowBlur = 20; ctx.strokeStyle = "#ffffff"; ctx.lineWidth = 4; ctx.beginPath(); ctx.arc(0, 0, 18, Math.PI/2, -Math.PI/2, true); ctx.stroke();
+      ctx.restore();
   }
 
   function render() {
     ctx.clearRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
-
-    // Fond
-    ctx.save();
-    // On garde un fond très léger ou transparent selon l'envie
-    // Ici un dégradé très subtil pour habiller mais sans "bloc bleu"
-    ctx.fillStyle = "rgba(0,0,0,0.0)"; 
-    ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
-    ctx.restore();
-
-    // Appliquer le Shake
+    ctx.save(); ctx.fillStyle = "rgba(0,0,0,0.0)"; ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT); ctx.restore();
     ctx.save();
     if (shakeIntensity > 0) {
-      const dx = (Math.random() - 0.5) * shakeIntensity;
-      const dy = (Math.random() - 0.5) * shakeIntensity;
+      const dx = (Math.random() - 0.5) * shakeIntensity; const dy = (Math.random() - 0.5) * shakeIntensity;
       ctx.translate(dx, dy);
     }
 
-    // Grille / Murs (RENDUS VISIBLES ICI)
     ctx.save();
-    
-    // Ombre "glow" pour les murs
-    ctx.shadowColor = "rgba(52, 152, 219, 0.8)";
-    ctx.shadowBlur = 15;
-    
-    ctx.strokeStyle = "rgba(255, 255, 255, 0.5)"; // Plus visible
-    ctx.lineWidth = 3; // Plus épais
-    
-    const rectHeight = (GRID_BOTTOM_LIMIT - GRID_TOP) + BUBBLE_RADIUS;
-    
-    // On dessine le rectangle des limites de jeu (murs)
-    ctx.strokeRect(GRID_LEFT, GRID_TOP, GRID_WIDTH, rectHeight);
-    
+    ctx.shadowColor = "rgba(52, 152, 219, 0.8)"; ctx.shadowBlur = 15;
+    ctx.strokeStyle = "rgba(255, 255, 255, 0.5)"; ctx.lineWidth = 3; 
+    ctx.strokeRect(GRID_LEFT, GRID_TOP, GRID_WIDTH, (GRID_BOTTOM_LIMIT - GRID_TOP) + BUBBLE_RADIUS);
     ctx.restore();
 
-    // Bulles fixes
     for (let r = 0; r < GRID_ROWS; r++) {
       for (let c = 0; c < GRID_COLS; c++) {
         if (!grid[r][c]) continue;
         const pos = gridToPixel(r, c);
-        drawBubble(pos.x, pos.y, grid[r][c].color, 1);
+        
+        let drawX = pos.x;
+        // Animation descente
+        let drawY = pos.y + gridDropOffset; 
+        
+        // Tremblement
+        if (isDropImminent) {
+            drawX += (Math.random() - 0.5) * 4;
+            drawY += (Math.random() - 0.5) * 4;
+        }
+        
+        drawBubble(drawX, drawY, grid[r][c].color, 1);
       }
     }
 
-    // Bulles tombantes
-    for (const f of fallingBubbles) {
-      drawBubble(f.x, f.y, f.color, 1);
-    }
-
-    // Particules
+    for (const f of fallingBubbles) drawBubble(f.x, f.y, f.color, 1);
     for (const p of particles) {
-      ctx.globalAlpha = p.life;
-      ctx.fillStyle = p.color;
-      ctx.beginPath();
-      ctx.rect(p.x, p.y, p.size, p.size);
-      ctx.fill();
+      ctx.globalAlpha = p.life; ctx.fillStyle = p.color;
+      ctx.beginPath(); ctx.rect(p.x, p.y, p.size, p.size); ctx.fill();
     }
     ctx.globalAlpha = 1;
 
-    // Tir avec déformation (Squash & Stretch)
     if (shot) {
-      ctx.save();
-      ctx.translate(shot.x, shot.y);
-      // On tourne le repère pour que Y soit l'axe du mouvement
+      ctx.save(); ctx.translate(shot.x, shot.y);
       const angleTraj = Math.atan2(shot.vy, shot.vx);
       ctx.rotate(angleTraj + Math.PI / 2);
       ctx.scale(currentBubbleScale.x, currentBubbleScale.y);
@@ -1850,105 +1685,69 @@
     drawLauncher();
 
     if (currentBubble) {
-      const t = elapsed / 1000;
-      const pulse = 1 + 0.02 * Math.sin(t * 4);
+      const t = elapsed / 1000; const pulse = 1 + 0.02 * Math.sin(t * 4);
       drawBubble(currentBubble.x, currentBubble.y, currentBubble.color, pulse);
     }
 
-    // Textes flottants
     for (const t of floatingTexts) {
-      ctx.save();
-      ctx.globalAlpha = t.life;
-      ctx.font = "900 24px system-ui"; // Plus gros
-      ctx.fillStyle = "#ffffff";
-      ctx.shadowColor = "rgba(0,0,0,0.8)";
-      ctx.shadowBlur = 4;
-      ctx.textAlign = "center";
-      ctx.fillText(t.text, t.x, t.y);
-      ctx.restore();
+      ctx.save(); ctx.globalAlpha = t.life; ctx.font = "900 24px system-ui"; ctx.fillStyle = "#ffffff"; ctx.shadowColor = "rgba(0,0,0,0.8)"; ctx.shadowBlur = 4; ctx.textAlign = "center"; ctx.fillText(t.text, t.x, t.y); ctx.restore();
     }
 
-    // Vignette très légère pour le focus
     ctx.save();
-    const vignette = ctx.createRadialGradient(
-      GAME_WIDTH / 2, GAME_HEIGHT * 0.45, GAME_WIDTH * 0.1,
-      GAME_WIDTH / 2, GAME_HEIGHT * 0.5, GAME_WIDTH * 0.7
-    );
-    vignette.addColorStop(0, "rgba(0,0,0,0)");
-    vignette.addColorStop(1, "rgba(0,0,0,0.2)");
-    ctx.fillStyle = vignette;
-    ctx.fillRect(-20, -20, GAME_WIDTH + 40, GAME_HEIGHT + 40);
+    const vignette = ctx.createRadialGradient(GAME_WIDTH / 2, GAME_HEIGHT * 0.45, GAME_WIDTH * 0.1, GAME_WIDTH / 2, GAME_HEIGHT * 0.5, GAME_WIDTH * 0.7);
+    vignette.addColorStop(0, "rgba(0,0,0,0)"); vignette.addColorStop(1, "rgba(0,0,0,0.2)");
+    ctx.fillStyle = vignette; ctx.fillRect(-20, -20, GAME_WIDTH + 40, GAME_HEIGHT + 40);
     ctx.restore();
-
-    ctx.restore(); // Fin du shake
+    ctx.restore(); 
   }
 
   function step(timestamp) {
-    const deltaMs = (timestamp - lastTime) || 16.67;
-    const dt = deltaMs / 16.67;
-    lastTime = timestamp;
-    elapsed += deltaMs;
-
+    const deltaMs = (timestamp - lastTime) || 16.67; 
+    const safeDelta = Math.min(deltaMs, 50); // Cap anti-lag
+    const dt = safeDelta / 16.67; 
+    lastTime = timestamp; elapsed += safeDelta;
     if (gameState === "playing") updateShot(dt);
     updateEffects(dt);
     render();
     requestAnimationFrame(step);
   }
 
-  // --- Input ---
-  canvas.addEventListener("mousemove", function (e) {
-    const rect = canvas.getBoundingClientRect();
-    const scaleX = canvas.width / rect.width;
-    const scaleY = canvas.height / rect.height;
-    const mx = (e.clientX - rect.left) * scaleX;
-    const my = (e.clientY - rect.top) * scaleY;
-    const dx = mx - LAUNCHER_X;
-    const dy = my - LAUNCHER_Y;
-    angle = clamp(Math.atan2(dy, dx), MIN_ANGLE, MAX_ANGLE);
-  });
+  function updateAngle(clientX, clientY) {
+      const rect = canvas.getBoundingClientRect();
+      const scaleX = canvas.width / rect.width; const scaleY = canvas.height / rect.height;
+      const mx = (clientX - rect.left) * scaleX; const my = (clientY - rect.top) * scaleY;
+      const dx = mx - LAUNCHER_X; const dy = my - LAUNCHER_Y;
+      angle = clamp(Math.atan2(dy, dx), MIN_ANGLE, MAX_ANGLE);
+  }
 
-  canvas.addEventListener("click", fire);
+  canvas.addEventListener("mousemove", function (e) { updateAngle(e.clientX, e.clientY); });
+  
+  canvas.addEventListener("mousedown", function(e) {
+      initAudio();
+      if(e.button === 2) swapBubbles(); else if(e.button === 0) fire();
+  });
+  canvas.addEventListener("contextmenu", e => e.preventDefault());
+
+  canvas.addEventListener("touchstart", function (e) { e.preventDefault(); initAudio(); const touch = e.touches[0]; updateAngle(touch.clientX, touch.clientY); }, {passive: false});
+  canvas.addEventListener("touchmove", function (e) { e.preventDefault(); const touch = e.touches[0]; updateAngle(touch.clientX, touch.clientY); }, {passive: false});
+  canvas.addEventListener("touchend", function (e) { e.preventDefault(); fire(); });
+
+  document.getElementById("next-bubble-block").addEventListener("click", swapBubbles);
 
   document.addEventListener("keydown", function (e) {
+    initAudio();
     const key = e.key.toLowerCase();
-    if (key === "arrowleft" || key === "q") {
-      angle = clamp(angle - 0.07, MIN_ANGLE, MAX_ANGLE);
+    if (key === "arrowleft" || key === "q") { angle = clamp(angle - 0.07, MIN_ANGLE, MAX_ANGLE); e.preventDefault(); }
+    else if (key === "arrowright" || key === "d") { angle = clamp(angle + 0.07, MIN_ANGLE, MAX_ANGLE); e.preventDefault(); }
+    else if (key === " " || key === "spacebar") { fire(); e.preventDefault(); }
+    else if (key === "p") {
+      if (gameState === "playing") { gameState = "paused"; showCenterMessage("Pause", "P pour reprendre."); }
+      else if (gameState === "paused") { gameState = "playing"; hideCenterMessage(); }
       e.preventDefault();
-    } else if (key === "arrowright" || key === "d") {
-      angle = clamp(angle + 0.07, MIN_ANGLE, MAX_ANGLE);
-      e.preventDefault();
-    } else if (key === " " || key === "spacebar") {
-      fire();
-      e.preventDefault();
-    } else if (key === "p") {
-      if (gameState === "playing") {
-        gameState = "paused";
-        showCenterMessage("Pause", "P pour reprendre.");
-      } else if (gameState === "paused") {
-        gameState = "playing";
-        hideCenterMessage();
-      }
-      e.preventDefault();
-    } else if (key === "r" && gameState === "gameover") {
-      resetGame();
-    }
-    if (gameState === "betweenLevels" && key === " ") {
-      startLevel();
-      e.preventDefault();
-    }
+    } else if (key === "r" && gameState === "gameover") resetGame();
+    else if (key === "c" || key === "shift") swapBubbles();
+    if (gameState === "betweenLevels" && key === " ") { startLevel(); e.preventDefault(); }
   });
-
-  let musicStarted = false;
-  function tryStartMusic() {
-    if (musicStarted) return;
-    musicStarted = true;
-    if (musicEl && musicEl.play) {
-      musicEl.volume = 0.5;
-      musicEl.play().catch(() => {});
-    }
-  }
-  canvas.addEventListener("click", tryStartMusic);
-  document.addEventListener("keydown", tryStartMusic);
 
   loadHighScores();
   updateHighScoresDisplay();
