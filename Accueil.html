@@ -14,8 +14,8 @@
 <style>
   :root {
     --glass-panel: rgba(255, 255, 255, 0.25);
-    --glass-card: rgba(255, 255, 255, 0.50);
-    --glass-border: rgba(255, 255, 255, 0.4);
+    --glass-card: rgba(255, 255, 255, 0.60);
+    --glass-border: rgba(255, 255, 255, 0.5);
     --text-primary: #1d1d1f;
     --text-secondary: #48484a;
     --accent-blue: #0071e3;
@@ -25,7 +25,7 @@
 
   html, body {
     height: 100%; margin: 0; padding: 0;
-    overflow: hidden; /* Pas d'ascenseur */
+    overflow: hidden;
     font-family: 'Inter', sans-serif;
     user-select: none;
   }
@@ -34,6 +34,31 @@
     background-color: #2c3e50;
     display: flex; justify-content: center; align-items: center;
     perspective: 1200px;
+    transition: filter 0.5s ease;
+  }
+
+  /* EFFET CHEAT CODE (DISCO) */
+  @keyframes rainbow-party {
+    0% { filter: hue-rotate(0deg) contrast(1.1); }
+    100% { filter: hue-rotate(360deg) contrast(1.1); }
+  }
+  body.cheat-mode {
+    animation: rainbow-party 2s linear infinite;
+  }
+  
+  @keyframes dance {
+    0%, 100% { transform: translateY(0) rotate(0); }
+    25% { transform: translateY(-10px) rotate(-2deg); }
+    75% { transform: translateY(5px) rotate(2deg); }
+  }
+  body.cheat-mode .game-card {
+    animation: dance 0.5s ease-in-out infinite alternate;
+  }
+  
+  /* Rotation Proviseur */
+  .spin-360 {
+    transition: transform 0.8s cubic-bezier(0.68, -0.55, 0.27, 1.55) !important;
+    transform: rotate(360deg) scale(1.1) !important;
   }
 
   /* FOND PARALLAXE */
@@ -47,19 +72,19 @@
 
   #bg-overlay {
     position: absolute; inset: 0;
-    background: linear-gradient(135deg, rgba(30, 41, 59, 0.4), rgba(0,0,0,0.2));
+    background: linear-gradient(135deg, rgba(30, 41, 59, 0.5), rgba(0,0,0,0.3));
     z-index: -1; pointer-events: none;
   }
 
   /* --- GRAND PANNEAU CENTRAL --- */
   #main-wrapper {
-    width: 95%; max-width: 1150px; height: 92%;
+    width: 95%; max-width: 1200px; height: 94%;
     background: var(--glass-panel);
-    backdrop-filter: blur(30px) saturate(180%);
-    -webkit-backdrop-filter: blur(30px) saturate(180%);
+    backdrop-filter: blur(40px) saturate(160%);
+    -webkit-backdrop-filter: blur(40px) saturate(160%);
     border-radius: 24px;
     border: 1px solid var(--glass-border);
-    box-shadow: 0 40px 80px rgba(0,0,0,0.25), inset 0 1px 1px rgba(255,255,255,0.4);
+    box-shadow: 0 40px 80px rgba(0,0,0,0.3), inset 0 1px 1px rgba(255,255,255,0.4);
     display: flex; flex-direction: column;
     position: relative; z-index: 10;
     overflow: hidden;
@@ -72,136 +97,142 @@
   /* HEADER */
   .header {
     padding: 12px 20px; text-align: center;
-    border-bottom: 1px solid rgba(255,255,255,0.2);
-    background: linear-gradient(to bottom, rgba(255,255,255,0.2), rgba(255,255,255,0.05));
-    flex-shrink: 0;
+    border-bottom: 1px solid rgba(255,255,255,0.3);
+    background: linear-gradient(to bottom, rgba(255,255,255,0.3), rgba(255,255,255,0.05));
+    flex-shrink: 0; display: flex; align-items: center; justify-content: center; gap: 15px;
   }
   #logo {
-    height: 55px; margin-bottom: 4px;
-    filter: drop-shadow(0 4px 10px rgba(0,0,0,0.15));
+    height: 50px; 
+    filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));
     transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
   }
   #logo:hover { transform: scale(1.1) rotate(5deg); }
-  .header h1 { font-size: 20px; font-weight: 800; margin: 0; color: #1d1d1f; letter-spacing: -0.8px; }
-  #greeting-text { font-size: 10px; color: #333; font-weight: 600; margin: 2px 0 0 0; text-transform: uppercase; letter-spacing: 1.2px; opacity: 0.7; }
+  .header-text { text-align: left; }
+  .header h1 { font-size: 20px; font-weight: 900; margin: 0; color: #1d1d1f; letter-spacing: -0.5px; }
+  #greeting-text { font-size: 10px; color: #333; font-weight: 700; margin: 2px 0 0 0; text-transform: uppercase; letter-spacing: 1px; opacity: 0.8; }
 
   /* CONTENT AREA */
   .content-area {
-    flex: 1; padding: 20px 25px;
+    flex: 1; padding: 20px 30px;
     display: flex; flex-direction: column; justify-content: center;
     overflow: hidden;
   }
 
-  /* --- GRID LAYOUT 5 ITEMS (BENTO STYLE) --- */
+  /* --- GRID LAYOUT --- */
   .games-grid {
     display: grid;
     grid-template-columns: repeat(6, 1fr);
     grid-template-rows: repeat(2, 1fr);
-    gap: 16px;
+    gap: 20px;
     height: 100%; max-height: 100%;
   }
 
   /* --- CARTE JEU --- */
   .game-card {
     background: var(--glass-card);
-    border: 1px solid rgba(255,255,255,0.6);
-    border-radius: 18px; padding: 0;
-    display: grid; grid-template-columns: 1fr 130px;
+    border: 1px solid rgba(255,255,255,0.7);
+    border-radius: 20px; padding: 0;
+    display: grid; grid-template-columns: 1fr 140px;
     cursor: pointer;
     transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.05);
     position: relative; overflow: hidden; min-height: 0;
   }
+
+  .game-card::before {
+    content: ""; position: absolute; inset: 0;
+    background-image: radial-gradient(#000000 1px, transparent 1px);
+    background-size: 20px 20px; opacity: 0.03; pointer-events: none;
+  }
   
-  /* Layout Bento */
   .game-card:nth-child(1), .game-card:nth-child(2), .game-card:nth-child(3) { grid-column: span 2; }
   .game-card:nth-child(4), .game-card:nth-child(5) { grid-column: span 3; }
 
   .game-card::after {
     content: ''; position: absolute; top: 0; left: -150%; width: 60%; height: 100%;
-    background: linear-gradient(to right, transparent, rgba(255,255,255,0.5), transparent);
-    transform: skewX(-25deg); transition: none; pointer-events: none;
+    background: linear-gradient(to right, transparent, rgba(255,255,255,0.6), transparent);
+    transform: skewX(-25deg); transition: none; pointer-events: none; z-index: 2;
   }
   .game-card:hover::after { left: 200%; transition: 0.6s ease-in-out; }
 
   .game-card:hover {
-    transform: translateY(-4px) scale(1.01);
-    background: rgba(255, 255, 255, 0.8);
-    box-shadow: 0 15px 30px rgba(0,0,0,0.12), 0 0 0 1px rgba(255,255,255,0.5);
+    transform: translateY(-5px) scale(1.01);
+    background: rgba(255, 255, 255, 0.9);
+    box-shadow: 0 20px 40px rgba(0,0,0,0.15), 0 0 0 2px rgba(255,255,255,0.8);
     z-index: 5;
   }
 
-  .card-content { padding: 16px; display: flex; flex-direction: column; justify-content: space-between; overflow: hidden; height: 100%; box-sizing: border-box; }
+  .card-content { 
+    padding: 18px; display: flex; flex-direction: column; justify-content: space-between; 
+    overflow: hidden; height: 100%; box-sizing: border-box; position: relative; z-index: 2;
+  }
   
-  .card-head { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+  .card-head { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
   .icon-box {
-    width: 36px; height: 36px; border-radius: 8px;
+    width: 42px; height: 42px; border-radius: 10px;
     display: flex; align-items: center; justify-content: center;
-    font-weight: 900; font-size: 18px; color: #fff;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    font-weight: 900; font-size: 20px; color: #fff;
+    box-shadow: 0 6px 12px rgba(0,0,0,0.15);
     text-shadow: 0 2px 0 rgba(0,0,0,0.1); flex-shrink: 0;
   }
 
-  .card-titles h3 { margin: 0; font-size: 15px; font-weight: 800; color: #1d1d1f; white-space: nowrap; }
-  .card-titles span { font-size: 9px; text-transform: uppercase; color: #666; font-weight: 700; letter-spacing: 0.5px; }
+  .card-titles h3 { margin: 0; font-size: 16px; font-weight: 800; color: #1d1d1f; white-space: nowrap; }
+  .card-titles span { font-size: 10px; text-transform: uppercase; color: #555; font-weight: 700; letter-spacing: 0.5px; }
 
-  /* INFO TAGS & STATS */
-  .meta-tags { display: flex; gap: 6px; margin-bottom: 8px; flex-wrap: wrap; }
+  .meta-tags { display: flex; gap: 6px; margin-bottom: 10px; flex-wrap: wrap; }
   .tag { 
     background: var(--tag-bg); color: var(--tag-text); 
-    padding: 3px 8px; border-radius: 4px; 
-    font-size: 9px; font-weight: 700; text-transform: uppercase;
+    padding: 4px 10px; border-radius: 6px; 
+    font-size: 9px; font-weight: 700; text-transform: uppercase; border: 1px solid rgba(0, 113, 227, 0.2);
   }
-  .tag.hard { background: rgba(220, 38, 38, 0.1); color: #dc2626; }
-  .tag.med { background: rgba(245, 158, 11, 0.1); color: #d97706; }
+  .tag.hard { background: rgba(220, 38, 38, 0.1); color: #dc2626; border-color: rgba(220, 38, 38, 0.2); }
+  .tag.med { background: rgba(245, 158, 11, 0.1); color: #d97706; border-color: rgba(245, 158, 11, 0.2); }
 
-  .live-stats {
-    display: flex; justify-content: space-between; align-items: center;
-    font-size: 9px; color: #555; margin-bottom: 6px; font-weight: 500;
+  .status-line {
+      display: flex; align-items: center; gap: 6px; font-size: 9px; color: #666; font-weight: 600; margin-bottom: 6px;
   }
-  .live-stats strong { color: #333; }
+  .dot { width: 6px; height: 6px; background: #10b981; border-radius: 50%; box-shadow: 0 0 5px #10b981;}
 
   .score-box {
-    background: rgba(255,255,255,0.6);
-    border-radius: 6px; padding: 4px 8px;
+    background: rgba(255,255,255,0.5);
+    border-radius: 8px; padding: 6px 10px;
     display: flex; align-items: center; justify-content: space-between;
     font-size: 10px; font-family: 'JetBrains Mono', monospace; color: #333;
-    border: 1px solid rgba(255,255,255,0.5);
-    margin-bottom: 8px;
+    border: 1px solid rgba(255,255,255,0.6);
+    margin-bottom: 8px; box-shadow: inset 0 1px 3px rgba(0,0,0,0.03);
   }
-  .score-label { color: #666; font-size: 9px; text-transform: uppercase; }
-  .score-val { font-weight: 800; color: var(--accent-blue); font-size: 11px; }
-  .champion-name { font-size: 9px; color: #888; margin-left: auto; margin-right: 5px; font-style: italic;}
+  .score-label { color: #555; font-size: 9px; text-transform: uppercase; font-weight: 700; }
+  .score-val { font-weight: 800; color: var(--accent-blue); font-size: 12px; }
+  .champion-name { font-size: 9px; color: #777; margin-left: auto; margin-right: 8px; font-style: italic;}
 
   .card-desc {
-    font-size: 10px; line-height: 1.4; color: #444; margin: 0 0 10px 0;
-    display: -webkit-box; -webkit-line-clamp: 3; /* Permet 3 lignes */
+    font-size: 11px; line-height: 1.45; color: #444; margin: 0 0 12px 0;
+    display: -webkit-box; -webkit-line-clamp: 4; 
     -webkit-box-orient: vertical; overflow: hidden; font-weight: 500;
-    flex-grow: 1;
+    flex-grow: 1; text-align: justify;
   }
 
   .play-btn {
     align-self: flex-start;
     background: var(--accent-blue);
-    color: #fff; border: none; padding: 8px 16px; border-radius: 30px;
-    font-size: 10px; font-weight: 700; text-transform: uppercase;
-    cursor: pointer; box-shadow: 0 4px 10px rgba(0, 113, 227, 0.3);
+    color: #fff; border: none; padding: 10px 20px; border-radius: 30px;
+    font-size: 10px; font-weight: 800; text-transform: uppercase;
+    cursor: pointer; box-shadow: 0 4px 12px rgba(0, 113, 227, 0.3);
     transition: all 0.2s; display: flex; align-items: center; gap: 6px;
   }
-  .play-btn:hover { background: #0077ED; transform: translateY(-1px); box-shadow: 0 6px 15px rgba(0, 113, 227, 0.4); }
+  .play-btn:hover { background: #0077ED; transform: translateY(-2px); box-shadow: 0 6px 18px rgba(0, 113, 227, 0.45); }
   .play-btn:active { transform: translateY(1px); }
 
   .card-visual {
-    background-color: rgba(0,0,0,0.03); position: relative;
-    border-left: 1px solid rgba(255,255,255,0.5); height: 100%; overflow: hidden;
+    background-color: rgba(0,0,0,0.02); position: relative;
+    border-left: 1px solid rgba(255,255,255,0.6); height: 100%; overflow: hidden;
   }
   .card-visual div { 
     position: absolute; inset: 0; background-size: cover; background-position: center; 
-    z-index: 1; transition: transform 0.5s cubic-bezier(0.25, 0.8, 0.25, 1); 
+    z-index: 1; transition: transform 0.6s cubic-bezier(0.25, 0.8, 0.25, 1); 
   }
-  .game-card:hover .card-visual div { transform: scale(1.08); }
+  .game-card:hover .card-visual div { transform: scale(1.1); }
 
-  /* COULEURS */
   .t-tetris { background: linear-gradient(135deg, #3498db, #2980b9); }
   .v-tetris { background-image: url("CaseTetris.gif"); }
   .t-arkanoid { background: linear-gradient(135deg, #e74c3c, #c0392b); }
@@ -214,49 +245,93 @@
   .v-rolling { background-image: url("Rolling Thunder.gif"); }
 
   .footer {
-    text-align: center; padding: 8px; font-size: 9px; color: rgba(0,0,0,0.5);
-    background: rgba(255,255,255,0.15); border-top: 1px solid rgba(255,255,255,0.2);
-    font-weight: 500;
+    text-align: center; padding: 10px; font-size: 10px; color: rgba(0,0,0,0.5);
+    background: rgba(255,255,255,0.2); border-top: 1px solid rgba(255,255,255,0.3);
+    font-weight: 600; text-transform: uppercase; letter-spacing: 1px;
   }
 
-  /* PROVISEUR - AGRANDI */
-  #proviseur-container {
-    position: fixed; right: 1%; bottom: 0;
-    display: flex; flex-direction: column; align-items: center;
+  /* --- PERSONNAGES --- */
+  
+  .char-container {
+    position: fixed; bottom: 0;
+    display: flex; flex-direction: column; 
     z-index: 100; pointer-events: none;
+    transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.4s ease;
   }
+
+  /* PROVISEUR (DROITE) */
+  #proviseur-container { right: 1%; align-items: flex-end; }
+  
   #proviseur-img {
-    height: 55vh; /* Agrandi */
-    max-height: 500px; /* Agrandi */
-    width: auto;
-    filter: drop-shadow(0 15px 30px rgba(0,0,0,0.3));
+    height: 55vh; max-height: 500px; width: auto;
+    filter: drop-shadow(0 15px 30px rgba(0,0,0,0.4));
     cursor: pointer; pointer-events: auto;
     transition: transform 0.2s; transform-origin: bottom center;
+    position: relative; z-index: 1; /* Derrière la bulle si besoin, mais z-index géré par l'ordre DOM */
   }
-  #proviseur-img:hover { transform: scale(1.03) translateY(-5px); }
-  #bubble {
-    background: #fff; color: #2c3e50; padding: 12px 20px; border-radius: 20px;
-    font-size: 13px; font-weight: 700; max-width: 220px; text-align: center;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.2); margin-bottom: 0px; position: relative;
+  #proviseur-img:hover { transform: scale(1.02); }
+  
+  /* BULLE PROVISEUR MODIFIÉE */
+  #bubble-prov {
+    background: #fff; color: #2c3e50; padding: 14px 22px; border-radius: 24px; border-bottom-right-radius: 4px;
+    font-size: 13px; font-weight: 700; max-width: 240px; text-align: center;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.25); 
+    
+    /* MODIF: Marge positive pour remonter la bulle */
+    margin-bottom: 5px; margin-right: 40px;
+    
     opacity: 0; transform: translateY(20px) scale(0.9);
-    pointer-events: auto; cursor: pointer; border: 2px solid #2c3e50;
-    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    pointer-events: auto; cursor: pointer; border: 3px solid #2c3e50;
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); position: relative;
+    
+    /* MODIF: Z-Index supérieur à l'image */
+    z-index: 10; 
   }
-  #bubble.visible { opacity: 1; transform: translateY(0) scale(1); }
-  #bubble::after { content: ''; position: absolute; left: 70%; top: 100%; border: 10px solid transparent; border-top-color: #2c3e50; }
+  
+  /* MODIF: En mode Cheat, la bulle remonte encore plus pour laisser passer la tête qui tourne */
+  body.cheat-mode #bubble-prov {
+    transform: translateY(-40px) scale(1.1);
+  }
+
+  #bubble-prov.visible { opacity: 1; transform: translateY(0) scale(1); }
+  
+  /* PROFESSEUR (GAUCHE) */
+  #prof-container { 
+    left: 1%; align-items: flex-start; 
+    transform: translateX(-120%); 
+  }
+  #prof-container.active { transform: translateX(0); }
+
+  #prof-img {
+    height: 50vh; max-height: 480px; width: auto;
+    filter: drop-shadow(0 15px 30px rgba(0,0,0,0.4));
+    cursor: pointer; pointer-events: auto; transform-origin: bottom center;
+  }
+  
+  #bubble-prof {
+    background: #f0f9ff; color: #0369a1; padding: 14px 22px; border-radius: 24px; border-bottom-left-radius: 4px;
+    font-size: 13px; font-weight: 700; max-width: 240px; text-align: center;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.25); margin-bottom: -10px; margin-left: 40px;
+    border: 3px solid #0ea5e9; position: relative;
+    pointer-events: auto; cursor: pointer;
+  }
+  #bubble-prof small { display: block; margin-top: 5px; font-size: 10px; color: #64748b; font-weight: 500; }
 
   @media (max-width: 1024px) {
     .games-grid { grid-template-columns: repeat(2, 1fr); grid-template-rows: auto; overflow-y: auto; }
     .game-card, .game-card:nth-child(n) { grid-column: span 1; }
     .content-area { overflow-y: auto; display: block; }
+    #prof-container { display: none; }
   }
   @media (max-width: 600px) {
     .games-grid { grid-template-columns: 1fr; }
     .game-card { grid-template-columns: 1fr; }
     .card-visual { height: 100px; border-left: none; border-bottom: 1px solid rgba(255,255,255,0.5); order: -1; }
     #main-wrapper { width: 100%; height: 100%; border-radius: 0; border: none; }
-    #proviseur-img { height: 80px; width: 80px; border-radius: 50%; border: 2px solid #fff; background: #fff; margin-right: 5px; max-height: none;}
-    #bubble { font-size: 10px; right: 5px; }
+    
+    #proviseur-img { height: 70px; width: 70px; border-radius: 50%; border: 2px solid #fff; background: #fff; margin-right: 5px; max-height: none;}
+    #bubble-prov { font-size: 10px; margin-right: 0; padding: 8px; margin-bottom: 5px; right: 5px;}
+    #prof-container { display: none; }
   }
 </style>
 </head>
@@ -270,8 +345,10 @@
   
   <header class="header">
     <img id="logo" src="Logo.gif" alt="BTS CIEL" onerror="this.style.display='none'">
-    <h1>Arcade BTS CIEL</h1>
-    <div id="greeting-text">Hub Pédagogique</div>
+    <div class="header-text">
+      <h1>Arcade BTS CIEL</h1>
+      <div id="greeting-text">Hub Pédagogique</div>
+    </div>
   </header>
 
   <div class="content-area">
@@ -280,24 +357,22 @@
       <div class="game-card" onclick="goTo('tetris.html')">
         <div class="card-content">
           <div>
+            <div class="status-line"><div class="dot"></div>Système: ONLINE</div>
             <div class="card-head">
               <div class="icon-box t-tetris">T</div>
               <div class="card-titles"><h3>Tetris</h3><span>Algorithmique</span></div>
             </div>
             <div class="meta-tags">
-              <span class="tag">Mémoire</span><span class="tag">Stack</span>
-            </div>
-            <div class="live-stats">
-              <span>Joueurs: <strong>12</strong></span><span>Diff: <strong>Normale</strong></span>
+              <span class="tag">Mémoire</span><span class="tag">Optimisation</span>
             </div>
             <div class="score-box">
-              <span class="score-label">Record</span>
+              <span class="score-label">Top Score</span>
               <span class="champion-name" id="name-tetris">--</span>
               <span class="score-val" id="score-tetris" data-key="highScore_tetris" data-fake="14200" data-user="AdminSys">0</span>
             </div>
-            <p class="card-desc">Protocol d'empilement critique. Défragmentez la mémoire vive en alignant les blocs de données. Gare au débordement de buffer !</p>
+            <p class="card-desc">Protocol d'empilement critique. Votre mission : défragmenter la mémoire vive en alignant les blocs de données avant le débordement de buffer (Stack Overflow). L'efficacité du CPU en dépend.</p>
           </div>
-          <button class="play-btn"><span>▶</span> Lancer</button>
+          <button class="play-btn"><span>▶</span> Accéder au Terminal</button>
         </div>
         <div class="card-visual"><div class="v-tetris"></div></div>
       </div>
@@ -305,24 +380,22 @@
       <div class="game-card" onclick="goTo('Arkanoid.html')">
         <div class="card-content">
           <div>
+            <div class="status-line"><div class="dot"></div>Système: MENACE DÉTECTÉE</div>
             <div class="card-head">
               <div class="icon-box t-arkanoid">A</div>
-              <div class="card-titles"><h3>Arkanoid</h3><span>Debug</span></div>
+              <div class="card-titles"><h3>Arkanoid</h3><span>Cybersécurité</span></div>
             </div>
             <div class="meta-tags">
-              <span class="tag hard">Sécu</span><span class="tag">Firewall</span>
-            </div>
-            <div class="live-stats">
-              <span>Joueurs: <strong>8</strong></span><span>Diff: <strong>Difficile</strong></span>
+              <span class="tag hard">Reflexes</span><span class="tag">Firewall</span>
             </div>
             <div class="score-box">
-              <span class="score-label">Record</span>
+              <span class="score-label">Top Score</span>
               <span class="champion-name" id="name-arkanoid">--</span>
               <span class="score-val" id="score-arkanoid" data-key="highScore_arkanoid" data-fake="28500" data-user="RetroKing">0</span>
             </div>
-            <p class="card-desc">Intrusion détectée. Déployez le pare-feu cinétique pour éradiquer les bugs corrompus. Réflexes neuronaux requis.</p>
+            <p class="card-desc">Intrusion massive détectée dans le secteur 7. Déployez le pare-feu cinétique mobile pour intercepter les paquets malveillants et détruire les blocs de données corrompus. Zéro latence tolérée.</p>
           </div>
-          <button class="play-btn"><span>▶</span> Lancer</button>
+          <button class="play-btn"><span>▶</span> Lancer Défense</button>
         </div>
         <div class="card-visual"><div class="v-arkanoid"></div></div>
       </div>
@@ -330,24 +403,22 @@
       <div class="game-card" onclick="goTo('VoltLink.html')">
         <div class="card-content">
           <div>
+            <div class="status-line"><div class="dot" style="background:#f59e0b"></div>Système: HAUTE TENSION</div>
             <div class="card-head">
               <div class="icon-box t-volt">V</div>
-              <div class="card-titles"><h3>VoltLink</h3><span>Loi d'Ohm</span></div>
+              <div class="card-titles"><h3>VoltLink</h3><span>Physique Appliquée</span></div>
             </div>
             <div class="meta-tags">
-              <span class="tag">Haut Voltage</span><span class="tag">Safety</span>
-            </div>
-            <div class="live-stats">
-              <span>Joueurs: <strong>15</strong></span><span>Diff: <strong>Progressive</strong></span>
+              <span class="tag">Loi d'Ohm</span><span class="tag">Safety</span>
             </div>
             <div class="score-box">
-              <span class="score-label">Record</span>
+              <span class="score-label">Top Score</span>
               <span class="champion-name" id="name-volt">--</span>
               <span class="score-val" id="score-volt" data-key="highScore_volt" data-fake="4500" data-user="Ampere_XX">0</span>
             </div>
-            <p class="card-desc">Danger Haute Tension ! Raccordez le VCC au GND sans faire sauter les plombs. Une erreur de résistance et c'est la fumée magique.</p>
+            <p class="card-desc">Atelier pratique : Raccordez le potentiel VCC au GND. Attention : calculez vos résistances pour éviter de griller les LEDs. Une erreur de câblage et c'est la fumée magique assurée !</p>
           </div>
-          <button class="play-btn"><span>▶</span> Lancer</button>
+          <button class="play-btn"><span>▶</span> Ouvrir Labo</button>
         </div>
         <div class="card-visual"><div class="v-volt"></div></div>
       </div>
@@ -355,24 +426,22 @@
       <div class="game-card" onclick="goTo('Bobble.html')">
         <div class="card-content">
           <div>
+            <div class="status-line"><div class="dot"></div>Système: CONGESTION</div>
             <div class="card-head">
               <div class="icon-box t-bubble">B</div>
-              <div class="card-titles"><h3>Bobble</h3><span>Réseaux</span></div>
+              <div class="card-titles"><h3>Puzzle Bobble</h3><span>Réseaux</span></div>
             </div>
             <div class="meta-tags">
-              <span class="tag">Topologie</span><span class="tag">Ping</span>
-            </div>
-            <div class="live-stats">
-              <span>Joueurs: <strong>5</strong></span><span>Diff: <strong>Normale</strong></span>
+              <span class="tag">Topologie</span><span class="tag">Routing</span>
             </div>
             <div class="score-box">
-              <span class="score-label">Record</span>
+              <span class="score-label">Top Score</span>
               <span class="champion-name" id="name-bubble">--</span>
               <span class="score-val" id="score-bubble" data-key="highScore_bubble" data-fake="32000" data-user="NetAdmin">0</span>
             </div>
-            <p class="card-desc">Congestion réseau imminente ! Regroupez les paquets de données par clusters colorés pour libérer la bande passante.</p>
+            <p class="card-desc">Le switch est saturé ! Regroupez les paquets de données par VLAN (couleur) pour libérer la bande passante. Optimisez votre routage pour éviter le goulot d'étranglement.</p>
           </div>
-          <button class="play-btn"><span>▶</span> Lancer</button>
+          <button class="play-btn"><span>▶</span> Nettoyer Cache</button>
         </div>
         <div class="card-visual"><div class="v-bubble"></div></div>
       </div>
@@ -380,24 +449,22 @@
       <div class="game-card" onclick="goTo('Rolling Thunder.html')">
         <div class="card-content">
           <div>
+            <div class="status-line"><div class="dot" style="background:#ef4444"></div>Système: OVERCLOCK</div>
             <div class="card-head">
               <div class="icon-box t-rolling">R</div>
-              <div class="card-titles"><h3>Thunder</h3><span>Séquentiel</span></div>
+              <div class="card-titles"><h3>Rolling Thunder</h3><span>Logique Binaire</span></div>
             </div>
             <div class="meta-tags">
-              <span class="tag med">Hardware</span><span class="tag">Clock</span>
-            </div>
-            <div class="live-stats">
-              <span>Joueurs: <strong>24</strong></span><span>Diff: <strong>Extrême</strong></span>
+              <span class="tag med">Séquentiel</span><span class="tag">Clock</span>
             </div>
             <div class="score-box">
-              <span class="score-label">Record</span>
+              <span class="score-label">Top Score</span>
               <span class="champion-name" id="name-rolling">--</span>
               <span class="score-val" id="score-rolling" data-key="binaryrun_best" data-fake="6200" data-user="CyberWolf">0</span>
             </div>
-            <p class="card-desc">Séquence d'initiation lancée. Une course binaire à la nanoseconde près où le 0 et le 1 dictent votre survie sur le bus de données.</p>
+            <p class="card-desc">Course à haute fréquence sur le bus de données. Basculez vos bits (0/1) en rythme avec l'horloge système. Une désynchronisation et c'est le Blue Screen of Death.</p>
           </div>
-          <button class="play-btn"><span>▶</span> Lancer</button>
+          <button class="play-btn"><span>▶</span> Exécuter RUN</button>
         </div>
         <div class="card-visual"><div class="v-rolling"></div></div>
       </div>
@@ -406,13 +473,18 @@
   </div>
 
   <footer class="footer">
-    Département CIEL – Lycée Simone Veil – v2.2 (Simulation de Compétition Active)
+    Département CIEL – Lycée Simone Veil – v3.1 (Système Éducatif)
   </footer>
 </div>
 
-<div id="proviseur-container">
-  <div id="bubble">Initialisation...</div>
+<div id="proviseur-container" class="char-container">
+  <div id="bubble-prov">Initialisation du Hub...</div>
   <img id="proviseur-img" src="proviseur.png" alt="Proviseur">
+</div>
+
+<div id="prof-container" class="char-container">
+  <div id="bubble-prof">...<small>Conseiller Technique</small></div>
+  <img id="prof-img" src="Perso1.png" alt="Professeur">
 </div>
 
 <script>
@@ -439,7 +511,6 @@
 
   function loadScores() {
     const scoreElements = document.querySelectorAll('.score-val');
-    
     scoreElements.forEach(el => {
       const key = el.dataset.key;
       const fakeScore = parseInt(el.dataset.fake);
@@ -451,16 +522,11 @@
       let user = "";
 
       if (localScore && parseInt(localScore) > 0) {
-        val = parseInt(localScore);
-        user = "Vous";
-        el.style.color = "#10b981"; 
+        val = parseInt(localScore); user = "Vous"; el.style.color = "#10b981"; 
       } else {
         const variance = Math.floor(Math.random() * (fakeScore * 0.2)) - (fakeScore * 0.1);
-        val = fakeScore + variance;
-        user = fakeUser;
-        el.style.color = "#0071e3";
+        val = fakeScore + variance; user = fakeUser; el.style.color = "#0071e3";
       }
-
       if(nameEl) nameEl.innerText = user;
       animateValue(el, 0, val, 1500);
     });
@@ -476,8 +542,8 @@
 
   document.addEventListener('mousemove', (e) => {
     if(!mainWrapper.classList.contains('loaded')) return;
-    const x = (window.innerWidth / 2 - e.pageX) / 60;
-    const y = (window.innerHeight / 2 - e.pageY) / 60;
+    const x = (window.innerWidth / 2 - e.pageX) / 80;
+    const y = (window.innerHeight / 2 - e.pageY) / 80;
     bgLayer.style.transform = `translate(${x}px, ${y}px) scale(1.05)`;
     mainWrapper.style.transform = `perspective(1200px) rotateY(${x * -0.05}deg) rotateX(${y * 0.05}deg)`;
   });
@@ -485,36 +551,107 @@
   // --- 4. NAVIGATION ---
   function goTo(url) {
     mainWrapper.classList.remove('loaded'); 
-    mainWrapper.style.opacity = "0"; 
-    mainWrapper.style.transform = "scale(0.95)";
+    mainWrapper.style.opacity = "0"; mainWrapper.style.transform = "scale(0.95)";
     setTimeout(() => { window.location.href = url; }, 200);
   }
 
-  // --- 5. INTERACTION PROVISEUR ---
-  const quotes = [
-    "Le réseau semble stable aujourd'hui.",
+  // --- 5. INTERACTION PROVISEUR & CHEAT CODE ---
+  const quotesProv = [
+    "Le réseau semble stable. Pour l'instant.",
     "Qui est ce 'CyberWolf' en tête du classement ?",
-    "N'oubliez pas vos rapports de stage.",
-    "La pause café est terminée.",
-    "Attention aux injections SQL."
+    "Pas de jeux pendant les cours... sauf ceux-là.",
+    "La pause café est terminée. Au travail.",
+    "Attention aux injections SQL dans vos formulaires.",
+    "Un esprit sain dans un code propre.",
+    "J'ai vu votre commit... on doit parler."
   ];
 
-  const bubble = document.getElementById('bubble');
+  const bubbleProv = document.getElementById('bubble-prov');
   const provImg = document.getElementById('proviseur-img');
   
+  // CHEAT CODE VARS
+  let clickCount = 0;
+  let resetTimer;
+
+  function triggerProviseur() {
+    bubbleProv.classList.remove('visible');
+    setTimeout(() => { 
+      bubbleProv.innerHTML = quotesProv[Math.floor(Math.random() * quotesProv.length)]; 
+      bubbleProv.classList.add('visible'); 
+    }, 100);
+  }
+
+  function activateCheatMode() {
+    document.body.classList.add('cheat-mode');
+    provImg.classList.add('spin-360');
+    showBubble("ACCÈS ADMIN... ERREUR... PARTY MODE ! 🕺");
+    
+    setTimeout(() => {
+        document.body.classList.remove('cheat-mode');
+        provImg.classList.remove('spin-360');
+        showBubble("Retour à la normale. Circulez.");
+    }, 5000);
+  }
+
   function showBubble(text) {
-    bubble.classList.remove('visible');
-    setTimeout(() => { bubble.innerHTML = text; bubble.classList.add('visible'); }, 100);
+    bubbleProv.classList.remove('visible');
+    setTimeout(() => { bubbleProv.innerHTML = text; bubbleProv.classList.add('visible'); }, 100);
   }
 
   provImg.addEventListener('click', (e) => {
-    e.stopPropagation();
-    showBubble(quotes[Math.floor(Math.random() * quotes.length)]);
-    provImg.style.transform = "scale(1.05) translateY(-5px)";
-    setTimeout(() => provImg.style.transform = "", 200);
-  });
+    e.stopPropagation(); 
+    
+    // Cheat Logic
+    clickCount++;
+    clearTimeout(resetTimer);
+    resetTimer = setTimeout(() => clickCount = 0, 800);
 
-  setTimeout(() => showBubble("Les serveurs de jeu sont en ligne.<br>Battez les records !"), 800);
+    if (clickCount >= 4) {
+        activateCheatMode();
+        clickCount = 0;
+    } else {
+        triggerProviseur();
+        provImg.style.transform = "scale(1.05) translateY(-5px)";
+        setTimeout(() => provImg.style.transform = "", 200);
+    }
+  });
+  bubbleProv.addEventListener('click', (e) => { e.stopPropagation(); triggerProviseur(); });
+
+  setTimeout(() => { bubbleProv.innerHTML = "Les serveurs de jeu sont en ligne.<br>Battez les records !"; bubbleProv.classList.add('visible'); }, 800);
+
+  // --- 6. SYSTEME PROFESSEUR ALEATOIRE ---
+  const profContainer = document.getElementById('prof-container');
+  const profImg = document.getElementById('prof-img');
+  const profBubble = document.getElementById('bubble-prof');
+  
+  const profData = [
+    { img: "Perso1.png", txt: "Hé ! Une partie de <b>Tetris</b> pour réviser tes pointeurs ?" },
+    { img: "Perso2.png", txt: "Le câblage dans <b>VoltLink</b> est un désastre... va réparer ça !" },
+    { img: "Perso3.png", txt: "<b>Arkanoid</b> est parfait pour tester tes réflexes avant l'examen." },
+    { img: "Perso4.png", txt: "Les paquets s'accumulent ! Lance <b>Puzzle Bobble</b> vite !" },
+    { img: "Perso5.png", txt: "T'as vu le score sur <b>Rolling Thunder</b> ? Impossible à battre." },
+    { img: "Perso6.png", txt: "Pause déj ? Viens faire un tournoi sur le Hub." },
+    { img: "Perso7.png", txt: "N'oublie pas : la loi d'Ohm s'applique aussi dans <b>VoltLink</b>." }
+  ];
+
+  let profTimer = null;
+
+  function spawnProf() {
+    const data = profData[Math.floor(Math.random() * profData.length)];
+    profImg.src = data.img;
+    profBubble.innerHTML = data.txt + "<small>Conseiller Technique</small>";
+    profContainer.classList.add('active');
+    setTimeout(() => { profContainer.classList.remove('active'); }, 8000);
+    scheduleNextProf();
+  }
+
+  function scheduleNextProf() {
+    const delay = Math.random() * 8000 + 12000; 
+    clearTimeout(profTimer);
+    profTimer = setTimeout(spawnProf, delay);
+  }
+
+  setTimeout(spawnProf, 3000);
   loadScores();
 
 </script>
