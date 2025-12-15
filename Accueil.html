@@ -14,262 +14,249 @@
 <style>
   :root {
     --glass-panel: rgba(255, 255, 255, 0.25);
-    --glass-card: rgba(255, 255, 255, 0.45);
+    --glass-card: rgba(255, 255, 255, 0.50);
     --glass-border: rgba(255, 255, 255, 0.4);
     --text-primary: #1d1d1f;
     --text-secondary: #48484a;
     --accent-blue: #0071e3;
+    --tag-bg: rgba(0, 113, 227, 0.1);
+    --tag-text: #0071e3;
   }
 
   html, body {
-    height: 100%;
-    margin: 0;
-    padding: 0;
-    overflow: hidden;
+    height: 100%; margin: 0; padding: 0;
+    overflow: hidden; /* Pas d'ascenseur */
     font-family: 'Inter', sans-serif;
     user-select: none;
   }
 
   body {
     background-color: #2c3e50;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+    display: flex; justify-content: center; align-items: center;
     perspective: 1200px;
   }
 
   /* FOND PARALLAXE */
   #bg-layer {
-    position: absolute;
-    top: -5%; left: -5%; width: 110%; height: 110%;
+    position: absolute; top: -5%; left: -5%; width: 110%; height: 110%;
     background: url("fond_lycee.jpg") no-repeat center center;
     background-size: cover;
-    filter: blur(14px);
-    z-index: -1;
+    filter: blur(12px); z-index: -1;
     transition: transform 0.05s linear;
   }
 
   #bg-overlay {
     position: absolute; inset: 0;
     background: linear-gradient(135deg, rgba(30, 41, 59, 0.4), rgba(0,0,0,0.2));
-    z-index: -1;
-    pointer-events: none;
+    z-index: -1; pointer-events: none;
   }
 
   /* --- GRAND PANNEAU CENTRAL --- */
   #main-wrapper {
-    width: 95%; max-width: 1100px; height: 92%;
+    width: 95%; max-width: 1150px; height: 92%;
     background: var(--glass-panel);
     backdrop-filter: blur(30px) saturate(180%);
     -webkit-backdrop-filter: blur(30px) saturate(180%);
     border-radius: 24px;
     border: 1px solid var(--glass-border);
-    box-shadow: 
-      0 40px 80px rgba(0,0,0,0.25), 
-      inset 0 1px 1px rgba(255,255,255,0.4);
+    box-shadow: 0 40px 80px rgba(0,0,0,0.25), inset 0 1px 1px rgba(255,255,255,0.4);
     display: flex; flex-direction: column;
     position: relative; z-index: 10;
     overflow: hidden;
-    
-    /* MODIF POUR CORRIGER L'AFFICHAGE ERRATIQUE */
-    opacity: 0; /* On cache par défaut */
-    transform: scale(0.98); /* Légèrement dézoomé pour l'anim d'entrée */
-    transition: transform 0.1s ease-out, opacity 0.5s ease-out; /* Transition fluide pour l'apparition */
+    opacity: 0; transform: scale(0.98); 
+    transition: transform 0.1s ease-out, opacity 0.5s ease-out; 
   }
 
-  /* Une classe pour l'état visible */
-  #main-wrapper.loaded {
-    opacity: 1;
-    transform: scale(1);
-  }
+  #main-wrapper.loaded { opacity: 1; transform: scale(1); }
 
   /* HEADER */
   .header {
-    padding: 18px 20px; text-align: center;
+    padding: 12px 20px; text-align: center;
     border-bottom: 1px solid rgba(255,255,255,0.2);
     background: linear-gradient(to bottom, rgba(255,255,255,0.2), rgba(255,255,255,0.05));
     flex-shrink: 0;
   }
   #logo {
-    height: 72px; margin-bottom: 8px;
+    height: 55px; margin-bottom: 4px;
     filter: drop-shadow(0 4px 10px rgba(0,0,0,0.15));
     transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
   }
   #logo:hover { transform: scale(1.1) rotate(5deg); }
-  
-  .header h1 { font-size: 26px; font-weight: 800; margin: 0; color: #1d1d1f; letter-spacing: -0.8px; }
-  
-  #greeting-text { 
-    font-size: 12px; color: #333; font-weight: 600; margin: 4px 0 0 0; 
-    text-transform: uppercase; letter-spacing: 1.2px; opacity: 0.7; 
-  }
+  .header h1 { font-size: 20px; font-weight: 800; margin: 0; color: #1d1d1f; letter-spacing: -0.8px; }
+  #greeting-text { font-size: 10px; color: #333; font-weight: 600; margin: 2px 0 0 0; text-transform: uppercase; letter-spacing: 1.2px; opacity: 0.7; }
 
-  /* CONTENT */
+  /* CONTENT AREA */
   .content-area {
-    flex: 1; overflow-y: auto; padding: 30px;
-    scrollbar-width: none;
+    flex: 1; padding: 20px 25px;
+    display: flex; flex-direction: column; justify-content: center;
+    overflow: hidden;
   }
-  .content-area::-webkit-scrollbar { display: none; }
 
+  /* --- GRID LAYOUT 5 ITEMS (BENTO STYLE) --- */
   .games-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(440px, 1fr));
-    gap: 24px;
+    grid-template-columns: repeat(6, 1fr);
+    grid-template-rows: repeat(2, 1fr);
+    gap: 16px;
+    height: 100%; max-height: 100%;
   }
 
   /* --- CARTE JEU --- */
   .game-card {
     background: var(--glass-card);
     border: 1px solid rgba(255,255,255,0.6);
-    border-radius: 22px;
-    padding: 0;
-    display: grid;
-    grid-template-columns: 1fr 160px;
+    border-radius: 18px; padding: 0;
+    display: grid; grid-template-columns: 1fr 130px;
     cursor: pointer;
     transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-    box-shadow: 0 4px 20px rgba(0,0,0,0.05);
-    position: relative;
-    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    position: relative; overflow: hidden; min-height: 0;
   }
+  
+  /* Layout Bento */
+  .game-card:nth-child(1), .game-card:nth-child(2), .game-card:nth-child(3) { grid-column: span 2; }
+  .game-card:nth-child(4), .game-card:nth-child(5) { grid-column: span 3; }
 
   .game-card::after {
     content: ''; position: absolute; top: 0; left: -150%; width: 60%; height: 100%;
     background: linear-gradient(to right, transparent, rgba(255,255,255,0.5), transparent);
-    transform: skewX(-25deg);
-    transition: none; pointer-events: none;
+    transform: skewX(-25deg); transition: none; pointer-events: none;
   }
   .game-card:hover::after { left: 200%; transition: 0.6s ease-in-out; }
 
   .game-card:hover {
-    transform: translateY(-6px) scale(1.01);
-    background: rgba(255, 255, 255, 0.7);
-    box-shadow: 0 20px 40px rgba(0,0,0,0.12), 0 0 0 1px rgba(255,255,255,0.5);
+    transform: translateY(-4px) scale(1.01);
+    background: rgba(255, 255, 255, 0.8);
+    box-shadow: 0 15px 30px rgba(0,0,0,0.12), 0 0 0 1px rgba(255,255,255,0.5);
+    z-index: 5;
   }
 
-  .card-content { padding: 22px; display: flex; flex-direction: column; justify-content: space-between; }
+  .card-content { padding: 16px; display: flex; flex-direction: column; justify-content: space-between; overflow: hidden; height: 100%; box-sizing: border-box; }
   
-  .card-head { display: flex; align-items: center; gap: 14px; }
-  
+  .card-head { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
   .icon-box {
-    width: 48px; height: 48px; border-radius: 12px;
+    width: 36px; height: 36px; border-radius: 8px;
     display: flex; align-items: center; justify-content: center;
-    font-weight: 900; font-size: 24px; color: #fff;
-    box-shadow: 0 8px 16px rgba(0,0,0,0.2);
-    text-shadow: 0 2px 0 rgba(0,0,0,0.1);
+    font-weight: 900; font-size: 18px; color: #fff;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    text-shadow: 0 2px 0 rgba(0,0,0,0.1); flex-shrink: 0;
   }
 
-  .card-titles h3 { margin: 0; font-size: 19px; font-weight: 800; color: #1d1d1f; }
-  .card-titles span { font-size: 11px; text-transform: uppercase; color: #666; font-weight: 700; letter-spacing: 0.5px; }
+  .card-titles h3 { margin: 0; font-size: 15px; font-weight: 800; color: #1d1d1f; white-space: nowrap; }
+  .card-titles span { font-size: 9px; text-transform: uppercase; color: #666; font-weight: 700; letter-spacing: 0.5px; }
+
+  /* INFO TAGS & STATS */
+  .meta-tags { display: flex; gap: 6px; margin-bottom: 8px; flex-wrap: wrap; }
+  .tag { 
+    background: var(--tag-bg); color: var(--tag-text); 
+    padding: 3px 8px; border-radius: 4px; 
+    font-size: 9px; font-weight: 700; text-transform: uppercase;
+  }
+  .tag.hard { background: rgba(220, 38, 38, 0.1); color: #dc2626; }
+  .tag.med { background: rgba(245, 158, 11, 0.1); color: #d97706; }
+
+  .live-stats {
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 9px; color: #555; margin-bottom: 6px; font-weight: 500;
+  }
+  .live-stats strong { color: #333; }
 
   .score-box {
-    margin-top: 12px;
-    background: rgba(255,255,255,0.4);
-    border-radius: 8px;
-    padding: 6px 12px;
+    background: rgba(255,255,255,0.6);
+    border-radius: 6px; padding: 4px 8px;
     display: flex; align-items: center; justify-content: space-between;
-    font-size: 11px; font-family: 'JetBrains Mono', monospace; color: #333;
+    font-size: 10px; font-family: 'JetBrains Mono', monospace; color: #333;
     border: 1px solid rgba(255,255,255,0.5);
-    box-shadow: inset 0 1px 2px rgba(0,0,0,0.03);
+    margin-bottom: 8px;
   }
-  .score-val { font-weight: 800; color: var(--accent-blue); letter-spacing: -0.5px; font-size: 12px; }
+  .score-label { color: #666; font-size: 9px; text-transform: uppercase; }
+  .score-val { font-weight: 800; color: var(--accent-blue); font-size: 11px; }
+  .champion-name { font-size: 9px; color: #888; margin-left: auto; margin-right: 5px; font-style: italic;}
 
   .card-desc {
-    font-size: 13px; line-height: 1.45; color: #444; margin: 14px 0;
-    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; font-weight: 500;
+    font-size: 10px; line-height: 1.4; color: #444; margin: 0 0 10px 0;
+    display: -webkit-box; -webkit-line-clamp: 3; /* Permet 3 lignes */
+    -webkit-box-orient: vertical; overflow: hidden; font-weight: 500;
+    flex-grow: 1;
   }
 
   .play-btn {
     align-self: flex-start;
     background: var(--accent-blue);
-    color: #fff; border: none; padding: 10px 22px; border-radius: 30px;
-    font-size: 12px; font-weight: 700; text-transform: uppercase;
-    cursor: pointer;
-    box-shadow: 0 4px 12px rgba(0, 113, 227, 0.3);
-    transition: all 0.2s;
-    display: flex; align-items: center; gap: 8px;
+    color: #fff; border: none; padding: 8px 16px; border-radius: 30px;
+    font-size: 10px; font-weight: 700; text-transform: uppercase;
+    cursor: pointer; box-shadow: 0 4px 10px rgba(0, 113, 227, 0.3);
+    transition: all 0.2s; display: flex; align-items: center; gap: 6px;
   }
   .play-btn:hover { background: #0077ED; transform: translateY(-1px); box-shadow: 0 6px 15px rgba(0, 113, 227, 0.4); }
   .play-btn:active { transform: translateY(1px); }
 
   .card-visual {
-    background-color: rgba(0,0,0,0.03);
-    background-size: cover; background-position: center;
-    position: relative;
-    border-left: 1px solid rgba(255,255,255,0.5);
+    background-color: rgba(0,0,0,0.03); position: relative;
+    border-left: 1px solid rgba(255,255,255,0.5); height: 100%; overflow: hidden;
   }
   .card-visual div { 
-    position: absolute; inset: 0; background-size: cover; background-position: center bottom; 
+    position: absolute; inset: 0; background-size: cover; background-position: center; 
     z-index: 1; transition: transform 0.5s cubic-bezier(0.25, 0.8, 0.25, 1); 
   }
   .game-card:hover .card-visual div { transform: scale(1.08); }
 
+  /* COULEURS */
   .t-tetris { background: linear-gradient(135deg, #3498db, #2980b9); }
   .v-tetris { background-image: url("CaseTetris.gif"); }
-  
   .t-arkanoid { background: linear-gradient(135deg, #e74c3c, #c0392b); }
   .v-arkanoid { background-image: url("CaseArkanoid.gif"); }
-  
   .t-volt { background: linear-gradient(135deg, #f1c40f, #f39c12); }
   .v-volt { background-image: url("VoltLink.gif"); }
-  
   .t-bubble { background: linear-gradient(135deg, #9b59b6, #8e44ad); }
   .v-bubble { background-image: url("CaseBubble.gif"); }
+  .t-rolling { background: linear-gradient(135deg, #0f172a, #334155); }
+  .v-rolling { background-image: url("Rolling Thunder.gif"); }
 
   .footer {
-    text-align: center; padding: 14px; font-size: 11px; color: rgba(0,0,0,0.5);
+    text-align: center; padding: 8px; font-size: 9px; color: rgba(0,0,0,0.5);
     background: rgba(255,255,255,0.15); border-top: 1px solid rgba(255,255,255,0.2);
     font-weight: 500;
   }
 
-  /* PROVISEUR */
+  /* PROVISEUR - AGRANDI */
   #proviseur-container {
-    position: fixed; right: 2%; bottom: 0;
+    position: fixed; right: 1%; bottom: 0;
     display: flex; flex-direction: column; align-items: center;
     z-index: 100; pointer-events: none;
   }
-
   #proviseur-img {
-    height: 60vh; max-height: 520px; width: auto;
+    height: 55vh; /* Agrandi */
+    max-height: 500px; /* Agrandi */
+    width: auto;
     filter: drop-shadow(0 15px 30px rgba(0,0,0,0.3));
     cursor: pointer; pointer-events: auto;
-    transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    transform-origin: bottom center;
+    transition: transform 0.2s; transform-origin: bottom center;
   }
   #proviseur-img:hover { transform: scale(1.03) translateY(-5px); }
-  #proviseur-img:active { transform: scale(0.95); }
-
   #bubble {
-    background: #fff; color: #2c3e50; padding: 14px 20px; border-radius: 22px;
-    font-size: 13px; font-weight: 700; max-width: 250px; text-align: center;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-    margin-bottom: 12px; position: relative;
+    background: #fff; color: #2c3e50; padding: 12px 20px; border-radius: 20px;
+    font-size: 13px; font-weight: 700; max-width: 220px; text-align: center;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2); margin-bottom: 0px; position: relative;
     opacity: 0; transform: translateY(20px) scale(0.9);
-    pointer-events: auto; cursor: pointer;
-    border: 2px solid #2c3e50;
+    pointer-events: auto; cursor: pointer; border: 2px solid #2c3e50;
     transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
   }
   #bubble.visible { opacity: 1; transform: translateY(0) scale(1); }
-  #bubble::after {
-    content: ''; position: absolute; left: 60%; top: 100%;
-    border: 10px solid transparent; border-top-color: #2c3e50;
-  }
-  #bubble small { display: block; margin-top: 5px; font-weight: 500; font-size: 10px; color: #888; text-transform: uppercase; }
+  #bubble::after { content: ''; position: absolute; left: 70%; top: 100%; border: 10px solid transparent; border-top-color: #2c3e50; }
 
-  /* RESPONSIVE */
-  @media (max-width: 900px) {
-    .games-grid { grid-template-columns: 1fr; }
-    #proviseur-img { height: 35vh; }
+  @media (max-width: 1024px) {
+    .games-grid { grid-template-columns: repeat(2, 1fr); grid-template-rows: auto; overflow-y: auto; }
+    .game-card, .game-card:nth-child(n) { grid-column: span 1; }
+    .content-area { overflow-y: auto; display: block; }
   }
-
   @media (max-width: 600px) {
+    .games-grid { grid-template-columns: 1fr; }
     .game-card { grid-template-columns: 1fr; }
-    .card-visual { height: 150px; border-left: none; border-bottom: 1px solid rgba(255,255,255,0.5); order: -1; }
+    .card-visual { height: 100px; border-left: none; border-bottom: 1px solid rgba(255,255,255,0.5); order: -1; }
     #main-wrapper { width: 100%; height: 100%; border-radius: 0; border: none; }
-    .header h1 { font-size: 22px; }
-    
-    #proviseur-container { right: 10px; bottom: 10px; align-items: flex-end; }
-    #proviseur-img { height: 70px; width: 70px; border-radius: 50%; object-fit: cover; object-position: top; border: 3px solid #fff; box-shadow: 0 5px 15px rgba(0,0,0,0.3); background: #fff; margin-right: 5px;}
-    #bubble { font-size: 11px; padding: 10px 14px; margin-bottom: 8px; right: 5px; transform-origin: bottom right; }
+    #proviseur-img { height: 80px; width: 80px; border-radius: 50%; border: 2px solid #fff; background: #fff; margin-right: 5px; max-height: none;}
+    #bubble { font-size: 10px; right: 5px; }
   }
 </style>
 </head>
@@ -295,18 +282,22 @@
           <div>
             <div class="card-head">
               <div class="icon-box t-tetris">T</div>
-              <div class="card-titles">
-                <h3>Tetris</h3>
-                <span>Flux & Mémoire</span>
-              </div>
+              <div class="card-titles"><h3>Tetris</h3><span>Algorithmique</span></div>
+            </div>
+            <div class="meta-tags">
+              <span class="tag">Mémoire</span><span class="tag">Stack</span>
+            </div>
+            <div class="live-stats">
+              <span>Joueurs: <strong>12</strong></span><span>Diff: <strong>Normale</strong></span>
             </div>
             <div class="score-box">
-              <span>BEST SCORE</span>
-              <span class="score-val" id="score-tetris" data-val="0">0000</span>
+              <span class="score-label">Record</span>
+              <span class="champion-name" id="name-tetris">--</span>
+              <span class="score-val" id="score-tetris" data-key="highScore_tetris" data-fake="14200" data-user="AdminSys">0</span>
             </div>
-            <p class="card-desc">Gérez l'empilement des données. Optimisation de l'espace mémoire requise.</p>
+            <p class="card-desc">Protocol d'empilement critique. Défragmentez la mémoire vive en alignant les blocs de données. Gare au débordement de buffer !</p>
           </div>
-          <button class="play-btn"><span>▶</span> Jouer (1)</button>
+          <button class="play-btn"><span>▶</span> Lancer</button>
         </div>
         <div class="card-visual"><div class="v-tetris"></div></div>
       </div>
@@ -316,18 +307,22 @@
           <div>
             <div class="card-head">
               <div class="icon-box t-arkanoid">A</div>
-              <div class="card-titles">
-                <h3>Arkanoid</h3>
-                <span>Debug Arcade</span>
-              </div>
+              <div class="card-titles"><h3>Arkanoid</h3><span>Debug</span></div>
+            </div>
+            <div class="meta-tags">
+              <span class="tag hard">Sécu</span><span class="tag">Firewall</span>
+            </div>
+            <div class="live-stats">
+              <span>Joueurs: <strong>8</strong></span><span>Diff: <strong>Difficile</strong></span>
             </div>
             <div class="score-box">
-              <span>BEST SCORE</span>
-              <span class="score-val" id="score-arkanoid" data-val="0">0000</span>
+              <span class="score-label">Record</span>
+              <span class="champion-name" id="name-arkanoid">--</span>
+              <span class="score-val" id="score-arkanoid" data-key="highScore_arkanoid" data-fake="28500" data-user="RetroKing">0</span>
             </div>
-            <p class="card-desc">Destruction de blocs corrompus. Test de latence réflexe.</p>
+            <p class="card-desc">Intrusion détectée. Déployez le pare-feu cinétique pour éradiquer les bugs corrompus. Réflexes neuronaux requis.</p>
           </div>
-          <button class="play-btn"><span>▶</span> Jouer (2)</button>
+          <button class="play-btn"><span>▶</span> Lancer</button>
         </div>
         <div class="card-visual"><div class="v-arkanoid"></div></div>
       </div>
@@ -337,18 +332,22 @@
           <div>
             <div class="card-head">
               <div class="icon-box t-volt">V</div>
-              <div class="card-titles">
-                <h3>VoltLink</h3>
-                <span>Loi d'Ohm</span>
-              </div>
+              <div class="card-titles"><h3>VoltLink</h3><span>Loi d'Ohm</span></div>
+            </div>
+            <div class="meta-tags">
+              <span class="tag">Haut Voltage</span><span class="tag">Safety</span>
+            </div>
+            <div class="live-stats">
+              <span>Joueurs: <strong>15</strong></span><span>Diff: <strong>Progressive</strong></span>
             </div>
             <div class="score-box">
-              <span>BEST SCORE</span>
-              <span class="score-val" id="score-volt" data-val="0">0000</span>
+              <span class="score-label">Record</span>
+              <span class="champion-name" id="name-volt">--</span>
+              <span class="score-val" id="score-volt" data-key="highScore_volt" data-fake="4500" data-user="Ampere_XX">0</span>
             </div>
-            <p class="card-desc">Raccordement VCC/GND. Évitez les court-circuits.</p>
+            <p class="card-desc">Danger Haute Tension ! Raccordez le VCC au GND sans faire sauter les plombs. Une erreur de résistance et c'est la fumée magique.</p>
           </div>
-          <button class="play-btn"><span>▶</span> Jouer (3)</button>
+          <button class="play-btn"><span>▶</span> Lancer</button>
         </div>
         <div class="card-visual"><div class="v-volt"></div></div>
       </div>
@@ -358,27 +357,56 @@
           <div>
             <div class="card-head">
               <div class="icon-box t-bubble">B</div>
-              <div class="card-titles">
-                <h3>Puzzle Bobble</h3>
-                <span>Topologie</span>
-              </div>
+              <div class="card-titles"><h3>Bobble</h3><span>Réseaux</span></div>
+            </div>
+            <div class="meta-tags">
+              <span class="tag">Topologie</span><span class="tag">Ping</span>
+            </div>
+            <div class="live-stats">
+              <span>Joueurs: <strong>5</strong></span><span>Diff: <strong>Normale</strong></span>
             </div>
             <div class="score-box">
-              <span>BEST SCORE</span>
-              <span class="score-val" id="score-bubble" data-val="0">0000</span>
+              <span class="score-label">Record</span>
+              <span class="champion-name" id="name-bubble">--</span>
+              <span class="score-val" id="score-bubble" data-key="highScore_bubble" data-fake="32000" data-user="NetAdmin">0</span>
             </div>
-            <p class="card-desc">Nettoyage de buffer par regroupement de paquets.</p>
+            <p class="card-desc">Congestion réseau imminente ! Regroupez les paquets de données par clusters colorés pour libérer la bande passante.</p>
           </div>
-          <button class="play-btn"><span>▶</span> Jouer (4)</button>
+          <button class="play-btn"><span>▶</span> Lancer</button>
         </div>
         <div class="card-visual"><div class="v-bubble"></div></div>
+      </div>
+
+      <div class="game-card" onclick="goTo('Rolling Thunder.html')">
+        <div class="card-content">
+          <div>
+            <div class="card-head">
+              <div class="icon-box t-rolling">R</div>
+              <div class="card-titles"><h3>Thunder</h3><span>Séquentiel</span></div>
+            </div>
+            <div class="meta-tags">
+              <span class="tag med">Hardware</span><span class="tag">Clock</span>
+            </div>
+            <div class="live-stats">
+              <span>Joueurs: <strong>24</strong></span><span>Diff: <strong>Extrême</strong></span>
+            </div>
+            <div class="score-box">
+              <span class="score-label">Record</span>
+              <span class="champion-name" id="name-rolling">--</span>
+              <span class="score-val" id="score-rolling" data-key="binaryrun_best" data-fake="6200" data-user="CyberWolf">0</span>
+            </div>
+            <p class="card-desc">Séquence d'initiation lancée. Une course binaire à la nanoseconde près où le 0 et le 1 dictent votre survie sur le bus de données.</p>
+          </div>
+          <button class="play-btn"><span>▶</span> Lancer</button>
+        </div>
+        <div class="card-visual"><div class="v-rolling"></div></div>
       </div>
 
     </div>
   </div>
 
   <footer class="footer">
-    Département CIEL – Lycée Simone Veil
+    Département CIEL – Lycée Simone Veil – v2.2 (Simulation de Compétition Active)
   </footer>
 </div>
 
@@ -396,133 +424,97 @@
   }
   updateGreeting();
 
-  // --- 2. SCORES ---
-  const games = [
-    { id: 'tetris', label: 'score-tetris' },
-    { id: 'arkanoid', label: 'score-arkanoid' },
-    { id: 'volt', label: 'score-volt' },
-    { id: 'bubble', label: 'score-bubble' }
-  ];
-
-  function animateValue(obj, start, end, duration, suffix = "") {
+  // --- 2. SCORES & FAKE DATA ---
+  function animateValue(obj, start, end, duration) {
     let startTimestamp = null;
     const step = (timestamp) => {
       if (!startTimestamp) startTimestamp = timestamp;
       const progress = Math.min((timestamp - startTimestamp) / duration, 1);
       const value = Math.floor(progress * (end - start) + start);
-      obj.innerHTML = value + suffix;
+      obj.innerHTML = value;
       if (progress < 1) window.requestAnimationFrame(step);
     };
     window.requestAnimationFrame(step);
   }
 
   function loadScores() {
-    games.forEach(game => {
-      let savedScore = localStorage.getItem('highScore_' + game.id);
-      let targetVal = savedScore ? parseInt(savedScore) : 0; 
-      const el = document.getElementById(game.label);
-      if(el) animateValue(el, 0, targetVal, 1000, game.suffix || "");
+    const scoreElements = document.querySelectorAll('.score-val');
+    
+    scoreElements.forEach(el => {
+      const key = el.dataset.key;
+      const fakeScore = parseInt(el.dataset.fake);
+      const fakeUser = el.dataset.user;
+      const nameEl = document.getElementById(el.id.replace('score-', 'name-'));
+
+      let localScore = localStorage.getItem(key);
+      let val = 0;
+      let user = "";
+
+      if (localScore && parseInt(localScore) > 0) {
+        val = parseInt(localScore);
+        user = "Vous";
+        el.style.color = "#10b981"; 
+      } else {
+        const variance = Math.floor(Math.random() * (fakeScore * 0.2)) - (fakeScore * 0.1);
+        val = fakeScore + variance;
+        user = fakeUser;
+        el.style.color = "#0071e3";
+      }
+
+      if(nameEl) nameEl.innerText = user;
+      animateValue(el, 0, val, 1500);
     });
   }
 
-  // --- 3. PARALLAX & ANIMATION D'ENTREE ---
+  // --- 3. ANIMATION ENTREE ---
   const bgLayer = document.getElementById('bg-layer');
   const mainWrapper = document.getElementById('main-wrapper');
   
-  // Fonction pour afficher le hub proprement (Fix erratic display + Fix back button)
-  function showHub() {
-    mainWrapper.classList.add('loaded');
-  }
-
-  // Au chargement initial
+  function showHub() { mainWrapper.classList.add('loaded'); }
   window.addEventListener('load', showHub);
-
-  // **CORRECTION POUR LE BOUTON RETOUR DU NAVIGATEUR (BFCACHE)**
-  window.addEventListener('pageshow', (event) => {
-    // Si la page est chargée depuis le cache (bouton retour), on force l'affichage
-    if (event.persisted || performance.navigation.type === 2) {
-      mainWrapper.classList.add('loaded');
-      mainWrapper.style.opacity = "1";
-      mainWrapper.style.transform = "scale(1)";
-    }
-  });
+  window.addEventListener('pageshow', (e) => { if(e.persisted) showHub(); });
 
   document.addEventListener('mousemove', (e) => {
-    // On ne bouge que si le hub est chargé pour éviter les sauts
     if(!mainWrapper.classList.contains('loaded')) return;
-
     const x = (window.innerWidth / 2 - e.pageX) / 60;
     const y = (window.innerHeight / 2 - e.pageY) / 60;
     bgLayer.style.transform = `translate(${x}px, ${y}px) scale(1.05)`;
-    // Note: on utilise la classe .loaded pour le scale, ici on applique juste la rotation
     mainWrapper.style.transform = `perspective(1200px) rotateY(${x * -0.05}deg) rotateX(${y * 0.05}deg)`;
   });
 
   // --- 4. NAVIGATION ---
   function goTo(url) {
-    // Animation de sortie
-    mainWrapper.classList.remove('loaded'); // Retire la classe pour déclencher le fade out CSS
+    mainWrapper.classList.remove('loaded'); 
     mainWrapper.style.opacity = "0"; 
     mainWrapper.style.transform = "scale(0.95)";
-    
     setTimeout(() => { window.location.href = url; }, 200);
   }
 
-  document.addEventListener("keydown", (e) => {
-    const k = e.key.toLowerCase();
-    if(k === "1" || k === "t") goTo("tetris.html");
-    if(k === "2" || k === "a") goTo("Arkanoid.html");
-    if(k === "3" || k === "v") goTo("VoltLink.html");
-    if(k === "4" || k === "b") goTo("Bobble.html");
-  });
-
-  // --- 5. INTERACTION PROVISEUR (SECRET CLICK) ---
+  // --- 5. INTERACTION PROVISEUR ---
   const quotes = [
-    "J'espère que le code est commenté.",
-    "Un bug ? Non, une feature.",
-    "Score élevé à Tetris... Et en Maths ?",
-    "La pause est bientôt finie.",
-    "Ctrl+S sauve des vies."
+    "Le réseau semble stable aujourd'hui.",
+    "Qui est ce 'CyberWolf' en tête du classement ?",
+    "N'oubliez pas vos rapports de stage.",
+    "La pause café est terminée.",
+    "Attention aux injections SQL."
   ];
 
   const bubble = document.getElementById('bubble');
   const provImg = document.getElementById('proviseur-img');
-  let clickCount = 0;
-  let clickTimer = null;
-
+  
   function showBubble(text) {
     bubble.classList.remove('visible');
-    setTimeout(() => {
-      bubble.innerHTML = text;
-      bubble.classList.add('visible');
-    }, 100);
+    setTimeout(() => { bubble.innerHTML = text; bubble.classList.add('visible'); }, 100);
   }
 
   provImg.addEventListener('click', (e) => {
     e.stopPropagation();
-    
-    // Logique du Secret (5 clics rapides)
-    clickCount++;
-    clearTimeout(clickTimer);
-    clickTimer = setTimeout(() => { clickCount = 0; }, 500); 
-
-    if (clickCount >= 5) {
-      showBubble("🕶️ MODE ADMIN ACTIVÉ 🕶️<br><small>Hacking en cours...</small>");
-      document.body.style.filter = "hue-rotate(90deg)";
-      setTimeout(() => { document.body.style.filter = "none"; }, 1000);
-      clickCount = 0;
-      return;
-    }
-
-    // Comportement normal
-    showBubble(quotes[Math.floor(Math.random() * quotes.length)] + "<small>(Cliquer pour changer)</small>");
-    provImg.style.transform = "scale(1.05) translateY(-10px)";
+    showBubble(quotes[Math.floor(Math.random() * quotes.length)]);
+    provImg.style.transform = "scale(1.05) translateY(-5px)";
     setTimeout(() => provImg.style.transform = "", 200);
   });
 
-  // Message initial
-  setTimeout(() => showBubble("Bienvenue au Hub CIEL.<br>Choisissez votre mission."), 800);
-  
+  setTimeout(() => showBubble("Les serveurs de jeu sont en ligne.<br>Battez les records !"), 800);
   loadScores();
 
 </script>
