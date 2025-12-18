@@ -119,6 +119,7 @@
   }
   .pill b{ color: var(--accent-blue); }
 
+  /* ✅ viseur FIXE au centre (FPS classique) */
   #crosshair{
     position:absolute; left:50%; top:50%;
     width:18px; height:18px;
@@ -134,6 +135,7 @@
   #crosshair::before{ width:2px; height:18px; transform: translate(-50%,-50%); }
   #crosshair::after{ width:18px; height:2px; transform: translate(-50%,-50%); }
 
+  /* ✅ muzzle FIXE au centre aussi */
   #muzzle{
     position:absolute; left:50%; top:50%;
     width:18px; height:18px;
@@ -247,7 +249,7 @@
     <img id="logo" src="Logo.gif" alt="BTS CIEL" onerror="this.style.display='none'">
     <div class="header-text">
       <h1>CIEL DOOM</h1>
-      <div class="sub">start robuste (lock optionnel) + drag-look</div>
+      <div class="sub">tir cohérent avec pitch (coeurs = exactement au viseur)</div>
     </div>
   </header>
 
@@ -294,7 +296,7 @@
       <div class="panel">
         <h3>Note</h3>
         <div class="small">
-          Si tu affiches ce jeu dans un iframe, il faut <b>allow="pointer-lock"</b> sur l’iframe. Sinon : clic-glissé.
+          Ici le viseur est fixe. Le pitch décale l’horizon avec <b>tan(pitch)*focale</b>, donc le rayon de tir passe toujours par la croix.
         </div>
       </div>
     </div>
@@ -336,7 +338,7 @@
   const btnResume = document.getElementById('btn-resume');
   const muzzle = document.getElementById('muzzle');
 
-  // ✅ START robuste : on démarre même si pointer-lock échoue
+  // START robuste
   let started = false;
   function startGameUI(){
     if (started) return;
@@ -406,31 +408,29 @@
   const SENS_YAW = 0.0022;
   const SENS_PITCH = 0.0019;
 
-  // Pointer-lock mouse look
   document.addEventListener('mousemove', (e) => {
     if (!pointerLocked) return;
     const dx = e.movementX || 0;
     const dy = e.movementY || 0;
     player.yaw = normAngle(player.yaw + dx * SENS_YAW);
-    player.pitch = clamp(player.pitch - dy * SENS_PITCH, -0.78, 0.78);
+    player.pitch = clamp(player.pitch - dy * SENS_PITCH, -0.78, 0.78); // up=look up
   });
 
   document.addEventListener('pointerlockchange', () => {
     pointerLocked = (document.pointerLockElement === canvas);
     uiMode.textContent = pointerLocked ? "LOCK" : "FREE";
     if (pointerLocked) {
-      startGameUI(); // ✅ même si overlay déjà caché
+      startGameUI();
       if (pendingShot) { pendingShot = false; shoot(); }
     }
   });
 
-  // ✅ Si lock refusé : on garde le jeu jouable en clic-glissé
   document.addEventListener('pointerlockerror', () => {
     startGameUI();
     uiMode.textContent = "FREE";
   });
 
-  // ✅ Fallback drag-look (utile si iframe sans allow="pointer-lock")
+  // drag-look fallback
   let dragging = false;
   let lastX = 0, lastY = 0;
   canvas.addEventListener('pointerdown', (e) => {
@@ -455,22 +455,14 @@
   });
   canvas.addEventListener('pointercancel', () => { dragging = false; });
 
-  // Start buttons
-  btnStart.addEventListener('click', () => {
-    startGameUI();
-    requestLock(); // lock optionnel
-  });
-  btnResume.addEventListener('click', () => {
-    setPaused(false);
-    startGameUI();
-    requestLock();
-  });
+  btnStart.addEventListener('click', () => { startGameUI(); requestLock(); });
+  btnResume.addEventListener('click', () => { setPaused(false); startGameUI(); requestLock(); });
 
   // Tir
   canvas.addEventListener('mousedown', (e) => {
     if (e.button !== 0) return;
     startGameUI();
-    if (!pointerLocked) { pendingShot = true; requestLock(); shoot(); return; } // ✅ on tire même sans lock
+    if (!pointerLocked) { pendingShot = true; requestLock(); shoot(); return; }
     shoot();
   });
 
@@ -497,7 +489,7 @@
   let focal = 400;
   let floorPattern = null;
 
-  // Textures procédurales (mur + sol)
+  // Textures
   const TEX = 64;
 
   const wallTex = document.createElement('canvas');
@@ -610,7 +602,7 @@
   }
   window.addEventListener('resize', resize);
 
-  // Raycast DDA (yaw)
+  // Raycast yaw-only
   function castRayYawOnly(yaw){
     const rayDirX = Math.cos(yaw);
     const rayDirY = Math.sin(yaw);
@@ -661,7 +653,7 @@
       wallX -= Math.floor(wallX);
     }
 
-    return { hit, dist2D, side, wallX, mapX, mapY, normalX, normalY };
+    return { hit, dist2D, side, wallX, normalX, normalY };
   }
 
   function projectPoint(wx, wy, wz, horizon){
@@ -696,12 +688,9 @@
 
   let paused = false;
   function setPaused(v){ paused = v; overlayPause.classList.toggle('visible', paused); }
-  function togglePause(){
-    if (!started) return;
-    setPaused(!paused);
-  }
+  function togglePause(){ if (!started) return; setPaused(!paused); }
 
-  // FX Tir
+  // FX
   const bullets = [];
   const sparks  = [];
   const marks   = [];
@@ -876,8 +865,12 @@
 
   function render(){
     offCtx.clearRect(0,0,offW,offH);
-    const horizon = (offH * 0.52) + (player.pitch * offH * 0.35);
 
+    // ✅ pitch cohérent : horizon = centre + tan(pitch)*focale
+    const centerY = offH * 0.5;
+    const horizon = centerY + Math.tan(player.pitch) * focal;
+
+    // plafond
     const skyGrad = offCtx.createLinearGradient(0, 0, 0, horizon);
     skyGrad.addColorStop(0, "rgb(44, 48, 78)");
     skyGrad.addColorStop(1, "rgb(28, 32, 52)");
@@ -900,6 +893,7 @@
     }
     offCtx.restore();
 
+    // sol
     const floorGrad = offCtx.createLinearGradient(0, horizon, 0, offH);
     floorGrad.addColorStop(0, "rgb(46, 48, 58)");
     floorGrad.addColorStop(1, "rgb(22, 24, 30)");
@@ -923,6 +917,7 @@
 
     if (zBuf.length !== offW) zBuf = new Float32Array(offW);
 
+    // murs
     for (let x=0; x<offW; x++){
       const camX = (x / offW) - 0.5;
       const ang = player.yaw + camX * FOV;
@@ -953,9 +948,11 @@
       offCtx.fillRect(x, y1, 1, 1);
     }
 
-    // Draw bullets / marks / sparks (identique à ta version précédente)
-    const cx = offW * 0.5, cy = offH * 0.5;
+    // ✅ centre de visée (fixe) = centre écran
+    const cx = offW * 0.5;
+    const cy = centerY;
 
+    // anneau de tir (au viseur)
     if (muzzleRing > 0) {
       const t = clamp(muzzleRing / 0.13, 0, 1);
       const r = (1 - t) * 26 + 6;
@@ -969,6 +966,7 @@
       offCtx.restore();
     }
 
+    // marks
     for (let i=0;i<marks.length;i++){
       const m = marks[i];
       const a = clamp(m.life / 2.8, 0, 1);
@@ -989,6 +987,7 @@
       offCtx.restore();
     }
 
+    // sparks
     for (let i=0;i<sparks.length;i++){
       const p = sparks[i];
       const a = clamp(p.life / 0.7, 0, 1);
@@ -1007,17 +1006,21 @@
       offCtx.restore();
     }
 
+    // bullets
     offCtx.textAlign = "center";
     offCtx.textBaseline = "middle";
 
     for (let i=0;i<bullets.length;i++){
       const b = bullets[i];
       const tt = Math.min(b.t, b.tEnd);
+
       const wx = b.ox + b.dx * tt;
       const wy = b.oy + b.dy * tt;
       const wz = b.oz + b.dz * tt;
+
       const pr = projectPoint(wx, wy, wz, horizon);
       if (!pr) continue;
+
       const xi = pr.sx|0;
       if (xi < 0 || xi >= offW) continue;
       if (pr.forward > zBuf[xi] + 0.18) continue;
@@ -1028,6 +1031,8 @@
 
       offCtx.save();
       offCtx.globalCompositeOperation = "lighter";
+
+      // trail depuis la croix (centre)
       offCtx.strokeStyle = "rgba(255, 120, 170, 0.14)";
       offCtx.lineWidth = 2;
       offCtx.beginPath(); offCtx.moveTo(cx, cy); offCtx.lineTo(pr.sx, pr.sy); offCtx.stroke();
@@ -1039,6 +1044,7 @@
         const wz2 = b.oz + b.dz * t2;
         const pr2 = projectPoint(wx2, wy2, wz2, horizon);
         if (!pr2) continue;
+
         const s2 = clamp((focal / pr2.forward) * 0.13, 8, 52);
         const a2 = 0.08 * (1 - g/5);
         offCtx.font = `900 ${Math.floor(s2)}px Inter, system-ui`;
@@ -1060,6 +1066,7 @@
       offCtx.restore();
     }
 
+    // upscale + vignette
     ctx.imageSmoothingEnabled = true;
     ctx.clearRect(0,0,W,H);
     ctx.drawImage(off, 0, 0, W, H);
@@ -1089,7 +1096,6 @@
       uiFps.textContent = String(Math.round(fpsAcc / fpsN));
       fpsAcc = 0; fpsN = 0; fpsT = 0;
     }
-
     requestAnimationFrame(loop);
   }
   requestAnimationFrame(loop);
