@@ -1,3 +1,4 @@
+<!-- Remplace ton Accueil.html par celui-ci (ou applique le diff si tu préfères) -->
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -42,19 +43,15 @@
     0% { filter: hue-rotate(0deg) contrast(1.1); }
     100% { filter: hue-rotate(360deg) contrast(1.1); }
   }
-  body.cheat-mode {
-    animation: rainbow-party 2s linear infinite;
-  }
-  
+  body.cheat-mode { animation: rainbow-party 2s linear infinite; }
+
   @keyframes dance {
     0%, 100% { transform: translateY(0) rotate(0); }
     25% { transform: translateY(-10px) rotate(-2deg); }
     75% { transform: translateY(5px) rotate(2deg); }
   }
-  body.cheat-mode .game-card {
-    animation: dance 0.5s ease-in-out infinite alternate;
-  }
-  
+  body.cheat-mode .game-card { animation: dance 0.5s ease-in-out infinite alternate; }
+
   /* Rotation Proviseur */
   .spin-360 {
     transition: transform 0.8s cubic-bezier(0.68, -0.55, 0.27, 1.55) !important;
@@ -88,10 +85,9 @@
     display: flex; flex-direction: column;
     position: relative; z-index: 10;
     overflow: hidden;
-    opacity: 0; transform: scale(0.98); 
-    transition: transform 0.1s ease-out, opacity 0.5s ease-out; 
+    opacity: 0; transform: scale(0.98);
+    transition: transform 0.1s ease-out, opacity 0.5s ease-out;
   }
-
   #main-wrapper.loaded { opacity: 1; transform: scale(1); }
 
   /* HEADER */
@@ -102,7 +98,7 @@
     flex-shrink: 0; display: flex; align-items: center; justify-content: center; gap: 15px;
   }
   #logo {
-    height: 50px; 
+    height: 50px;
     filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));
     transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
   }
@@ -144,9 +140,14 @@
     background-image: radial-gradient(#000000 1px, transparent 1px);
     background-size: 20px 20px; opacity: 0.03; pointer-events: none;
   }
-  
-  .game-card:nth-child(1), .game-card:nth-child(2), .game-card:nth-child(3) { grid-column: span 2; }
-  .game-card:nth-child(4), .game-card:nth-child(5) { grid-column: span 3; }
+
+  /* >>> MODIF: 6 cartes = 3 par ligne (2 colonnes chacune) */
+  .game-card:nth-child(1),
+  .game-card:nth-child(2),
+  .game-card:nth-child(3),
+  .game-card:nth-child(4),
+  .game-card:nth-child(5),
+  .game-card:nth-child(6) { grid-column: span 2; }
 
   .game-card::after {
     content: ''; position: absolute; top: 0; left: -150%; width: 60%; height: 100%;
@@ -162,11 +163,11 @@
     z-index: 5;
   }
 
-  .card-content { 
-    padding: 18px; display: flex; flex-direction: column; justify-content: space-between; 
+  .card-content {
+    padding: 18px; display: flex; flex-direction: column; justify-content: space-between;
     overflow: hidden; height: 100%; box-sizing: border-box; position: relative; z-index: 2;
   }
-  
+
   .card-head { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
   .icon-box {
     width: 42px; height: 42px; border-radius: 10px;
@@ -180,16 +181,17 @@
   .card-titles span { font-size: 10px; text-transform: uppercase; color: #555; font-weight: 700; letter-spacing: 0.5px; }
 
   .meta-tags { display: flex; gap: 6px; margin-bottom: 10px; flex-wrap: wrap; }
-  .tag { 
-    background: var(--tag-bg); color: var(--tag-text); 
-    padding: 4px 10px; border-radius: 6px; 
+  .tag {
+    background: var(--tag-bg); color: var(--tag-text);
+    padding: 4px 10px; border-radius: 6px;
     font-size: 9px; font-weight: 700; text-transform: uppercase; border: 1px solid rgba(0, 113, 227, 0.2);
   }
   .tag.hard { background: rgba(220, 38, 38, 0.1); color: #dc2626; border-color: rgba(220, 38, 38, 0.2); }
   .tag.med { background: rgba(245, 158, 11, 0.1); color: #d97706; border-color: rgba(245, 158, 11, 0.2); }
+  .tag.purple { background: rgba(168, 85, 247, 0.12); color: #7c3aed; border-color: rgba(168, 85, 247, 0.22); }
 
   .status-line {
-      display: flex; align-items: center; gap: 6px; font-size: 9px; color: #666; font-weight: 600; margin-bottom: 6px;
+    display: flex; align-items: center; gap: 6px; font-size: 9px; color: #666; font-weight: 600; margin-bottom: 6px;
   }
   .dot { width: 6px; height: 6px; background: #10b981; border-radius: 50%; box-shadow: 0 0 5px #10b981;}
 
@@ -207,7 +209,7 @@
 
   .card-desc {
     font-size: 11px; line-height: 1.45; color: #444; margin: 0 0 12px 0;
-    display: -webkit-box; -webkit-line-clamp: 4; 
+    display: -webkit-box; -webkit-line-clamp: 4;
     -webkit-box-orient: vertical; overflow: hidden; font-weight: 500;
     flex-grow: 1; text-align: justify;
   }
@@ -227,9 +229,9 @@
     background-color: rgba(0,0,0,0.02); position: relative;
     border-left: 1px solid rgba(255,255,255,0.6); height: 100%; overflow: hidden;
   }
-  .card-visual div { 
-    position: absolute; inset: 0; background-size: cover; background-position: center; 
-    z-index: 1; transition: transform 0.6s cubic-bezier(0.25, 0.8, 0.25, 1); 
+  .card-visual div {
+    position: absolute; inset: 0; background-size: cover; background-position: center;
+    z-index: 1; transition: transform 0.6s cubic-bezier(0.25, 0.8, 0.25, 1);
   }
   .game-card:hover .card-visual div { transform: scale(1.1); }
 
@@ -244,6 +246,15 @@
   .t-rolling { background: linear-gradient(135deg, #0f172a, #334155); }
   .v-rolling { background-image: url("Rolling Thunder.gif"); }
 
+  /* >>> AJOUT: DOOM */
+  .t-doom { background: linear-gradient(135deg, #111827, #2563eb); }
+  .v-doom { background-image: url("CaseDoom.gif"); } /* optionnel, sinon gradient dessous */
+  .v-doom::after{
+    content:""; position:absolute; inset:0;
+    background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.20), transparent 55%);
+    pointer-events:none;
+  }
+
   .footer {
     text-align: center; padding: 10px; font-size: 10px; color: rgba(0,0,0,0.5);
     background: rgba(255,255,255,0.2); border-top: 1px solid rgba(255,255,255,0.3);
@@ -251,54 +262,42 @@
   }
 
   /* --- PERSONNAGES --- */
-  
   .char-container {
     position: fixed; bottom: 0;
-    display: flex; flex-direction: column; 
+    display: flex; flex-direction: column;
     z-index: 100; pointer-events: none;
     transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.4s ease;
   }
 
   /* PROVISEUR (DROITE) */
   #proviseur-container { right: 1%; align-items: flex-end; }
-  
+
   #proviseur-img {
     height: 55vh; max-height: 500px; width: auto;
     filter: drop-shadow(0 15px 30px rgba(0,0,0,0.4));
     cursor: pointer; pointer-events: auto;
     transition: transform 0.2s; transform-origin: bottom center;
-    position: relative; z-index: 1; /* Derrière la bulle si besoin, mais z-index géré par l'ordre DOM */
+    position: relative; z-index: 1;
   }
   #proviseur-img:hover { transform: scale(1.02); }
-  
-  /* BULLE PROVISEUR MODIFIÉE */
+
   #bubble-prov {
     background: #fff; color: #2c3e50; padding: 14px 22px; border-radius: 24px; border-bottom-right-radius: 4px;
     font-size: 13px; font-weight: 700; max-width: 240px; text-align: center;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.25); 
-    
-    /* MODIF: Marge positive pour remonter la bulle */
+    box-shadow: 0 10px 30px rgba(0,0,0,0.25);
     margin-bottom: 5px; margin-right: 40px;
-    
     opacity: 0; transform: translateY(20px) scale(0.9);
     pointer-events: auto; cursor: pointer; border: 3px solid #2c3e50;
     transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); position: relative;
-    
-    /* MODIF: Z-Index supérieur à l'image */
-    z-index: 10; 
+    z-index: 10;
   }
-  
-  /* MODIF: En mode Cheat, la bulle remonte encore plus pour laisser passer la tête qui tourne */
-  body.cheat-mode #bubble-prov {
-    transform: translateY(-40px) scale(1.1);
-  }
-
+  body.cheat-mode #bubble-prov { transform: translateY(-40px) scale(1.1); }
   #bubble-prov.visible { opacity: 1; transform: translateY(0) scale(1); }
-  
+
   /* PROFESSEUR (GAUCHE) */
-  #prof-container { 
-    left: 1%; align-items: flex-start; 
-    transform: translateX(-120%); 
+  #prof-container {
+    left: 1%; align-items: flex-start;
+    transform: translateX(-120%);
   }
   #prof-container.active { transform: translateX(0); }
 
@@ -307,7 +306,7 @@
     filter: drop-shadow(0 15px 30px rgba(0,0,0,0.4));
     cursor: pointer; pointer-events: auto; transform-origin: bottom center;
   }
-  
+
   #bubble-prof {
     background: #f0f9ff; color: #0369a1; padding: 14px 22px; border-radius: 24px; border-bottom-left-radius: 4px;
     font-size: 13px; font-weight: 700; max-width: 240px; text-align: center;
@@ -328,7 +327,7 @@
     .game-card { grid-template-columns: 1fr; }
     .card-visual { height: 100px; border-left: none; border-bottom: 1px solid rgba(255,255,255,0.5); order: -1; }
     #main-wrapper { width: 100%; height: 100%; border-radius: 0; border: none; }
-    
+
     #proviseur-img { height: 70px; width: 70px; border-radius: 50%; border: 2px solid #fff; background: #fff; margin-right: 5px; max-height: none;}
     #bubble-prov { font-size: 10px; margin-right: 0; padding: 8px; margin-bottom: 5px; right: 5px;}
     #prof-container { display: none; }
@@ -342,7 +341,6 @@
 <div id="bg-overlay"></div>
 
 <div id="main-wrapper">
-  
   <header class="header">
     <img id="logo" src="Logo.gif" alt="BTS CIEL" onerror="this.style.display='none'">
     <div class="header-text">
@@ -362,9 +360,7 @@
               <div class="icon-box t-tetris">T</div>
               <div class="card-titles"><h3>Tetris</h3><span>Algorithmique</span></div>
             </div>
-            <div class="meta-tags">
-              <span class="tag">Mémoire</span><span class="tag">Optimisation</span>
-            </div>
+            <div class="meta-tags"><span class="tag">Mémoire</span><span class="tag">Optimisation</span></div>
             <div class="score-box">
               <span class="score-label">Top Score</span>
               <span class="champion-name" id="name-tetris">--</span>
@@ -385,9 +381,7 @@
               <div class="icon-box t-arkanoid">A</div>
               <div class="card-titles"><h3>Arkanoid</h3><span>Cybersécurité</span></div>
             </div>
-            <div class="meta-tags">
-              <span class="tag hard">Reflexes</span><span class="tag">Firewall</span>
-            </div>
+            <div class="meta-tags"><span class="tag hard">Reflexes</span><span class="tag">Firewall</span></div>
             <div class="score-box">
               <span class="score-label">Top Score</span>
               <span class="champion-name" id="name-arkanoid">--</span>
@@ -408,9 +402,7 @@
               <div class="icon-box t-volt">V</div>
               <div class="card-titles"><h3>VoltLink</h3><span>Physique Appliquée</span></div>
             </div>
-            <div class="meta-tags">
-              <span class="tag">Loi d'Ohm</span><span class="tag">Safety</span>
-            </div>
+            <div class="meta-tags"><span class="tag">Loi d'Ohm</span><span class="tag">Safety</span></div>
             <div class="score-box">
               <span class="score-label">Top Score</span>
               <span class="champion-name" id="name-volt">--</span>
@@ -431,9 +423,7 @@
               <div class="icon-box t-bubble">B</div>
               <div class="card-titles"><h3>Puzzle Bobble</h3><span>Réseaux</span></div>
             </div>
-            <div class="meta-tags">
-              <span class="tag">Topologie</span><span class="tag">Routing</span>
-            </div>
+            <div class="meta-tags"><span class="tag">Topologie</span><span class="tag">Routing</span></div>
             <div class="score-box">
               <span class="score-label">Top Score</span>
               <span class="champion-name" id="name-bubble">--</span>
@@ -454,9 +444,7 @@
               <div class="icon-box t-rolling">R</div>
               <div class="card-titles"><h3>Rolling Thunder</h3><span>Logique Binaire</span></div>
             </div>
-            <div class="meta-tags">
-              <span class="tag med">Séquentiel</span><span class="tag">Clock</span>
-            </div>
+            <div class="meta-tags"><span class="tag med">Séquentiel</span><span class="tag">Clock</span></div>
             <div class="score-box">
               <span class="score-label">Top Score</span>
               <span class="champion-name" id="name-rolling">--</span>
@@ -469,11 +457,33 @@
         <div class="card-visual"><div class="v-rolling"></div></div>
       </div>
 
+      <!-- >>> AJOUT: DOOM -->
+      <div class="game-card" onclick="goTo('Doom.html')">
+        <div class="card-content">
+          <div>
+            <div class="status-line"><div class="dot" style="background:#60a5fa"></div>Système: SIMULATION 3D</div>
+            <div class="card-head">
+              <div class="icon-box t-doom">D</div>
+              <div class="card-titles"><h3>CIEL DOOM</h3><span>3D / Moteur</span></div>
+            </div>
+            <div class="meta-tags"><span class="tag">Raycasting</span><span class="tag purple">FPS</span></div>
+            <div class="score-box">
+              <span class="score-label">Statut</span>
+              <span class="champion-name">Mode</span>
+              <span class="score-val" style="color:#2563eb">ONLINE</span>
+            </div>
+            <p class="card-desc">Mini FPS en Canvas : collisions, contrôle souris (pointer-lock) et tirs “cœurs”. Objectif : performance + identité visuelle du Hub.</p>
+          </div>
+          <button class="play-btn"><span>▶</span> Entrer en simulation</button>
+        </div>
+        <div class="card-visual"><div class="v-doom"></div></div>
+      </div>
+
     </div>
   </div>
 
   <footer class="footer">
-    Département CIEL – Lycée Simone Veil – v3.1 (Système Éducatif)
+    Département CIEL – Lycée Simone Veil – v3.2 (Système Éducatif)
   </footer>
 </div>
 
@@ -488,7 +498,6 @@
 </div>
 
 <script>
-  // --- 1. GREETING ---
   function updateGreeting() {
     const h = new Date().getHours();
     const greet = h < 18 ? "Bonjour." : "Bonsoir.";
@@ -496,7 +505,6 @@
   }
   updateGreeting();
 
-  // --- 2. SCORES & FAKE DATA ---
   function animateValue(obj, start, end, duration) {
     let startTimestamp = null;
     const step = (timestamp) => {
@@ -510,7 +518,7 @@
   }
 
   function loadScores() {
-    const scoreElements = document.querySelectorAll('.score-val');
+    const scoreElements = document.querySelectorAll('.score-val[data-key]');
     scoreElements.forEach(el => {
       const key = el.dataset.key;
       const fakeScore = parseInt(el.dataset.fake);
@@ -522,7 +530,7 @@
       let user = "";
 
       if (localScore && parseInt(localScore) > 0) {
-        val = parseInt(localScore); user = "Vous"; el.style.color = "#10b981"; 
+        val = parseInt(localScore); user = "Vous"; el.style.color = "#10b981";
       } else {
         const variance = Math.floor(Math.random() * (fakeScore * 0.2)) - (fakeScore * 0.1);
         val = fakeScore + variance; user = fakeUser; el.style.color = "#0071e3";
@@ -532,10 +540,9 @@
     });
   }
 
-  // --- 3. ANIMATION ENTREE ---
   const bgLayer = document.getElementById('bg-layer');
   const mainWrapper = document.getElementById('main-wrapper');
-  
+
   function showHub() { mainWrapper.classList.add('loaded'); }
   window.addEventListener('load', showHub);
   window.addEventListener('pageshow', (e) => { if(e.persisted) showHub(); });
@@ -548,14 +555,12 @@
     mainWrapper.style.transform = `perspective(1200px) rotateY(${x * -0.05}deg) rotateX(${y * 0.05}deg)`;
   });
 
-  // --- 4. NAVIGATION ---
   function goTo(url) {
-    mainWrapper.classList.remove('loaded'); 
+    mainWrapper.classList.remove('loaded');
     mainWrapper.style.opacity = "0"; mainWrapper.style.transform = "scale(0.95)";
     setTimeout(() => { window.location.href = url; }, 200);
   }
 
-  // --- 5. INTERACTION PROVISEUR & CHEAT CODE ---
   const quotesProv = [
     "Le réseau semble stable. Pour l'instant.",
     "Qui est ce 'CyberWolf' en tête du classement ?",
@@ -568,16 +573,15 @@
 
   const bubbleProv = document.getElementById('bubble-prov');
   const provImg = document.getElementById('proviseur-img');
-  
-  // CHEAT CODE VARS
+
   let clickCount = 0;
   let resetTimer;
 
   function triggerProviseur() {
     bubbleProv.classList.remove('visible');
-    setTimeout(() => { 
-      bubbleProv.innerHTML = quotesProv[Math.floor(Math.random() * quotesProv.length)]; 
-      bubbleProv.classList.add('visible'); 
+    setTimeout(() => {
+      bubbleProv.innerHTML = quotesProv[Math.floor(Math.random() * quotesProv.length)];
+      bubbleProv.classList.add('visible');
     }, 100);
   }
 
@@ -585,11 +589,11 @@
     document.body.classList.add('cheat-mode');
     provImg.classList.add('spin-360');
     showBubble("ACCÈS ADMIN... ERREUR... PARTY MODE ! 🕺");
-    
+
     setTimeout(() => {
-        document.body.classList.remove('cheat-mode');
-        provImg.classList.remove('spin-360');
-        showBubble("Retour à la normale. Circulez.");
+      document.body.classList.remove('cheat-mode');
+      provImg.classList.remove('spin-360');
+      showBubble("Retour à la normale. Circulez.");
     }, 5000);
   }
 
@@ -599,31 +603,29 @@
   }
 
   provImg.addEventListener('click', (e) => {
-    e.stopPropagation(); 
-    
-    // Cheat Logic
+    e.stopPropagation();
+
     clickCount++;
     clearTimeout(resetTimer);
     resetTimer = setTimeout(() => clickCount = 0, 800);
 
     if (clickCount >= 4) {
-        activateCheatMode();
-        clickCount = 0;
+      activateCheatMode();
+      clickCount = 0;
     } else {
-        triggerProviseur();
-        provImg.style.transform = "scale(1.05) translateY(-5px)";
-        setTimeout(() => provImg.style.transform = "", 200);
+      triggerProviseur();
+      provImg.style.transform = "scale(1.05) translateY(-5px)";
+      setTimeout(() => provImg.style.transform = "", 200);
     }
   });
   bubbleProv.addEventListener('click', (e) => { e.stopPropagation(); triggerProviseur(); });
 
   setTimeout(() => { bubbleProv.innerHTML = "Les serveurs de jeu sont en ligne.<br>Battez les records !"; bubbleProv.classList.add('visible'); }, 800);
 
-  // --- 6. SYSTEME PROFESSEUR ALEATOIRE ---
   const profContainer = document.getElementById('prof-container');
   const profImg = document.getElementById('prof-img');
   const profBubble = document.getElementById('bubble-prof');
-  
+
   const profData = [
     { img: "Perso1.png", txt: "Hé ! Une partie de <b>Tetris</b> pour réviser tes pointeurs ?" },
     { img: "Perso2.png", txt: "Le câblage dans <b>VoltLink</b> est un désastre... va réparer ça !" },
@@ -646,14 +648,13 @@
   }
 
   function scheduleNextProf() {
-    const delay = Math.random() * 8000 + 12000; 
+    const delay = Math.random() * 8000 + 12000;
     clearTimeout(profTimer);
     profTimer = setTimeout(spawnProf, delay);
   }
 
   setTimeout(spawnProf, 3000);
   loadScores();
-
 </script>
 </body>
 </html>

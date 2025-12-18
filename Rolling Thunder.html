@@ -22,7 +22,6 @@
     background: rgba(255, 255, 255, 0.15); pointer-events: none; z-index: 0;
   }
 
-  /* CONTENEUR (glass + transparent) */
   #main{
     background: rgba(255, 255, 255, 0.55);
     backdrop-filter: blur(22px);
@@ -327,8 +326,8 @@ const resetTimesBtn = document.getElementById('reset-times');
 const screenStart = document.getElementById('overlay-start');
 const screenGO = document.getElementById('overlay-gameover');
 const screenPause = document.getElementById('overlay-pause');
-const finalScoreEl = document.getElementById('final-score');
 const bestScoreEl = document.getElementById('best-score');
+const finalScoreEl = document.getElementById('final-score');
 const debugEl = document.getElementById('debugOverlay');
 
 function safeText(el, txt){ if(el) el.innerText = String(txt); }
@@ -344,6 +343,15 @@ function formatTime(ms){
   return `${pad2(m)}:${pad2(s)}.${pad3(x)}`;
 }
 
+function clamp01(x){ return Math.max(0, Math.min(1, x)); }
+function moveTowards(current, target, maxDelta){
+  if(current < target) return Math.min(current + maxDelta, target);
+  return Math.max(current - maxDelta, target);
+}
+
+/* =========================
+   IMAGES VISAGES BONUS
+========================= */
 const faceImages = [];
 for (let i = 1; i <= 11; i++) {
   const img = new Image();
@@ -359,16 +367,20 @@ for (let i = 1; i <= 11; i++) {
 const GRAVITY = 0.55;
 const JUMP_FORCE = -12.0;
 
-const MOVE_ACCEL_GROUND = 1.0;
-const MOVE_ACCEL_AIR = 0.55;
 const MAX_SPEED = 8.0;
-
-const FRICTION_GROUND = 0.85;
-const FRICTION_AIR = 0.95;
+const ACCEL_GROUND = 0.85;
+const ACCEL_AIR    = 0.55;
+const DECEL_GROUND = 1.05;
+const DECEL_AIR    = 0.40;
 
 const JUMP_CUT_OFF = 0.5;
 
-// Couleurs : bit = bleu/rouge, arrivée = vert uniquement
+// rebond à l'atterrissage
+const LAND_BOUNCE_MIN_IMPACT = 6.5;
+const LAND_BOUNCE_FACTOR = 0.18;
+const LAND_BOUNCE_MAX = 2.8;
+
+// Couleurs
 const C_0 = '#3b82f6';
 const C_1 = '#ef4444';
 const C_N = '#94a3b8';
@@ -383,85 +395,208 @@ const BONUS_TYPES = [
 ];
 
 /* =========================
-   LUNE PIXEL (parallaxe)
+   FX
 ========================= */
-const MOON = {
-  px: 6,
-  parallax: 0.18,   // 0 = fixe écran, 1 = suit le monde
-  yRatio: 0.22,
-  xOffset: 680,
-  bobAmp: 6,
-  bobSpeed: 0.018,
-  alpha: 0.22
+const FX = {
+  hazeAlpha: 0.018,
+  hazeTopAlpha: 0.012,
+
+  fogAlpha: 0.065,
+  fogSpeed: 0.15,
+  fogScale: 0.9,
+  fogParallax: 0.06,
+
+  grainAlpha: 0.032,
+
+  shadowMaxAlpha: 0.28,
+
+  motionBlurAlpha: 0.22,
+  motionBlurMinSpeed: 2.6,
+
+  depthBase: 8,
+  depthVar: 3,
+
+  inactiveAlpha: 0.18,
+  inactiveStrokeAlpha: 0.12,
+
+  hazeParallax: 0.03,
+  hazeBobAmp: 14,
+  hazeBobSpeed: 0.010
 };
 
-function drawPixelMoon(cameraX){
-  const px = MOON.px;
-  const baseY = Math.round(canvas.height * MOON.yRatio);
-  const bob = Math.sin(game.frame * MOON.bobSpeed) * MOON.bobAmp;
+let grainCanvas = null;
+let fogBlobs = [];
 
-  let x = Math.round(canvas.width * 0.72 - (cameraX * MOON.parallax) + MOON.xOffset);
-  let y = Math.round(baseY + bob);
+/* =========================
+   PLUIE (2 couches + bokeh + éclats)
+========================= */
+const RAIN = {
+  enabled: true,
+  backCount: 120,
+  frontCount: 90,
+  wind: 0.55,
+  backSpeed: 9.5,
+  frontSpeed: 15.0,
+  backLen: 10,
+  frontLen: 18,
+  backAlpha: 0.08,
+  frontAlpha: 0.12,
+  backParallax: 0.08,
+  frontParallax: 0.18,
 
-  const wrapW = canvas.width + 600;
-  x = ((x % wrapW) + wrapW) % wrapW - 300;
+  // volumétrique
+  bokehCount: 18,
+  bokehAlpha: 0.06,
+  splashChance: 0.22,
+  splashCountMax: 140
+};
 
-  const grid = [
-    "0000011111000",
-    "0001111111110",
-    "0011111111111",
-    "0111111111111",
-    "0111111111111",
-    "1111111111111",
-    "1111111111111",
-    "1111111111111",
-    "0111111111111",
-    "0111111111111",
-    "0011111111111",
-    "0001111111110",
-    "0000011111000",
-  ];
+let rainBack = [];
+let rainFront = [];
+let rainSplashes = [];
+let rainBokeh = [];
 
-  const cut = [
-    "0000000000000",
-    "0000000011100",
-    "0000000111110",
-    "0000001111110",
-    "0000011111110",
-    "0000011111110",
-    "0000011111110",
-    "0000011111110",
-    "0000011111110",
-    "0000001111110",
-    "0000000111110",
-    "0000000011100",
-    "0000000000000",
-  ];
+/* =========================
+   GALAXIE
+========================= */
+const GALAXY = {
+  w: 900,
+  h: 520,
+  parallax: 0.14,
+  xRatio: 0.70,
+  yRatio: 0.26,
+  alpha: 0.20,
+  bobAmp: 5,
+  bobSpeed: 0.012
+};
 
-  ctx.save();
-  ctx.globalAlpha = MOON.alpha;
+let galaxyCanvas = null;
+let galaxyStars = [];
+let galaxySeed = 1337;
 
-  // halo discret
-  ctx.globalAlpha = MOON.alpha * 0.65;
-  ctx.fillStyle = "#cbd5e1";
-  ctx.beginPath();
-  ctx.arc(x + 6*px, y + 6*px, 10*px, 0, Math.PI*2);
-  ctx.fill();
+function rand(seed){
+  seed = (seed * 1664525 + 1013904223) >>> 0;
+  return [seed, seed / 4294967296];
+}
+function initGalaxy(){
+  galaxyCanvas = document.createElement('canvas');
+  galaxyCanvas.width = GALAXY.w;
+  galaxyCanvas.height = GALAXY.h;
+  const g = galaxyCanvas.getContext('2d');
 
-  // pixels
-  ctx.globalAlpha = MOON.alpha;
-  for(let r=0; r<grid.length; r++){
-    const row = grid[r];
-    const cutRow = cut[r];
-    for(let c=0; c<row.length; c++){
-      if(row[c] === "1" && cutRow[c] === "0"){
-        const shade = 220 - (c*2) + (r*1);
-        ctx.fillStyle = `rgb(${shade},${shade},${shade})`;
-        ctx.fillRect(x + c*px, y + r*px, px, px);
-      }
-    }
+  g.clearRect(0,0,GALAXY.w,GALAXY.h);
+
+  const cx = GALAXY.w * 0.52;
+  const cy = GALAXY.h * 0.55;
+
+  let grad = g.createRadialGradient(cx, cy, 10, cx, cy, GALAXY.w*0.55);
+  grad.addColorStop(0, "rgba(96,165,250,0.18)");
+  grad.addColorStop(0.55, "rgba(139,92,246,0.08)");
+  grad.addColorStop(1, "rgba(15,23,42,0)");
+  g.fillStyle = grad;
+  g.fillRect(0,0,GALAXY.w,GALAXY.h);
+
+  grad = g.createRadialGradient(cx, cy, 0, cx, cy, GALAXY.w*0.20);
+  grad.addColorStop(0, "rgba(255,255,255,0.55)");
+  grad.addColorStop(0.35, "rgba(191,219,254,0.22)");
+  grad.addColorStop(1, "rgba(15,23,42,0)");
+  g.fillStyle = grad;
+  g.fillRect(0,0,GALAXY.w,GALAXY.h);
+
+  let seed = galaxySeed >>> 0;
+  const arms = 3;
+  const points = 1600;
+
+  g.save();
+  g.globalCompositeOperation = "lighter";
+  g.filter = "blur(0.2px)";
+
+  for(let i=0;i<points;i++){
+    let r1,r2,r3;
+    [seed, r1] = rand(seed);
+    [seed, r2] = rand(seed);
+    [seed, r3] = rand(seed);
+
+    const t = r1;
+    const radius = Math.pow(t, 0.55) * (GALAXY.w*0.45);
+    const arm = Math.floor(r2 * arms);
+    const baseAng = arm * (Math.PI*2/arms);
+    const twist = radius * 0.015;
+    const ang = baseAng + twist + (r3-0.5)*0.35;
+
+    const x = cx + Math.cos(ang)*radius;
+    const y = cy + Math.sin(ang)*radius*0.62;
+
+    const size = 0.6 + Math.pow(1-t, 1.8)*2.2;
+    const a = 0.06 + (1-t)*0.18;
+
+    const cool = 190 + Math.floor((1-t)*55);
+    g.fillStyle = `rgba(${cool},${cool},255,${a})`;
+    g.fillRect(x, y, size, size);
   }
 
+  g.filter = "blur(18px)";
+  g.globalAlpha = 0.18;
+  g.fillStyle = "rgba(96,165,250,1)";
+  g.beginPath();
+  g.ellipse(cx, cy, GALAXY.w*0.26, GALAXY.h*0.18, -0.25, 0, Math.PI*2);
+  g.fill();
+  g.restore();
+
+  galaxyStars = [];
+  seed = (galaxySeed ^ 0x9E3779B9) >>> 0;
+  const n = 120;
+  for(let i=0;i<n;i++){
+    let r; [seed, r] = rand(seed); const x = r;
+    [seed, r] = rand(seed); const y = r;
+    [seed, r] = rand(seed); const s = r;
+    [seed, r] = rand(seed); const a = r;
+    galaxyStars.push({
+      x: x,
+      y: y,
+      r: 0.6 + s*1.8,
+      a: 0.05 + a*0.25,
+      tw: 0.6 + (s*1.6)
+    });
+  }
+}
+function drawGalaxy(cameraX){
+  if(!galaxyCanvas) return;
+
+  const bob = Math.sin(game.frame * GALAXY.bobSpeed) * GALAXY.bobAmp;
+
+  let x = canvas.width * GALAXY.xRatio - (cameraX * GALAXY.parallax);
+  let y = canvas.height * GALAXY.yRatio + bob;
+
+  const wrapW = canvas.width + GALAXY.w + 600;
+  x = ((x % wrapW) + wrapW) % wrapW - (GALAXY.w/2);
+
+  ctx.save();
+
+  ctx.globalCompositeOperation = "lighter";
+  for(const st of galaxyStars){
+    const tw = (Math.sin(game.frame*0.02*st.tw + st.x*10) * 0.5 + 0.5);
+    const a = st.a * (0.6 + tw*0.8);
+    ctx.globalAlpha = a;
+    ctx.fillStyle = (game.bit===0) ? "rgba(147,197,253,1)" : "rgba(252,165,165,1)";
+    ctx.beginPath();
+    ctx.arc(st.x*canvas.width, st.y*canvas.height, st.r, 0, Math.PI*2);
+    ctx.fill();
+  }
+
+  ctx.globalAlpha = GALAXY.alpha;
+  ctx.filter = "blur(0.8px)";
+  ctx.drawImage(galaxyCanvas, x, y, GALAXY.w, GALAXY.h);
+
+  ctx.globalAlpha = GALAXY.alpha * 0.55;
+  ctx.filter = "blur(22px)";
+  ctx.fillStyle = (game.bit===0) ? "rgba(59,130,246,1)" : "rgba(239,68,68,1)";
+  ctx.beginPath();
+  ctx.ellipse(x + GALAXY.w*0.55, y + GALAXY.h*0.50, GALAXY.w*0.22, GALAXY.h*0.14, -0.15, 0, Math.PI*2);
+  ctx.fill();
+
+  ctx.filter = "none";
+  ctx.globalCompositeOperation = "source-over";
   ctx.restore();
 }
 
@@ -480,8 +615,8 @@ let game = {
   levelStartTs: 0,
   runStartTs: 0,
 
-  spawn: null,        // point de départ du niveau
-  checkpoint: null,   // checkpoint ACTIF uniquement après passage
+  spawn: null,
+  checkpoint: null,
 
   respawnLock: 0,
   transition: 0,
@@ -572,25 +707,8 @@ function initAudio() {
 function playSound(type) {
   if(!audioCtx) return;
   const t = audioCtx.currentTime;
-  const osc = audioCtx.createOscillator();
-  const gain = audioCtx.createGain();
-  osc.connect(gain); gain.connect(audioCtx.destination);
 
-  if (type === 'jump') {
-    osc.type = 'triangle'; osc.frequency.setValueAtTime(100, t); osc.frequency.exponentialRampToValueAtTime(600, t+0.1);
-    gain.gain.setValueAtTime(0.1, t); gain.gain.exponentialRampToValueAtTime(0.01, t+0.15);
-    osc.start(t); osc.stop(t+0.15);
-  } else if (type === 'switch') {
-    osc.type = 'sawtooth'; osc.frequency.setValueAtTime(200, t); osc.frequency.linearRampToValueAtTime(50, t+0.2);
-    const f = audioCtx.createBiquadFilter(); f.type="lowpass"; f.frequency.value=1000;
-    osc.disconnect(); osc.connect(f); f.connect(gain);
-    gain.gain.setValueAtTime(0.1, t); gain.gain.linearRampToValueAtTime(0, t+0.2);
-    osc.start(t); osc.stop(t+0.2);
-  } else if (type === 'coin') {
-    osc.type = 'sine'; osc.frequency.setValueAtTime(1200, t);
-    gain.gain.setValueAtTime(0.05, t); gain.gain.exponentialRampToValueAtTime(0.001, t+0.3);
-    osc.start(t); osc.stop(t+0.3);
-  } else if (type === 'bonus') {
+  if (type === 'bonus') {
     const freqs = [440, 554, 659];
     freqs.forEach((fr, i) => {
       const o = audioCtx.createOscillator(); const g = audioCtx.createGain();
@@ -599,23 +717,294 @@ function playSound(type) {
       g.gain.setValueAtTime(0.05, t+i*0.05); g.gain.exponentialRampToValueAtTime(0.001, t+i*0.05+0.3);
       o.start(t+i*0.05); o.stop(t+i*0.05+0.3);
     });
+    return;
+  }
+
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.connect(gain); gain.connect(audioCtx.destination);
+
+  if (type === 'jump') {
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(100, t);
+    osc.frequency.exponentialRampToValueAtTime(600, t+0.1);
+    gain.gain.setValueAtTime(0.1, t);
+    gain.gain.exponentialRampToValueAtTime(0.01, t+0.15);
+    osc.start(t); osc.stop(t+0.15);
+  } else if (type === 'switch') {
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(200, t);
+    osc.frequency.linearRampToValueAtTime(50, t+0.2);
+    const f = audioCtx.createBiquadFilter(); f.type="lowpass"; f.frequency.value=1000;
+    osc.disconnect(); osc.connect(f); f.connect(gain);
+    gain.gain.setValueAtTime(0.1, t);
+    gain.gain.linearRampToValueAtTime(0, t+0.2);
+    osc.start(t); osc.stop(t+0.2);
+  } else if (type === 'coin') {
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(1200, t);
+    gain.gain.setValueAtTime(0.05, t);
+    gain.gain.exponentialRampToValueAtTime(0.001, t+0.3);
+    osc.start(t); osc.stop(t+0.3);
   } else if (type === 'save') {
-    osc.type = 'square'; osc.frequency.setValueAtTime(400, t); osc.frequency.linearRampToValueAtTime(800, t+0.3);
-    gain.gain.setValueAtTime(0.1, t); gain.gain.linearRampToValueAtTime(0, t+0.3);
+    osc.type = 'square';
+    osc.frequency.setValueAtTime(400, t);
+    osc.frequency.linearRampToValueAtTime(800, t+0.3);
+    gain.gain.setValueAtTime(0.1, t);
+    gain.gain.linearRampToValueAtTime(0, t+0.3);
     osc.start(t); osc.stop(t+0.3);
   } else if (type === 'checkpoint') {
-    osc.type = 'sine'; osc.frequency.setValueAtTime(520, t); osc.frequency.linearRampToValueAtTime(780, t+0.2);
-    gain.gain.setValueAtTime(0.08, t); gain.gain.linearRampToValueAtTime(0, t+0.25);
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(520, t);
+    osc.frequency.linearRampToValueAtTime(780, t+0.2);
+    gain.gain.setValueAtTime(0.08, t);
+    gain.gain.linearRampToValueAtTime(0, t+0.25);
     osc.start(t); osc.stop(t+0.25);
   } else if (type === 'overheat') {
-    osc.type = 'square'; osc.frequency.setValueAtTime(140, t); osc.frequency.linearRampToValueAtTime(90, t+0.25);
-    gain.gain.setValueAtTime(0.12, t); gain.gain.linearRampToValueAtTime(0, t+0.25);
+    osc.type = 'square';
+    osc.frequency.setValueAtTime(140, t);
+    osc.frequency.linearRampToValueAtTime(90, t+0.25);
+    gain.gain.setValueAtTime(0.12, t);
+    gain.gain.linearRampToValueAtTime(0, t+0.25);
     osc.start(t); osc.stop(t+0.25);
   }
 }
 
 /* =========================
-   VISUELS
+   VISUELS (grain / fog / haze / bits)
+========================= */
+function rand01(seed){
+  const x = Math.sin(seed * 12.9898) * 43758.5453;
+  return x - Math.floor(x);
+}
+
+function buildGrainTexture(){
+  grainCanvas = document.createElement('canvas');
+  grainCanvas.width = Math.max(64, Math.floor(canvas.width / 8));
+  grainCanvas.height = Math.max(64, Math.floor(canvas.height / 8));
+  const g = grainCanvas.getContext('2d');
+
+  const img = g.createImageData(grainCanvas.width, grainCanvas.height);
+  for(let y=0; y<img.height; y++){
+    for(let x=0; x<img.width; x++){
+      const i = (y*img.width + x)*4;
+      const v = Math.floor(rand01((x+1)*(y+1)*0.13) * 255);
+      img.data[i+0] = v;
+      img.data[i+1] = v;
+      img.data[i+2] = v;
+      img.data[i+3] = 255;
+    }
+  }
+  g.putImageData(img, 0, 0);
+}
+
+function initFog(){
+  fogBlobs = [];
+  const n = 9;
+  for(let i=0; i<n; i++){
+    fogBlobs.push({
+      x: Math.random()*(canvas.width+600)-300,
+      y: Math.random()*canvas.height,
+      r: 120 + Math.random()*260,
+      a: 0.05 + Math.random()*0.10
+    });
+  }
+}
+
+/* =========================
+   PLUIE: init/update/draw (+ bokeh + splashes)
+========================= */
+function makeDrop(front){
+  const w = canvas.width, h = canvas.height;
+  const z = front ? (0.7 + Math.random()*0.9) : (0.35 + Math.random()*0.65);
+  return {
+    x: Math.random()*w,
+    y: Math.random()*h,
+    z,
+    s: (front ? RAIN.frontSpeed : RAIN.backSpeed) * (0.8 + Math.random()*0.7) * (0.75 + z),
+    a: (front ? RAIN.frontAlpha : RAIN.backAlpha) * (0.7 + Math.random()*0.8),
+    len: (front ? RAIN.frontLen : RAIN.backLen) * (0.75 + z*0.8),
+    w: 0.8 + z*0.9,
+    phase: Math.random()*Math.PI*2
+  };
+}
+
+function makeBokeh(){
+  return {
+    x: Math.random(),
+    y: Math.random(),
+    z: 0.6 + Math.random()*1.0,
+    r: 10 + Math.random()*22,
+    a: RAIN.bokehAlpha * (0.6 + Math.random()*0.9),
+    phase: Math.random()*Math.PI*2
+  };
+}
+
+function spawnSplash(x, y){
+  if(rainSplashes.length > RAIN.splashCountMax) rainSplashes.splice(0, 30);
+  const n = 2 + Math.floor(Math.random()*3);
+  for(let i=0;i<n;i++){
+    rainSplashes.push({
+      x,
+      y,
+      vx: (Math.random()-0.5)*1.6,
+      vy: - (0.6 + Math.random()*1.6),
+      life: 1,
+      r: 1.0 + Math.random()*1.8
+    });
+  }
+}
+
+function initRain(){
+  rainBack = [];
+  rainFront = [];
+  rainSplashes = [];
+  rainBokeh = [];
+  for(let i=0;i<RAIN.backCount;i++) rainBack.push(makeDrop(false));
+  for(let i=0;i<RAIN.frontCount;i++) rainFront.push(makeDrop(true));
+  for(let i=0;i<RAIN.bokehCount;i++) rainBokeh.push(makeBokeh());
+}
+
+function updateRain(){
+  if(!RAIN.enabled) return;
+  const w = canvas.width, h = canvas.height;
+
+  const wind = RAIN.wind + Math.sin(game.frame*0.01)*0.15;
+  const drift = wind * 0.9;
+
+  const step = (player.activeBonus && player.activeBonus.id === 'SLOW') ? 0.6 : 1;
+
+  const upd = (arr, front) => {
+    const par = front ? RAIN.frontParallax : RAIN.backParallax;
+    for(const d of arr){
+      const wob = Math.sin(game.frame*0.02 + d.phase) * 0.15;
+      d.x += (drift + wob) * (0.8 + d.z*0.9) * step;
+      d.y += d.s * step;
+
+      d.x -= (player.vx * par) * (0.6 + d.z);
+
+      if(d.y > h + 50){
+        // éclats au "sol" (approx bas écran) pour la couche avant
+        if(front && Math.random() < RAIN.splashChance){
+          spawnSplash(d.x, h - 10 - Math.random()*22);
+        }
+        d.y = -60 - Math.random()*120;
+        d.x = Math.random()*w;
+        d.phase = Math.random()*Math.PI*2;
+      }
+      if(d.x < -80) d.x = w + 80;
+      if(d.x > w + 80) d.x = -80;
+    }
+  };
+
+  upd(rainBack, false);
+  upd(rainFront, true);
+
+  // bokeh qui dérive légèrement + parallax
+  for(const b of rainBokeh){
+    b.phase += 0.01;
+    const dx = (0.2 + b.z*0.5) * (0.12 + Math.sin(b.phase)*0.05);
+    b.x += dx * 0.001;
+    b.y += (0.0006 + b.z*0.0004);
+    b.x -= (player.vx * 0.00005) * (0.6 + b.z);
+
+    if(b.y > 1.15) { b.y = -0.15; b.x = Math.random(); }
+    if(b.x > 1.2) b.x = -0.2;
+    if(b.x < -0.2) b.x = 1.2;
+  }
+
+  // update splashes
+  for(let i=rainSplashes.length-1;i>=0;i--){
+    const s = rainSplashes[i];
+    s.x += s.vx;
+    s.y += s.vy;
+    s.vy += 0.18;
+    s.life -= 0.06;
+    if(s.life <= 0) rainSplashes.splice(i,1);
+  }
+}
+
+function drawRain(front){
+  if(!RAIN.enabled) return;
+  const arr = front ? rainFront : rainBack;
+
+  ctx.save();
+  ctx.globalCompositeOperation = "lighter";
+  ctx.lineCap = "round";
+
+  for(const d of arr){
+    const sx = d.x;
+    const sy = d.y;
+
+    const ang = 1.33 + Math.sin(game.frame*0.015 + d.phase)*0.03;
+    const dx = Math.cos(ang) * d.len;
+    const dy = Math.sin(ang) * d.len;
+
+    ctx.globalAlpha = d.a;
+
+    const col = (game.bit===0)
+      ? `rgba(147,197,253,1)`
+      : `rgba(252,165,165,1)`;
+
+    ctx.strokeStyle = col;
+    ctx.lineWidth = d.w;
+
+    ctx.beginPath();
+    ctx.moveTo(sx, sy);
+    ctx.lineTo(sx + dx, sy + dy);
+    ctx.stroke();
+  }
+
+  ctx.globalCompositeOperation = "source-over";
+  ctx.restore();
+}
+
+function drawRainBokeh(){
+  if(!RAIN.enabled || rainBokeh.length === 0) return;
+
+  ctx.save();
+  ctx.globalCompositeOperation = "screen";
+  ctx.filter = "blur(10px)";
+
+  const col = (game.bit===0) ? "rgba(147,197,253,1)" : "rgba(252,165,165,1)";
+
+  for(const b of rainBokeh){
+    const x = b.x * canvas.width;
+    const y = b.y * canvas.height;
+    const r = b.r * (0.7 + b.z*0.7);
+    const tw = (Math.sin(game.frame*0.02 + b.phase) * 0.5 + 0.5);
+    ctx.globalAlpha = b.a * (0.6 + tw*0.8);
+    ctx.fillStyle = col;
+    ctx.beginPath();
+    ctx.arc(x, y, r, 0, Math.PI*2);
+    ctx.fill();
+  }
+
+  ctx.filter = "none";
+  ctx.globalCompositeOperation = "source-over";
+  ctx.restore();
+}
+
+function drawRainSplashes(){
+  if(!RAIN.enabled || rainSplashes.length === 0) return;
+  ctx.save();
+  ctx.globalCompositeOperation = "lighter";
+  const col = (game.bit===0) ? "rgba(191,219,254,1)" : "rgba(254,202,202,1)";
+  ctx.fillStyle = col;
+
+  for(const s of rainSplashes){
+    ctx.globalAlpha = 0.18 * s.life;
+    ctx.beginPath();
+    ctx.arc(s.x, s.y, s.r, 0, Math.PI*2);
+    ctx.fill();
+  }
+
+  ctx.globalCompositeOperation = "source-over";
+  ctx.restore();
+}
+
+/* =========================
+   BACKGROUND INIT
 ========================= */
 function initBackground() {
   bgBits = [];
@@ -626,15 +1015,101 @@ function initBackground() {
       size: 10+Math.random()*15, alpha: 0.1+Math.random()*0.2
     });
   }
+  buildGrainTexture();
+  initFog();
+  initGalaxy();
+  initRain();
+}
+
+function drawFog(cameraX){
+  ctx.save();
+  ctx.globalAlpha = FX.fogAlpha;
+  ctx.fillStyle = "#94a3b8";
+  ctx.filter = "blur(18px)";
+  const t = game.frame * 0.004 * FX.fogSpeed;
+
+  for(const b of fogBlobs){
+    let x = b.x - cameraX * FX.fogParallax + Math.sin(t + b.y*0.01)*12;
+    let y = b.y + Math.cos(t*0.9 + b.x*0.01)*6;
+
+    const wrapW = canvas.width + 900;
+    x = ((x + 450) % wrapW) - 450;
+
+    ctx.globalAlpha = FX.fogAlpha * b.a;
+    ctx.beginPath();
+    ctx.ellipse(x, y, b.r*0.9, (b.r*0.55)*0.9, 0, 0, Math.PI*2);
+    ctx.fill();
+  }
+  ctx.filter = "none";
+  ctx.restore();
+}
+
+/* voile animé + parallax (moins gênant) */
+function drawHazeAnimated(){
+  const bob = Math.sin(game.frame * FX.hazeBobSpeed) * FX.hazeBobAmp;
+  const par = -game.cameraX * FX.hazeParallax;
+
+  ctx.save();
+
+  ctx.globalAlpha = FX.hazeAlpha;
+  ctx.fillStyle = "#0b1222";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  ctx.globalCompositeOperation = "screen";
+  ctx.globalAlpha = 0.10;
+  ctx.filter = "blur(30px)";
+
+  const cx = canvas.width*0.55 + par*0.6;
+  const cy = canvas.height*0.42 + bob;
+
+  let g1 = ctx.createRadialGradient(cx, cy, 10, cx, cy, canvas.width*0.55);
+  g1.addColorStop(0, (game.bit===0) ? "rgba(96,165,250,0.18)" : "rgba(248,113,113,0.18)");
+  g1.addColorStop(1, "rgba(15,23,42,0)");
+  ctx.fillStyle = g1;
+  ctx.fillRect(0,0,canvas.width,canvas.height);
+
+  const cx2 = canvas.width*0.30 + par*0.9;
+  const cy2 = canvas.height*0.65 - bob*0.6;
+  let g2 = ctx.createRadialGradient(cx2, cy2, 0, cx2, cy2, canvas.width*0.40);
+  g2.addColorStop(0, "rgba(255,255,255,0.08)");
+  g2.addColorStop(1, "rgba(15,23,42,0)");
+  ctx.fillStyle = g2;
+  ctx.fillRect(0,0,canvas.width,canvas.height);
+
+  ctx.filter = "none";
+  ctx.globalCompositeOperation = "source-over";
+
+  const g = ctx.createLinearGradient(0, 0, 0, canvas.height*0.9);
+  g.addColorStop(0, `rgba(148,163,184,${FX.hazeTopAlpha})`);
+  g.addColorStop(1, `rgba(148,163,184,0)`);
+  ctx.globalAlpha = 1;
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  ctx.restore();
+}
+
+function drawGrain(){
+  if(!grainCanvas) return;
+  ctx.save();
+  ctx.globalAlpha = FX.grainAlpha;
+  ctx.imageSmoothingEnabled = false;
+  ctx.drawImage(grainCanvas, 0, 0, canvas.width, canvas.height);
+  ctx.imageSmoothingEnabled = true;
+  ctx.restore();
 }
 
 function drawBackground() {
   ctx.fillStyle = C_BG;
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  // LUNE (derrière les 0/1)
-  drawPixelMoon(game.cameraX);
+  drawFog(game.cameraX);
+  drawGalaxy(game.cameraX);
 
+  // pluie arrière
+  drawRain(false);
+
+  // bits en fond
   ctx.save();
   bgBits.forEach(b => {
     let dx = (b.x - game.cameraX * (0.1 * b.z)) % (canvas.width + 50);
@@ -645,8 +1120,13 @@ function drawBackground() {
     ctx.fillText(b.txt, dx, b.y);
   });
   ctx.restore();
+
+  drawHazeAnimated();
 }
 
+/* =========================
+   PARTICULES / TEXTES
+========================= */
 function addParticles(x, y, color, count, speed=1) {
   for(let i=0; i<count; i++) {
     particles.push({
@@ -659,41 +1139,59 @@ function spawnFloatText(text, x, y, color) {
   floatTexts.push({text, x, y, color, life: 90, dy: -0.8});
 }
 
-function drawBlock3D(x, y, w, h, color, active) {
+/* =========================
+   RENDU BLOCS / BONUS
+========================= */
+function depthForBlock(p){
+  const yN = clamp01(p.y / Math.max(1, canvas.height));
+  let d = FX.depthBase;
+  if(p.isCheckpoint) d += 1;
+  if(p.isEnd) d += 2;
+  if(p.type === '0' || p.type === '1') d += 1;
+  d += (yN - 0.4) * 3;
+  d = Math.max(5, Math.min(12, d));
+  return d;
+}
+
+function drawBlock3D(x, y, w, h, color, active, depth) {
   let sx = x - game.cameraX;
   if (sx + w < 0 || sx > canvas.width) return;
 
-  const depth = 8;
+  const d = depth ?? FX.depthBase;
 
   if (!active) {
+    ctx.save();
+    ctx.globalAlpha = FX.inactiveAlpha;
     ctx.strokeStyle = color;
     ctx.lineWidth = 1;
-    ctx.globalAlpha = 0.15;
     ctx.strokeRect(sx, y, w, h);
-    ctx.globalAlpha = 1;
+    ctx.globalAlpha = FX.inactiveStrokeAlpha;
+    ctx.strokeStyle = 'rgba(255,255,255,0.35)';
+    ctx.strokeRect(sx+1, y+1, w-2, h-2);
+    ctx.restore();
     return;
   }
 
-  ctx.fillStyle = 'rgba(0,0,0,0.4)';
+  ctx.fillStyle = 'rgba(0,0,0,0.40)';
   ctx.beginPath();
   ctx.moveTo(sx+w,y);
-  ctx.lineTo(sx+w+depth,y-depth);
-  ctx.lineTo(sx+w+depth,y+h-depth);
+  ctx.lineTo(sx+w+d,y-d);
+  ctx.lineTo(sx+w+d,y+h-d);
   ctx.lineTo(sx+w,y+h);
   ctx.fill();
 
   ctx.fillStyle = 'rgba(255,255,255,0.15)';
   ctx.beginPath();
   ctx.moveTo(sx,y);
-  ctx.lineTo(sx+depth,y-depth);
-  ctx.lineTo(sx+w+depth,y-depth);
+  ctx.lineTo(sx+d,y-d);
+  ctx.lineTo(sx+w+d,y-d);
   ctx.lineTo(sx+w,y);
   ctx.fill();
 
   ctx.fillStyle = color;
   ctx.fillRect(sx, y, w, h);
 
-  ctx.strokeStyle = 'rgba(255,255,255,0.5)';
+  ctx.strokeStyle = 'rgba(255,255,255,0.50)';
   ctx.lineWidth = 1;
   ctx.strokeRect(sx, y, w, h);
 
@@ -704,6 +1202,20 @@ function drawBlock3D(x, y, w, h, color, active) {
   ctx.fillStyle = color;
   ctx.fillRect(sx+2, y+2, w-4, h-4);
   ctx.restore();
+
+  if(grainCanvas){
+    ctx.save();
+    ctx.globalAlpha = 0.05;
+    ctx.imageSmoothingEnabled = false;
+    ctx.beginPath();
+    ctx.rect(sx+1, y+1, w-2, h-2);
+    ctx.clip();
+    const ox = ((sx*0.1) % 32);
+    const oy = ((y*0.1) % 32);
+    ctx.drawImage(grainCanvas, ox, oy, canvas.width, canvas.height);
+    ctx.imageSmoothingEnabled = true;
+    ctx.restore();
+  }
 }
 
 function drawBonusBlock(it) {
@@ -742,19 +1254,15 @@ function drawBonusBlock(it) {
 
 /* =========================
    GENERATION NIVEAU
-   FIX: checkpoint NON actif tant que non touché
 ========================= */
 function initLevel() {
   platforms = [];
   items = [];
-
-  // IMPORTANT : checkpoint ACTIF = null tant que pas touché
   game.checkpoint = null;
 
   let cx = 0;
   let cy = canvas.height - 120;
 
-  // spawn de départ du niveau (respawn si pas de checkpoint actif)
   game.spawn = { x: 60, y: cy - 80 };
 
   platforms.push({x: -50, y: cy, w: 400, h: 40, type: 'neutral'});
@@ -789,7 +1297,6 @@ function initLevel() {
 
     let w = 110 + Math.random() * 110;
 
-    // place le checkpoint, mais ne l'active pas
     if(!checkpointPlaced && i >= checkpointIndex) {
       const cpW = 120;
       platforms.push({
@@ -885,8 +1392,11 @@ function doJump() {
   player.grounded = false;
   player.coyote = 0;
   player.jumpBuffer = 0;
-  player.scaleX = 0.7;
-  player.scaleY = 1.3;
+
+  // déformation saut plus visible
+  player.scaleX = 0.50;
+  player.scaleY = 1.70;
+
   playSound('jump');
   addParticles(player.x, player.y+15, '#fff', 6, 0.6);
 }
@@ -940,6 +1450,8 @@ function updateVisuals() {
   if(switchCooldown <= 0 && switchOverheat <= 0) switchHeat = Math.max(0, switchHeat - 2.2);
   else switchHeat = Math.max(0, switchHeat - 1.0);
 
+  updateRain();
+
   if(game.state === 'transition') {
     game.transitionAlpha = Math.min(1, game.transitionAlpha + 0.06);
     if(game.transition > 0) game.transition--;
@@ -979,28 +1491,50 @@ function updateVisuals() {
 function updatePhysics() {
   updateBonus();
 
-  let dtMultiplier = (player.activeBonus && player.activeBonus.id === 'SLOW') ? 0.5 : 1;
+  const dtMultiplier = (player.activeBonus && player.activeBonus.id === 'SLOW') ? 0.5 : 1;
 
-  const accelBase = player.grounded ? MOVE_ACCEL_GROUND : MOVE_ACCEL_AIR;
-  const accel = accelBase * dtMultiplier;
+  const input = keys.l ? -1 : (keys.r ? 1 : 0);
+  const maxSp = MAX_SPEED * dtMultiplier;
 
-  let input = keys.l ? -1 : (keys.r ? 1 : 0);
-  player.vx += input * accel;
+  const accel = (player.grounded ? ACCEL_GROUND : ACCEL_AIR) * dtMultiplier;
+  const decel = (player.grounded ? DECEL_GROUND : DECEL_AIR) * dtMultiplier;
 
-  let friction = player.grounded ? FRICTION_GROUND : FRICTION_AIR;
-  player.vx *= friction;
-  player.vx = Math.max(Math.min(player.vx, MAX_SPEED * dtMultiplier), -MAX_SPEED * dtMultiplier);
+  if(input !== 0){
+    const target = input * maxSp;
+    player.vx = moveTowards(player.vx, target, accel);
+  } else {
+    player.vx = moveTowards(player.vx, 0, decel);
+  }
 
   const oldX = player.x;
   const oldY = player.y;
+  const oldVy = player.vy;
 
   player.x += player.vx;
   player.vy += GRAVITY * dtMultiplier;
   player.y += player.vy;
 
   player.angle += player.vx / player.r;
-  player.scaleX += (1 - player.scaleX) * 0.15;
-  player.scaleY += (1 - player.scaleY) * 0.15;
+
+  // retour progressif aux proportions (plus rapide au sol)
+  const relax = player.grounded ? 0.28 : 0.18;
+  player.scaleX += (1 - player.scaleX) * relax;
+  player.scaleY += (1 - player.scaleY) * relax;
+
+  // micro-squash au sol très léger (évite l'effet "galette")
+  if (player.grounded) {
+    const t = clamp01(Math.abs(player.vx) / MAX_SPEED);
+    const targetX = 1 + 0.10 * t;
+    const targetY = 1 - 0.06 * t;
+    player.scaleX = moveTowards(player.scaleX, targetX, 0.06);
+    player.scaleY = moveTowards(player.scaleY, targetY, 0.06);
+  }
+
+  // rond au repos
+  if(player.grounded && Math.abs(player.vx) < 0.05 && Math.abs(player.vy) < 0.05){
+    player.scaleX = 1;
+    player.scaleY = 1;
+  }
 
   let targetCam = player.x - 200;
   game.cameraX += (targetCam - game.cameraX) * 0.12;
@@ -1012,7 +1546,7 @@ function updatePhysics() {
 
   player.grounded = false;
 
-  /* MAGNET */
+  // magnet
   if (player.activeBonus && player.activeBonus.id === 'MAGNET') {
     const RANGE = 420;
     const MAX_PULL = 14;
@@ -1053,7 +1587,6 @@ function updatePhysics() {
     if (rNow.r > p.x && rNow.l < p.x + p.w && rNow.b > p.y && rNow.t < p.y + p.h) {
       if(p.isEnd) { completeLevel(); break; }
 
-      // checkpoint activé seulement au toucher
       if(p.isCheckpoint && p.cp) {
         const newCP = p.cp;
         const changed = !game.checkpoint || Math.abs(game.checkpoint.x - newCP.x) > 1;
@@ -1072,8 +1605,30 @@ function updatePhysics() {
 
       if (comingFromAbove) {
         player.y = p.y - halfH;
+
+        const impact = Math.max(0, oldVy);
         player.vy = 0;
-        player.grounded = true;
+
+        // squash landing moins "galette"
+        player.scaleX = 1.35;
+        player.scaleY = 0.72;
+
+        if(impact > LAND_BOUNCE_MIN_IMPACT){
+          const bounce = Math.min(LAND_BOUNCE_MAX, impact * LAND_BOUNCE_FACTOR);
+          player.vy = -bounce;
+          player.grounded = false;
+          game.shake = Math.max(game.shake, 1.8);
+          addParticles(player.x, p.y - 2, '#ffffff', 4, 0.4);
+        } else {
+          player.grounded = true;
+          player.scaleX += (1 - player.scaleX) * 0.45;
+          player.scaleY += (1 - player.scaleY) * 0.45;
+          if(Math.abs(player.vx) < 0.03){
+            player.scaleX = 1;
+            player.scaleY = 1;
+          }
+        }
+
         if (player.jumpBuffer > 0) doJump();
       } else if (comingFromBelow) {
         player.y = p.y + p.h + halfH;
@@ -1088,8 +1643,14 @@ function updatePhysics() {
         const overlapX = Math.min(rNow.r - p.x, (p.x + p.w) - rNow.l);
         const overlapY = Math.min(rNow.b - p.y, (p.y + p.h) - rNow.t);
         if (overlapY < overlapX) {
-          if (player.vy >= 0) { player.y = p.y - halfH; player.vy = 0; player.grounded = true; }
-          else { player.y = p.y + p.h + halfH; player.vy = 0; }
+          if (player.vy >= 0) {
+            player.y = p.y - halfH;
+            player.vy = 0;
+            player.grounded = true;
+          } else {
+            player.y = p.y + p.h + halfH;
+            player.vy = 0;
+          }
         } else {
           if (player.vx >= 0) { player.x = p.x - halfW; player.vx = 0; }
           else { player.x = p.x + p.w + halfW; player.vx = 0; }
@@ -1098,6 +1659,7 @@ function updatePhysics() {
     }
   }
 
+  // items
   items.forEach(it => {
     if (it.collected) return;
     let dx = player.x - (it.x + it.w/2);
@@ -1118,7 +1680,8 @@ function updatePhysics() {
     }
   });
 
-  if (player.y > canvas.height + 120) {
+  // 🔥 SHIELD rescue plus tôt (évite les pertes "plateforme trop haute" / "hit dessous puis chute")
+  if (player.y > canvas.height + 15) {
     if(player.activeBonus && player.activeBonus.id === 'SHIELD') {
       player.vy = -22;
       clearBonus();
@@ -1133,6 +1696,91 @@ function updatePhysics() {
 }
 
 /* =========================
+   DRAW HELPERS
+========================= */
+function drawPlayerGroundShadow(){
+  let bestY = null;
+  const px = player.x;
+  const halfH = 16;
+
+  for(const p of platforms){
+    const active = (p.type === 'neutral' || parseInt(p.type) === game.bit) || p.isCheckpoint || p.isEnd;
+    if(!active) continue;
+
+    if(px >= p.x - 10 && px <= p.x + p.w + 10){
+      const top = p.y;
+      if(top >= player.y + halfH - 1){
+        const dy = top - (player.y + halfH);
+        if(dy < 220){
+          if(bestY === null || top < bestY) bestY = top;
+        }
+      }
+      if(player.grounded && (player.y + halfH) <= p.y + 2 && (player.y + halfH) >= p.y - 6){
+        bestY = p.y;
+        break;
+      }
+    }
+  }
+
+  if(bestY === null) return;
+
+  const sx = px - game.cameraX;
+  const dy = bestY - (player.y + halfH);
+  const t = clamp01(1 - dy / 220);
+
+  const a = FX.shadowMaxAlpha * t;
+  const w = (player.r * 2.4) * (1 + (1-t)*0.35);
+  const h = (player.r * 0.55) * (1 - t*0.15);
+
+  ctx.save();
+  ctx.globalAlpha = a;
+  ctx.fillStyle = "#000";
+  ctx.filter = "blur(6px)";
+  ctx.beginPath();
+  ctx.ellipse(sx, bestY + 6, w, h, 0, 0, Math.PI*2);
+  ctx.fill();
+  ctx.filter = "none";
+  ctx.restore();
+}
+
+function drawPlayerMotionBlur(sx, sy, col){
+  const speed = Math.hypot(player.vx, player.vy);
+  if(speed < FX.motionBlurMinSpeed) return;
+
+  const t = clamp01((speed - FX.motionBlurMinSpeed) / 7);
+  const a = FX.motionBlurAlpha * t;
+
+  const dx = player.vx / (speed || 1);
+  const dy = player.vy / (speed || 1);
+
+  const len = 18 + t * 26;
+  const wid = 10 + t * 6;
+
+  ctx.save();
+  ctx.globalAlpha = a;
+  ctx.globalCompositeOperation = "lighter";
+  ctx.filter = "blur(6px)";
+
+  ctx.translate(sx - dx * (len * 0.35), sy - dy * (len * 0.35));
+  const ang = Math.atan2(dy, dx);
+  ctx.rotate(ang);
+
+  const g = ctx.createLinearGradient(-len*0.5, 0, len*0.5, 0);
+  g.addColorStop(0, "rgba(255,255,255,0)");
+  g.addColorStop(0.35, col === C_0 ? "rgba(96,165,250,0.55)" : "rgba(248,113,113,0.55)");
+  g.addColorStop(1, "rgba(255,255,255,0)");
+
+  ctx.fillStyle = g;
+  ctx.beginPath();
+  ctx.ellipse(0, 0, len, wid, 0, 0, Math.PI*2);
+  ctx.fill();
+
+  ctx.filter = "none";
+  ctx.globalCompositeOperation = "source-over";
+  ctx.restore();
+}
+
+/* =========================
    DRAW
 ========================= */
 function draw() {
@@ -1143,6 +1791,7 @@ function draw() {
   }
 
   drawBackground();
+  drawPlayerGroundShadow();
 
   platforms.forEach(p => {
     let col = C_N;
@@ -1152,7 +1801,8 @@ function draw() {
     if (p.isEnd) col = C_END;
 
     let active = (p.type === 'neutral' || parseInt(p.type) === game.bit);
-    drawBlock3D(p.x, p.y, p.w, p.h, col, active || p.isCheckpoint || p.isEnd);
+    const depth = depthForBlock(p);
+    drawBlock3D(p.x, p.y, p.w, p.h, col, active || p.isCheckpoint || p.isEnd, depth);
   });
 
   items.forEach(it => {
@@ -1160,22 +1810,54 @@ function draw() {
     if (it.type === 'coin') {
       let sx = it.x - game.cameraX;
       let sy = it.y + Math.sin(game.frame*0.1)*5;
+      ctx.save();
+      ctx.shadowBlur = 10;
+      ctx.shadowColor = '#f1c40f';
       ctx.fillStyle = '#f1c40f';
       ctx.beginPath();
       ctx.arc(sx+5, sy+5, 6, 0, Math.PI*2);
       ctx.fill();
+      ctx.restore();
     } else {
       drawBonusBlock(it);
     }
   });
 
+  // bokeh pluie (avant joueur pour profondeur)
+  drawRainBokeh();
+
   let sx = player.x - game.cameraX;
   let sy = player.y;
   let col = game.bit === 0 ? C_0 : C_1;
 
+  drawPlayerMotionBlur(sx, sy, col);
+
   ctx.save();
   ctx.translate(sx, sy);
-  ctx.scale(player.scaleX, player.scaleY);
+
+  // ✅ Oblique seulement quand on "avance" (pas en saut)
+// - en saut / chute (vy fort) : déformation perpendiculaire au sol (angle 0)
+// - en déplacement horizontal : léger oblique dans le sens du mouvement
+const spx = Math.abs(player.vx);
+const t = clamp01((spx - 0.6) / (MAX_SPEED - 0.6)); // commence après une petite vitesse
+const strongVertical = Math.abs(player.vy) > 1.6;     // saut/chute => pas d'oblique
+
+let squashAng = 0;
+
+if (!strongVertical) {
+  const dir = Math.sign(player.vx); // -1 gauche, +1 droite
+  const groundedBoost = player.grounded ? 1.0 : 0.35; // très léger en l'air (si vy faible)
+  squashAng = dir * (0.30 * t) * groundedBoost;       // ~0 à ~0.30 rad
+  // si tu trouves que c'est "dans le mauvais sens", inverse :
+  // squashAng = -dir * (0.30 * t) * groundedBoost;
+}
+
+ctx.rotate(squashAng);
+ctx.scale(player.scaleX, player.scaleY);
+ctx.rotate(-squashAng);
+
+
+  // roulage après la déformation
   ctx.rotate(player.angle);
 
   ctx.shadowBlur = 15;
@@ -1234,6 +1916,10 @@ function draw() {
     ctx.fillText(t.text, t.x - game.cameraX, t.y);
   });
 
+  // pluie avant + éclats
+  drawRain(true);
+  drawRainSplashes();
+
   if(game.transitionAlpha > 0.01) {
     ctx.save();
     ctx.globalAlpha = Math.min(0.72, game.transitionAlpha * 0.72);
@@ -1254,6 +1940,7 @@ function draw() {
     ctx.restore();
   }
 
+  drawGrain();
   ctx.restore();
 
   if(debugOn && debugEl) {
@@ -1299,8 +1986,9 @@ function switchBit() {
   safeText(bitInd, game.bit);
   safeClass(bitInd, 'bit-' + game.bit);
   playSound('switch');
-  game.shake = 3;
+  game.shake = 3.5;
   addParticles(player.x, player.y, game.bit===0?C_0:C_1, 12, 2);
+  addParticles(player.x + 40, player.y - 25, game.bit===0?C_0:C_1, 8, 1.6);
 }
 
 function completeLevel() {
@@ -1309,7 +1997,6 @@ function completeLevel() {
 
   const now = performance.now();
   const elapsed = Math.max(0, now - game.levelStartTs);
-
   registerLevelTime(game.level, elapsed);
 
   const bonus = Math.max(0, 5000 - elapsed / 10);
@@ -1338,7 +2025,6 @@ function nextLevel() {
   showDialogue('teacher', "Niveau validé. Complexité augmentée.");
 }
 
-/* respawn sur spawn si checkpoint jamais activé */
 function respawnToCheckpoint() {
   if(game.respawnLock > 0) return;
 
@@ -1349,6 +2035,9 @@ function respawnToCheckpoint() {
   player.vx = 0;
   player.vy = 0;
   player.angle = 0;
+
+  player.scaleX = 1;
+  player.scaleY = 1;
 
   game.cameraX = Math.max(0, player.x - 200);
   game.respawnLock = 60;
@@ -1477,7 +2166,7 @@ function showDialogue(who, txt) {
 }
 
 /* =========================
-   RESIZE / BOOT
+   BOOT
 ========================= */
 function resize() {
   const container = document.getElementById('canvas-container');
