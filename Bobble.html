@@ -384,6 +384,29 @@
 <script>
 (function () {
   "use strict";
+// Effet parallaxe léger sur le fond d'écran
+(function () {
+  const force = 80; // plus petit = mouvement plus fort
+  let raf = 0, dx = 0, dy = 0;
+
+  function applyParallax() {
+    raf = 0;
+    document.body.style.backgroundPosition = `calc(50% + ${dx}px) calc(50% + ${dy}px)`;
+  }
+
+  function update(x, y) {
+    dx = (window.innerWidth / 2 - x) / force;
+    dy = (window.innerHeight / 2 - y) / force;
+    if (!raf) raf = requestAnimationFrame(applyParallax);
+  }
+
+  document.addEventListener("mousemove", e => update(e.pageX, e.pageY), { passive: true });
+  document.addEventListener("touchmove", e => {
+    const t = e.touches && e.touches[0];
+    if (t) update(t.pageX, t.pageY);
+  }, { passive: true });
+})();
+
 
   // --- AUDIO ENGINE ---
   let audioCtx = null;
