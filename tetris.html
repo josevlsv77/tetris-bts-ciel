@@ -12,6 +12,64 @@
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet">
 
 <style>
+
+/* Style du bouton Hub */
+  .hub-back-button {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    z-index: 9999;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+
+    /* Effet Glassmorphism */
+    background: rgba(255, 255, 255, 0.25);
+    backdrop-filter: blur(15px) saturate(120%);
+    -webkit-backdrop-filter: blur(15px) saturate(120%);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1), inset 0 1px 1px rgba(255,255,255,0.4);
+    
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  }
+
+  .hub-back-button svg {
+    width: 24px;
+    height: 24px;
+    fill: #1d1d1f;
+    opacity: 0.7;
+    transition: all 0.3s ease;
+  }
+
+  /* Effets au survol */
+  .hub-back-button:hover {
+    transform: scale(1.1) translateY(-2px);
+    background: rgba(255, 255, 255, 0.4);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+  }
+
+  .hub-back-button:hover svg {
+    fill: #0071e3; /* Bleu CIEL */
+    opacity: 1;
+  }
+  
+  .hub-back-button:active { transform: scale(0.95); }
+
+  @media (max-width: 600px) {
+    .hub-back-button { top: 10px; left: 10px; width: 40px; height: 40px; }
+    .hub-back-button svg { width: 20px; height: 20px; }
+  }
+
+
+<a href="Accueil.html" class="hub-back-button" title="Retour au Hub">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+    <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
+  </svg>
+</a>
   html, body {
     height: 100%;
     margin: 0;
