@@ -457,20 +457,48 @@ for (let i = 1; i <= 11; i++) {
    CONSTANTES
 ========================= */
 const GRAVITY = 0.55;
-const JUMP_FORCE = -12.0;
+const JUMP_FORCE = -13.4;
 
 const MAX_SPEED = 8.0;
-const ACCEL_GROUND = 0.85;
-const ACCEL_AIR    = 0.55;
-const DECEL_GROUND = 1.05;
-const DECEL_AIR    = 0.40;
+// Inertie "ballon" : accélération correcte, freinage plus doux (moins arcade, plus roulant)
+const ACCEL_GROUND = 0.72;
+const ACCEL_AIR    = 0.50;
+
+// décélération quand aucun input (glisse contrôlée)
+const DECEL_GROUND = 0.18;
+const DECEL_AIR    = 0.06;
+
+// freinage quand on inverse la direction (plus réactif que la simple friction)
+const BRAKE_GROUND = 1.15;
+const BRAKE_AIR    = 0.85;
+
+// friction multiplicative au sol (évite la glisse infinie sans tuer l'élan)
+const ROLL_FRICTION_GROUND = 0.992;
 
 const JUMP_CUT_OFF = 0.5;
+
+// plateformes traversables (Mario-style)
+const DROP_THROUGH_FRAMES = 12;
+
+// dash (mécanique de mobilité)
+const DASH_SPEED = 14.5;
+const DASH_FRAMES = 10;
+const DASH_COOLDOWN_FRAMES = 18;
+const DASH_CHARGES_MAX = 1;
+
 
 // rebond à l'atterrissage
 const LAND_BOUNCE_MIN_IMPACT = 6.5;
 const LAND_BOUNCE_FACTOR = 0.18;
 const LAND_BOUNCE_MAX = 2.8;
+
+// landing spring (render-only) : petit rebond visuel à l'atterrissage (pro, sans casser les collisions)
+const LAND_RENDER_MIN_IMPACT = 4.0;
+const LAND_RENDER_BOUNCE_FACTOR = 0.65; // px par impact
+const LAND_RENDER_BOUNCE_MAX = 7.5;      // px
+const LAND_RENDER_SPRING_K = 0.22;
+const LAND_RENDER_SPRING_DAMP = 0.78;
+
 
 // Couleurs
 const C_0 = '#3b82f6';
@@ -549,6 +577,136 @@ let rainSplashes = [];
 let rainBokeh = [];
 
 /* =========================
+   NEIGE + METEO (par niveau)
+   - Niveau 1 : pluie + vent
+   - Niveau 2 : neige
+   - Puis cycle (orage / calme) pour varier le challenge visuel
+========================= */
+const SNOW = {
+  enabled: false,
+  backCount: 90,
+  frontCount: 64,
+  wind: 0.20,
+  backSpeed: 1.8,
+  frontSpeed: 3.2,
+  backAlpha: 0.10,
+  frontAlpha: 0.14,
+  backParallax: 0.06,
+  frontParallax: 0.14,
+  swirl: 0.80
+};
+
+let snowBack = [];
+let snowFront = [];
+
+// Base rain profile (pour restaurer proprement quand on switch de météo)
+const RAIN_BASE = {
+  enabled: true,
+  backCount: RAIN.backCount,
+  frontCount: RAIN.frontCount,
+  wind: RAIN.wind,
+  backSpeed: RAIN.backSpeed,
+  frontSpeed: RAIN.frontSpeed,
+  backLen: RAIN.backLen,
+  frontLen: RAIN.frontLen,
+  backAlpha: RAIN.backAlpha,
+  frontAlpha: RAIN.frontAlpha,
+  backParallax: RAIN.backParallax,
+  frontParallax: RAIN.frontParallax,
+  bokehCount: RAIN.bokehCount,
+  bokehAlpha: RAIN.bokehAlpha,
+  splashChance: RAIN.splashChance
+};
+
+let currentWeather = null;
+let baseGalaxyAlpha = null;
+const baseFogAlpha = FX.fogAlpha;
+
+const WEATHER_PRESETS = [
+  { id:"RAINWIND", name:"PLUIE • VENT", precip:"rain",  rainMult:1.00, wind:0.95, fog:0.070, galaxyMul:1.00, beamMul:0.92 },
+  { id:"SNOW",     name:"NEIGE",        precip:"snow",  snowMult:1.05, wind:0.28, fog:0.055, galaxyMul:1.15, beamMul:0.78 },
+  { id:"STORM",    name:"ORAGE",        precip:"rain",  rainMult:1.55, wind:1.35, fog:0.088, galaxyMul:0.95, beamMul:1.00 },
+  { id:"CALM",     name:"CALME",        precip:"none",  rainMult:0.00, wind:0.00, fog:0.050, galaxyMul:1.25, beamMul:0.70 }
+];
+
+function tuneBeamsForWeather(mult){
+  if(!beams || beams.length === 0) return;
+  for(const b of beams){
+    if(b.alphaBase == null) b.alphaBase = b.alpha;
+    b.alpha = Math.max(0.012, Math.min(0.35, b.alphaBase * mult));
+  }
+}
+
+function applyWeatherPreset(p){
+  currentWeather = p;
+
+  // fog + galaxy: lisible et vivant sans masquer la galaxie
+  FX.fogAlpha = p.fog ?? baseFogAlpha;
+
+  // GALAXY est défini plus bas, mais existe au moment où on appelle cette fonction (initLevel)
+  if(typeof GALAXY !== "undefined"){
+    if(baseGalaxyAlpha == null) baseGalaxyAlpha = GALAXY.alpha;
+    GALAXY.alpha = Math.max(0.16, Math.min(0.42, baseGalaxyAlpha * (p.galaxyMul ?? 1)));
+  }
+
+  // Energy beams: on scale leur alpha (plus simple que modifier tout le renderer)
+  tuneBeamsForWeather(p.beamMul ?? 1);
+
+  // precipitation switching
+  RAIN.enabled = (p.precip === "rain");
+  SNOW.enabled = (p.precip === "snow");
+
+  if(p.precip === "rain"){
+    const m = p.rainMult ?? 1;
+    RAIN.backCount = Math.round(RAIN_BASE.backCount * m);
+    RAIN.frontCount = Math.round(RAIN_BASE.frontCount * m);
+    RAIN.wind = (p.wind ?? RAIN_BASE.wind);
+    RAIN.backSpeed = RAIN_BASE.backSpeed * (0.92 + m*0.18);
+    RAIN.frontSpeed = RAIN_BASE.frontSpeed * (0.90 + m*0.20);
+    RAIN.backLen = RAIN_BASE.backLen * (0.90 + m*0.18);
+    RAIN.frontLen = RAIN_BASE.frontLen * (0.90 + m*0.20);
+    RAIN.backAlpha = RAIN_BASE.backAlpha * (0.90 + m*0.15);
+    RAIN.frontAlpha = RAIN_BASE.frontAlpha * (0.92 + m*0.12);
+    RAIN.bokehCount = Math.round(RAIN_BASE.bokehCount * (0.95 + m*0.25));
+    RAIN.bokehAlpha = RAIN_BASE.bokehAlpha * (0.90 + m*0.25);
+    RAIN.splashChance = Math.min(0.42, RAIN_BASE.splashChance * (0.80 + m*0.35));
+    initRain();
+  } else {
+    // restore defaults so switching back looks correct
+    RAIN.backCount = RAIN_BASE.backCount;
+    RAIN.frontCount = RAIN_BASE.frontCount;
+    RAIN.wind = RAIN_BASE.wind;
+    RAIN.backSpeed = RAIN_BASE.backSpeed;
+    RAIN.frontSpeed = RAIN_BASE.frontSpeed;
+    RAIN.backLen = RAIN_BASE.backLen;
+    RAIN.frontLen = RAIN_BASE.frontLen;
+    RAIN.backAlpha = RAIN_BASE.backAlpha;
+    RAIN.frontAlpha = RAIN_BASE.frontAlpha;
+    RAIN.bokehCount = RAIN_BASE.bokehCount;
+    RAIN.bokehAlpha = RAIN_BASE.bokehAlpha;
+    RAIN.splashChance = RAIN_BASE.splashChance;
+  }
+
+  if(p.precip === "snow"){
+    const m = p.snowMult ?? 1;
+    SNOW.wind = (p.wind ?? SNOW.wind);
+    SNOW.backCount = Math.round(90 * m);
+    SNOW.frontCount = Math.round(64 * m);
+    initSnow();
+  }
+}
+
+function applyWeatherForLevel(level){
+  const idx = (Math.max(1, level) - 1) % WEATHER_PRESETS.length;
+  applyWeatherPreset(WEATHER_PRESETS[idx]);
+}
+
+function updateWeather(){
+  updateRain();
+  updateSnow();
+}
+
+/* =========================
    GALAXIE
 ========================= */
 const GALAXY = {
@@ -557,7 +715,7 @@ const GALAXY = {
   parallax: 0.14,
   xRatio: 0.70,
   yRatio: 0.26,
-  alpha: 0.20,
+  alpha: 0.30,
   bobAmp: 5,
   bobSpeed: 0.012
 };
@@ -721,9 +879,26 @@ let player = {
   grounded: false,
   coyote: 0,
   jumpBuffer: 0,
+
+  // platformer polish
+  facing: 1,
+  onPlatformId: null,
+  dropTimer: 0,
+
+  // dash
+  dashCharges: DASH_CHARGES_MAX,
+  dashTimer: 0,
+  dashDir: 1,
+  dashCooldown: 0,
+
   angle: 0,
   scaleY: 1,
   scaleX: 1,
+
+  // rendu: rebond d'atterrissage (ne modifie pas la physique)
+  renderYOffset: 0,
+  renderYVel: 0,
+
   activeBonus: null,
   bonusTimer: 0
 };
@@ -739,7 +914,7 @@ let beams = [];
 let lastTime = 0;
 const timeStep = 1000/60;
 
-let keys = { l: false, r: false, jumpHeld: false };
+let keys = { l: false, r: false, down: false, jumpHeld: false };
 let switchCooldown = 0;
 let debugOn = false;
 
@@ -834,7 +1009,14 @@ function playSound(type) {
     gain.gain.setValueAtTime(0.1, t);
     gain.gain.linearRampToValueAtTime(0, t+0.2);
     osc.start(t); osc.stop(t+0.2);
-  } else if (type === 'coin') {
+    } else if (type === 'dash') {
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(780, t);
+    osc.frequency.exponentialRampToValueAtTime(220, t+0.12);
+    gain.gain.setValueAtTime(0.09, t);
+    gain.gain.exponentialRampToValueAtTime(0.001, t+0.14);
+    osc.start(t); osc.stop(t+0.14);
+} else if (type === 'coin') {
     osc.type = 'sine';
     osc.frequency.setValueAtTime(1200, t);
     gain.gain.setValueAtTime(0.05, t);
@@ -1100,6 +1282,107 @@ function drawRainSplashes(){
 /* =========================
    BACKGROUND INIT
 ========================= */
+/* =========================
+   NEIGE : init/update/draw (2 couches)
+   - rendu "pixel game" : flocons carrés + petites croix
+========================= */
+function makeFlake(front){
+  const w = canvas.width, h = canvas.height;
+  const z = front ? (0.7 + Math.random()*0.9) : (0.35 + Math.random()*0.65);
+  return {
+    x: Math.random()*w,
+    y: Math.random()*h,
+    z,
+    s: (front ? SNOW.frontSpeed : SNOW.backSpeed) * (0.8 + Math.random()*0.8) * (0.75 + z),
+    a: (front ? SNOW.frontAlpha : SNOW.backAlpha) * (0.65 + Math.random()*0.85),
+    r: (front ? 1.4 : 1.0) + z * (front ? 1.6 : 1.2),
+    phase: Math.random()*Math.PI*2,
+    drift: (Math.random()-0.5) * (0.65 + z*0.9)
+  };
+}
+
+function initSnow(){
+  snowBack = [];
+  snowFront = [];
+  for(let i=0;i<SNOW.backCount;i++) snowBack.push(makeFlake(false));
+  for(let i=0;i<SNOW.frontCount;i++) snowFront.push(makeFlake(true));
+}
+
+function updateSnow(){
+  if(!SNOW.enabled) return;
+
+  const w = canvas.width, h = canvas.height;
+
+  const wind = SNOW.wind + Math.sin(game.frame*0.01)*0.10;
+  const step = (player.activeBonus && player.activeBonus.id === 'SLOW') ? 0.6 : 1;
+
+  const upd = (arr, front) => {
+    const par = front ? SNOW.frontParallax : SNOW.backParallax;
+    for(const f of arr){
+      const swirl = Math.sin(game.frame*0.018 + f.phase + f.y*0.012) * SNOW.swirl;
+      f.x += (wind*1.05 + f.drift + swirl*0.55) * (0.75 + f.z*0.9) * step;
+      f.y += f.s * step;
+
+      // Parallax léger (donne une sensation de profondeur)
+      f.x -= (player.vx * par) * (0.6 + f.z);
+
+      if(f.y > h + 30){
+        f.y = -40 - Math.random()*80;
+        f.x = Math.random()*w;
+        f.phase = Math.random()*Math.PI*2;
+      }
+      if(f.x < -60) f.x = w + 60;
+      if(f.x > w + 60) f.x = -60;
+    }
+  };
+
+  upd(snowBack, false);
+  upd(snowFront, true);
+}
+
+function drawSnow(front){
+  if(!SNOW.enabled) return;
+  const arr = front ? snowFront : snowBack;
+
+  ctx.save();
+  ctx.globalCompositeOperation = "screen";
+
+  const tint = (game.bit===0) ? [191,219,254] : [254,202,202];
+  const white = [255,255,255];
+
+  for(const f of arr){
+    const x = f.x;
+    const y = f.y;
+
+    // pixel-flake
+    const a = f.a;
+    ctx.globalAlpha = a;
+
+    // small "sparkle" modulation (harmonieux, pas bruité)
+    const tw = (Math.sin(game.frame*0.03 + f.phase) * 0.5 + 0.5);
+    const col = (tw > 0.68) ? white : tint;
+    ctx.fillStyle = `rgba(${col[0]},${col[1]},${col[2]},1)`;
+
+    const s = Math.max(1, Math.round(f.r));
+    const px = Math.round(x);
+    const py = Math.round(y);
+
+    // body
+    ctx.fillRect(px, py, s, s);
+
+    // cross arms sometimes (gives "pro" pixel vibe)
+    if(front && tw > 0.72){
+      ctx.globalAlpha = a * 0.75;
+      ctx.fillRect(px-1, py, 1, 1);
+      ctx.fillRect(px+1, py, 1, 1);
+      ctx.fillRect(px, py-1, 1, 1);
+      ctx.fillRect(px, py+1, 1, 1);
+    }
+  }
+
+  ctx.globalCompositeOperation = "source-over";
+  ctx.restore();
+}
 function initBeams(){
   // Pixel-art energy background: composed (not random), with stable “structure”.
   // Two families:
@@ -1182,6 +1465,7 @@ function initBackground() {
   initFog();
   initGalaxy();
   initRain();
+  initSnow();
   initBeams();
 }
 
@@ -1274,6 +1558,7 @@ function drawBackground() {
 
   // pluie arrière
   drawRain(false);
+  drawSnow(false);
 
   // bits en fond
   ctx.save();
@@ -1569,11 +1854,12 @@ function drawEnergyBeams(){
   }
   beamFxCtx.restore();
 
-  // Vertical fade so beams remain “background”
+  // Vertical fade so beams remain “background” (keep the top clear so the galaxy stays readable)
   const mask = beamFxCtx.createLinearGradient(0,0,0,h);
-  mask.addColorStop(0.00, "rgba(255,255,255,0.95)");
-  mask.addColorStop(0.55, "rgba(255,255,255,0.70)");
-  mask.addColorStop(1.00, "rgba(255,255,255,0.00)");
+  mask.addColorStop(0.00, "rgba(255,255,255,0.00)");
+  mask.addColorStop(0.18, "rgba(255,255,255,0.10)");
+  mask.addColorStop(0.55, "rgba(255,255,255,0.75)");
+  mask.addColorStop(1.00, "rgba(255,255,255,0.95)");
   beamFxCtx.globalCompositeOperation = "destination-in";
   beamFxCtx.globalAlpha = 1;
   beamFxCtx.fillStyle = mask;
@@ -1584,13 +1870,13 @@ function drawEnergyBeams(){
   // Composite to the main canvas
   ctx.save();
   ctx.globalCompositeOperation = "screen";
-  ctx.globalAlpha = 0.78;
+  ctx.globalAlpha = 0.62;
   ctx.imageSmoothingEnabled = false;
   ctx.drawImage(beamFxCanvas, 0, 0, canvas.width, canvas.height);
 
   // subtle extra glow (high-budget polish)
   ctx.filter = "blur(12px)";
-  ctx.globalAlpha = 0.14;
+  ctx.globalAlpha = 0.10;
   ctx.drawImage(beamFxCanvas, 0, 0, canvas.width, canvas.height);
   ctx.filter = "none";
 
@@ -1778,7 +2064,7 @@ function drawShockwaves(){
 
 function drawPlayerLight(){
   const sx = player.x - game.cameraX;
-  const sy = player.y;
+  const sy = player.y + (player.renderYOffset || 0);
   const rgb = (game.bit===0) ? [96,165,250] : [248,113,113];
   const speed = Math.hypot(player.vx, player.vy);
   const r = 180 + Math.min(140, speed*18);
@@ -1806,6 +2092,39 @@ function drawCoinPro(it){
 
   const r = 7.5;
   const spin = game.frame*0.10 + it.x*0.01;
+
+
+// magnet "tether" (rend l'effet clair sans surcharger)
+if(player.activeBonus && player.activeBonus.id === 'MAGNET'){
+  const dxW = player.x - (it.x + it.w/2);
+  const dyW = player.y - (it.y + it.h/2);
+  const dist = Math.hypot(dxW, dyW) || 1;
+  const RANGE = 720;
+  if(dist < RANGE){
+    const t = 1 - dist / RANGE;
+    const px = player.x - game.cameraX;
+    const py = player.y + (player.renderYOffset || 0);
+
+    ctx.save();
+    ctx.globalCompositeOperation = "screen";
+    ctx.globalAlpha = 0.06 + 0.22 * t;
+    ctx.lineWidth = 2;
+
+    const col = (game.bit===0) ? "rgba(147,197,253,1)" : "rgba(252,165,165,1)";
+    ctx.strokeStyle = col;
+
+    // courbe légère, plus "pro" qu'une simple ligne droite
+    const midx = (sx + px) * 0.5 + Math.sin(game.frame*0.06 + it.x*0.02) * (6 + 10*t);
+    const midy = (sy + py) * 0.5 - (10 + 18*t);
+
+    ctx.beginPath();
+    ctx.moveTo(sx, sy);
+    ctx.quadraticCurveTo(midx, midy, px, py);
+    ctx.stroke();
+
+    ctx.restore();
+  }
+}
 
   ctx.save();
   ctx.globalCompositeOperation = "lighter";
@@ -1981,75 +2300,397 @@ function initLevel() {
   items = [];
   game.checkpoint = null;
 
+  // météo par niveau (uniquement dans le cadre de jeu)
+  applyWeatherForLevel(game.level);
+
+  // Bounds for verticality (keep it fair + readable)
+  const minY = 140;
+  const maxY = canvas.height - 80;
+
+  const clampY = (y)=>Math.max(minY, Math.min(maxY, y));
+
+  // Helper: choose a platform type with more deliberate “binary” moments
+  const chooseType = (lastType, bias=1) => {
+    const rnd = Math.random();
+    const colorProb = Math.min(0.92, (0.38 + (game.level * 0.05)) * bias);
+
+    if(lastType === 'neutral') {
+      if(rnd < colorProb*0.45) return '0';
+      if(rnd < colorProb*0.90) return '1';
+      return 'neutral';
+    } else {
+      // Encourage breaks so it doesn't become a pure rhythm game
+      if(rnd < 0.55) return 'neutral';
+      if(rnd < 0.78) return lastType;
+      return (lastType === '0') ? '1' : '0';
+    }
+  };
+
+  const placeCoin = (x,y)=>items.push({x:x-5, y:y-20, w:10, h:10, type:'coin', collected:false});
+  const placeBonus = (x,y)=>{
+    const bType = BONUS_TYPES[Math.floor(Math.random()*BONUS_TYPES.length)];
+    const faceImg = faceImages[Math.floor(Math.random() * faceImages.length)];
+    items.push({x:x-20, y:y-60, w:40, h:40, type:'bonus', bonusType: bType, img: faceImg, collected:false});
+  };
+
   let cx = 0;
-  let cy = canvas.height - 120;
+  let baseY = canvas.height - 120;
+  let cy = clampY(baseY);
 
   game.spawn = { x: 60, y: cy - 80 };
 
-  platforms.push({x: -50, y: cy, w: 400, h: 40, type: 'neutral'});
-  cx += 350;
+  // Start platform (safe)
+  platforms.push({x: -50, y: cy, w: 420, h: 40, type: 'neutral'});
+  cx += 360;
 
-  let len = 15 + (game.level * 5);
+  let len = 18 + (game.level * 6);
   let lastType = 'neutral';
 
-  const checkpointIndex = Math.max(6, Math.floor(len * 0.55));
+  const checkpointIndex = Math.max(7, Math.floor(len * 0.60));
   let checkpointPlaced = false;
 
+  // Pattern system (adds variety + verticality without moving platforms)
+  let pattern = "sprint";
+  let patternLeft = 0;
+  let forkExitY = cy;
+
+  const pickPattern = ()=>{
+    const r = Math.random();
+    // Mix lisible + plus de verticalité (sans rendre ça injuste)
+    if(r < 0.14) return "tower";
+    if(r < 0.28) return "stairsUp";
+    if(r < 0.42) return "stairsDown";
+    if(r < 0.56) return "binaryRun";
+    if(r < 0.68) return "fork";
+    if(r < 0.82) return "micro";
+    return "sprint";
+  };
+
+  const stepGap = (min,max)=> (min + Math.random()*(max-min));
+  const stepW   = (min,max)=> (min + Math.random()*(max-min));
+
   for(let i=0; i<len; i++) {
-    let type = 'neutral';
-    let rnd = Math.random();
-    let colorProb = Math.min(0.8, 0.3 + (game.level * 0.05));
 
-    if(lastType === 'neutral') {
-      if(rnd < colorProb/2) type='0';
-      else if(rnd < colorProb) type='1';
-    } else {
-      if(rnd < 0.6) type='neutral';
-      else type=lastType;
-    }
-
-    let gap = 50 + Math.random() * 110;
-    let dy = (Math.random() - 0.5) * 100;
-    if(cy + dy > canvas.height - 80) dy = -50;
-    if(cy + dy < 150) dy = 50;
-
-    cx += gap;
-    cy += dy;
-
-    let w = 110 + Math.random() * 110;
-
-    if(!checkpointPlaced && i >= checkpointIndex) {
-      const cpW = 120;
+    // Inject checkpoint on a stable neutral platform (never inside a fork)
+    if(!checkpointPlaced && i >= checkpointIndex && pattern !== "fork") {
+      const cpW = 140;
+      cx += 70;
       platforms.push({
         x: cx, y: cy, w: cpW, h: 26,
         type: 'neutral',
         isCheckpoint: true,
-        cp: { x: cx + 40, y: cy - 60 }
+        cp: { x: cx + 50, y: cy - 60 }
       });
       checkpointPlaced = true;
 
-      items.push({x: cx+cpW/2-5, y: cy-20, w:10, h:10, type:'coin', collected:false});
+      // Small reward on checkpoint
+      placeCoin(cx + cpW/2, cy);
 
-      cx += cpW + 60;
+      cx += cpW + 80;
       continue;
     }
 
+    if(patternLeft <= 0){
+      pattern = pickPattern();
+      if(pattern === "tower") patternLeft = 4 + Math.floor(Math.random()*2);
+      else if(pattern === "stairsUp" || pattern === "stairsDown") patternLeft = 5 + Math.floor(Math.random()*2);
+      else if(pattern === "binaryRun") patternLeft = 4 + Math.floor(Math.random()*2);
+      else if(pattern === "fork") patternLeft = 2;
+      else if(pattern === "micro") patternLeft = 5 + Math.floor(Math.random()*3);
+      else patternLeft = 4 + Math.floor(Math.random()*3);
+    }
+
+    // Defaults (overridden per pattern)
+    let gap = stepGap(55, 115);
+    let w = stepW(100, 190);
+    let dy = (Math.random()-0.5) * 70;
+    let type = 'neutral';
+
+    // Pattern logic
+    if(pattern === "sprint"){
+      gap = stepGap(55, 95);
+      w = stepW(150, 260);
+      dy = (Math.random()-0.5) * 40;
+      type = chooseType(lastType, 0.95);
+
+      // Coin trails (makes “flow” moments)
+      if(Math.random() > 0.45){
+        const n = 2 + Math.floor(Math.random()*4);
+        for(let k=0;k<n;k++){
+          placeCoin(cx + gap + (w*(k+1)/(n+1)), cy + dy);
+        }
+      }
+    }
+
+    if(pattern === "micro"){
+      gap = stepGap(70, 125);
+      w = stepW(80, 130);
+      dy = (Math.random()-0.5) * 90;
+      type = chooseType(lastType, 1.05);
+
+      // Occasionally force a sharper vertical move (still fair)
+      if(Math.random() > 0.72) dy += (Math.random() > 0.5 ? -55 : 55);
+
+      // Precise reward: coin above center
+      if(Math.random() > 0.35) placeCoin(cx + gap + w/2, cy + dy);
+    }
+
+    if(pattern === "stairsUp"){
+      gap = stepGap(60, 105);
+      w = stepW(95, 155);
+      dy = -(34 + Math.random()*30); // up (reachable)
+      type = chooseType(lastType, 1.10);
+
+      // Encourage climbing: coin a bit higher
+      if(Math.random() > 0.40) {
+        items.push({x: cx + gap + w/2 - 5, y: (cy + dy) - 42, w:10, h:10, type:'coin', collected:false});
+      }
+    }
+
+    if(pattern === "stairsDown"){
+      gap = stepGap(60, 120);
+      w = stepW(110, 190);
+      dy = +(35 + Math.random()*45); // down
+      type = chooseType(lastType, 0.95);
+
+      // Occasional longer platform after a drop
+      if(patternLeft === 1 && Math.random() > 0.55){
+        w += 120;
+      }
+    }
+
+
+    if(pattern === "tower"){
+      gap = stepGap(52, 92);
+      w = stepW(80, 135);
+      dy = -(52 + Math.random()*38); // up + verticalité (reachable)
+      type = chooseType(lastType, 1.12);
+
+      // petit drift horizontal pour ne pas faire "échelle" parfaite
+      if(Math.random() > 0.65) gap += 30;
+
+      if(Math.random() > 0.30) {
+        placeCoin(cx + gap + w/2, cy + dy);
+        if(Math.random() > 0.65) placeCoin(cx + gap + w/2, cy + dy - 26);
+      }
+    }
+
+    if(pattern === "binaryRun"){
+      gap = stepGap(60, 115);
+      w = stepW(95, 160);
+      dy = (Math.random()-0.5) * 55;
+
+      // Alternate 0/1 to create deliberate switch moments
+      if(lastType === '0') type = '1';
+      else if(lastType === '1') type = '0';
+      else type = (Math.random() > 0.5 ? '0' : '1');
+
+      // Small coin always to guide rhythm
+      placeCoin(cx + gap + w/2, cy + dy);
+    }
+
+    if(pattern === "fork"){
+      // Step 1: two lanes (high + low), different types
+      // Step 2: a neutral “merge” platform accessible from both
+      if(patternLeft === 2){
+        gap = stepGap(70, 120);
+        w = stepW(120, 180);
+
+        const highY = clampY(cy - (80 + Math.random()*55));
+        const lowY  = clampY(cy + (55 + Math.random()*45));
+        const x = cx + gap;
+
+        // Lane types: encourage planning (switch + vertical choice)
+        const tHigh = (Math.random() > 0.5) ? '0' : '1';
+        const tLow  = (tHigh === '0') ? '1' : '0';
+
+        platforms.push({x:x, y: highY, w:w, h: 28, type: tHigh, fork:true});
+        platforms.push({x:x, y: lowY,  w:w, h: 28, type: tLow,  fork:true});
+
+        // Rewards: bonus sometimes on the risky/high lane, coins on low lane
+        if(Math.random() > 0.70) placeBonus(x + w/2, highY);
+        else placeCoin(x + w/2, highY);
+
+        placeCoin(x + w/2, lowY);
+
+        // Exit Y for merge platform: slightly above mid (keeps the run moving upward)
+        forkExitY = clampY((highY + lowY) * 0.5 - 20);
+
+        // Advance and consume this “step”
+        cx = x;
+        // Keep lastType neutral to avoid forcing unfair alternations after a fork
+        lastType = 'neutral';
+
+        patternLeft--;
+        continue;
+      } else {
+        // Merge platform (neutral + safe)
+        gap = stepGap(65, 110);
+        w = stepW(160, 260);
+        const x = cx + gap;
+        cy = forkExitY;
+
+        platforms.push({x:x, y: cy, w:w, h: 30, type: 'neutral'});
+        if(Math.random() > 0.35) placeCoin(x + w/2, cy);
+
+        cx = x;
+        lastType = 'neutral';
+
+        patternLeft--;
+        continue;
+      }
+    }
+
+    // Apply movement (for non-fork patterns)
+    cx += gap;
+    cy = clampY(cy + dy);
+
+    // Place platform
     platforms.push({x: cx, y: cy, w: w, h: 30, type: type});
     lastType = type;
 
-    if(w > 90 && Math.random() > 0.35) {
-      if(Math.random() > 0.8) {
-        let bType = BONUS_TYPES[Math.floor(Math.random()*BONUS_TYPES.length)];
-        let faceImg = faceImages[Math.floor(Math.random() * faceImages.length)];
-        items.push({x: cx+w/2-20, y: cy-60, w:40, h:40, type:'bonus', bonusType: bType, img: faceImg, collected:false});
-      } else {
-        items.push({x: cx+w/2-5, y: cy-20, w:10, h:10, type:'coin', collected:false});
+    // Items: more structured variety
+    if(w > 90 && Math.random() > 0.42) {
+      const roll = Math.random();
+      if(roll > 0.88) placeBonus(cx + w/2, cy);
+      else if(roll > 0.30) placeCoin(cx + w/2, cy);
+      else {
+        // small 2-coin line for richness
+        placeCoin(cx + w*0.35, cy);
+        placeCoin(cx + w*0.65, cy);
       }
     }
+
+    patternLeft--;
   }
 
-  platforms.push({x: cx + 120, y: cy, w: 300, h: 40, type: 'neutral', isEnd: true});
+  // End zone (safe)
+  platforms.push({x: cx + 140, y: cy, w: 320, h: 40, type: 'neutral', isEnd: true});
+
+  decoratePlatforms();
 }
+
+
+/* =========================
+   PLATEFORMES SPECIALES (mécaniques)
+   - one-way (Mario-style)
+   - moving / bounce / crumble (variété + verticalité)
+========================= */
+let platformIdCounter = 0;
+
+function decoratePlatforms(){
+  platformIdCounter = 0;
+
+  for(const p of platforms){
+    p.id = platformIdCounter++;
+    p.oneWay = true;
+
+    p.kind = p.kind || 'normal';
+
+    p.baseX = p.x; p.baseY = p.y;
+    p.lastX = p.x; p.lastY = p.y;
+    p.dx = 0; p.dy = 0;
+
+    // crumble state
+    p.crumble = !!p.crumble;
+    p.crumbleArmed = false;
+    p.crumbleTimer = 0;
+    p.crumbleDelay = p.crumbleDelay || 0;
+
+    // falling state
+    p.falling = false;
+    p.vy = 0;
+
+    // moving state
+    p.moving = !!p.moving;
+    p.phase = p.phase || 0;
+    p.speed = p.speed || 0;
+    p.ampX = p.ampX || 0;
+    p.ampY = p.ampY || 0;
+
+    // bounce state
+    p.bounceVy = p.bounceVy || 0;
+  }
+
+  // Décoration / diversité: on reste lisible => peu de plateformes spéciales
+  for(let i=1;i<platforms.length-1;i++){
+    const p = platforms[i];
+    if(p.isCheckpoint || p.isEnd) continue;
+    if(p.w < 90) continue;
+
+    // évite d'altérer des plateformes très proches du spawn
+    if(p.x < 220) continue;
+
+    const roll = Math.random();
+
+    // Moving (de préférence neutre pour rester "fair")
+    if(roll < 0.05 && p.type === 'neutral'){
+      p.kind = 'moving';
+      p.moving = true;
+      p.phase = Math.random()*140;
+      p.speed = 0.045 + Math.random()*0.035;
+
+      const vertical = Math.random() < 0.45;
+      if(vertical){
+        p.ampX = 0;
+        p.ampY = 18 + Math.random()*28;
+      } else {
+        p.ampX = 22 + Math.random()*40;
+        p.ampY = 0;
+      }
+      continue;
+    }
+
+    // Crumble (plutôt neutre pour éviter les pièges injustes)
+    if(roll < 0.09 && p.type === 'neutral'){
+      p.kind = 'crumble';
+      p.crumble = true;
+      p.crumbleDelay = 26 + Math.floor(Math.random()*20);
+      continue;
+    }
+
+    // Bounce (possible sur 0/1 aussi, ça crée des choix de switch + timing)
+    if(roll < 0.13){
+      p.kind = 'bounce';
+      p.bounceVy = -15.5 - Math.random()*2.5;
+      continue;
+    }
+  }
+}
+
+function updatePlatformDynamics(){
+  for(const p of platforms){
+    p.lastX = p.x; p.lastY = p.y;
+
+    // crumble timer (armé au contact)
+    if(p.crumbleArmed && !p.falling){
+      p.crumbleTimer--;
+      if(p.crumbleTimer <= 0){
+        p.falling = true;
+        p.moving = false;
+        p.vy = 0;
+        addParticles(p.x + p.w/2, p.y, '#ffffff', 10, 1.2);
+        addParticles(p.x + p.w/2, p.y+12, '#94a3b8', 10, 1.0);
+      }
+    }
+
+    // motion
+    if(p.moving && !p.falling){
+      const s = Math.sin((game.frame + p.phase) * p.speed);
+      p.x = p.baseX + s * (p.ampX || 0);
+      p.y = p.baseY + s * (p.ampY || 0);
+    }
+
+    if(p.falling){
+      p.vy += 0.45;
+      p.y += p.vy;
+    }
+
+    p.dx = p.x - p.lastX;
+    p.dy = p.y - p.lastY;
+  }
+}
+
 
 /* =========================
    INPUT
@@ -2057,14 +2698,34 @@ function initLevel() {
 window.addEventListener('keydown', e => {
   if (e.code === 'ArrowLeft') keys.l = true;
   if (e.code === 'ArrowRight') keys.r = true;
+  if (e.code === 'ArrowDown' || e.code === 'KeyS') keys.down = true;
 
   if (e.code === 'Space') {
     e.preventDefault();
     if(game.state === 'running' && !keys.jumpHeld) {
       keys.jumpHeld = true;
-      if(player.grounded || player.coyote > 0) doJump();
-      else player.jumpBuffer = 12;
+
+      // ✅ Plateformes traversables (comme Mario) : ↓ + Espace pour tomber au travers
+      if(player.grounded && keys.down) {
+        player.dropTimer = DROP_THROUGH_FRAMES;
+        player.grounded = false;
+        player.onPlatformId = null;
+
+        // petit "décrochage" pour éviter la re-collision immédiate
+        player.y += 2;
+        player.vy = Math.max(player.vy, 2.2);
+
+        addParticles(player.x, player.y+14, '#ffffff', 5, 0.55);
+      } else {
+        if(player.grounded || player.coyote > 0) doJump();
+        else player.jumpBuffer = 12;
+      }
     }
+  }
+
+  // Dash (mobilité) — touche X
+  if (e.code === 'KeyX' && game.state === 'running') {
+    doDash();
   }
 
   if ((e.key === 'Shift' || e.key === 'z' || e.key === 'Z') && game.state === 'running') {
@@ -2099,6 +2760,8 @@ window.addEventListener('keydown', e => {
 window.addEventListener('keyup', e => {
   if (e.code === 'ArrowLeft') keys.l = false;
   if (e.code === 'ArrowRight') keys.r = false;
+  if (e.code === 'ArrowDown' || e.code === 'KeyS') keys.down = false;
+
   if (e.code === 'Space') {
     keys.jumpHeld = false;
     if (player.vy < -2) player.vy *= JUMP_CUT_OFF;
@@ -2112,15 +2775,52 @@ function doJump() {
   player.vy = JUMP_FORCE;
   player.grounded = false;
   player.coyote = 0;
-  player.jumpBuffer = 0;
+    player.jumpBuffer = 0;
 
-  // déformation saut plus visible
-  player.scaleX = 0.50;
-  player.scaleY = 1.70;
+  player.onPlatformId = null;
+  player.dropTimer = 0;
+
+  player.dashCharges = DASH_CHARGES_MAX;
+  player.dashTimer = 0;
+  player.dashDir = 1;
+  player.dashCooldown = 0;
+
+
+  // déformation saut : légère (reste une sphère, donne juste un "élan")
+  const sp = clamp01(Math.abs(player.vx) / MAX_SPEED);
+  player.scaleX = 0.98 - 0.04 * sp; // 0.94..0.98
+  player.scaleY = 1.02 + 0.06 * sp; // 1.02..1.08
 
   playSound('jump');
   addParticles(player.x, player.y+15, '#fff', 6, 0.6);
 }
+
+function doDash(){
+  if(player.dashCooldown > 0) return;
+  if(player.dashTimer > 0) return;
+  if(player.dashCharges <= 0) return;
+
+  const dirInput = keys.l ? -1 : (keys.r ? 1 : 0);
+  const dir = (dirInput !== 0) ? dirInput : (player.facing || 1);
+
+  player.facing = dir;
+  player.dashDir = dir;
+  player.dashTimer = DASH_FRAMES;
+  player.dashCooldown = DASH_COOLDOWN_FRAMES;
+  player.dashCharges--;
+
+  // impulse
+  player.vx = player.dashDir * DASH_SPEED;
+  if(Math.abs(player.vy) > 2) player.vy *= 0.35;
+
+  playSound('dash');
+  game.shake = Math.max(game.shake, 2.6);
+
+  const col = (game.bit===0) ? C_0 : C_1;
+  addParticles(player.x, player.y, col, 14, 2.2);
+  spawnShockwave(player.x, player.y, game.bit===0 ? [96,165,250] : [248,113,113]);
+}
+
 
 function activateBonus(bonus) {
   player.activeBonus = bonus.bonusType;
@@ -2172,7 +2872,7 @@ function updateVisuals() {
   if(switchCooldown <= 0 && switchOverheat <= 0) switchHeat = Math.max(0, switchHeat - 2.2);
   else switchHeat = Math.max(0, switchHeat - 1.0);
 
-  updateRain();
+  updateWeather();
 
   if(game.state === 'transition') {
     game.transitionAlpha = Math.min(1, game.transitionAlpha + 0.06);
@@ -2221,41 +2921,88 @@ function updateVisuals() {
 function updatePhysics() {
   updateBonus();
 
+  // état précédent (pour porter le joueur sur les plateformes mobiles)
+  const prevGrounded = player.grounded;
+  const prevPlatformId = player.onPlatformId;
+
+  if(player.dropTimer > 0) player.dropTimer--;
+  if(player.dashCooldown > 0) player.dashCooldown--;
+  if(player.dashTimer > 0) player.dashTimer--;
+
+  // update plateformes spéciales (moving/crumble/falling)
+  updatePlatformDynamics();
+
+  // carry sur plateforme mobile si on était posé dessus
+  if(prevGrounded && prevPlatformId !== null) {
+    const gp = platforms.find(pp => pp.id === prevPlatformId);
+    if(gp) {
+      player.x += gp.dx;
+      player.y += gp.dy;
+    }
+  }
+
+
   const dtMultiplier = (player.activeBonus && player.activeBonus.id === 'SLOW') ? 0.5 : 1;
 
   const input = keys.l ? -1 : (keys.r ? 1 : 0);
+  if(input !== 0) player.facing = input;
   const maxSp = MAX_SPEED * dtMultiplier;
 
   const accel = (player.grounded ? ACCEL_GROUND : ACCEL_AIR) * dtMultiplier;
   const decel = (player.grounded ? DECEL_GROUND : DECEL_AIR) * dtMultiplier;
+  const brake = (player.grounded ? BRAKE_GROUND : BRAKE_AIR) * dtMultiplier;
 
-  if(input !== 0){
-    const target = input * maxSp;
-    player.vx = moveTowards(player.vx, target, accel);
+  const isDashing = (player.dashTimer > 0);
+
+  if(!isDashing){
+    if(input !== 0){
+      const target = input * maxSp;
+      const reversing = (player.vx !== 0 && Math.sign(player.vx) !== input);
+      const a = reversing ? brake : accel;
+      player.vx = moveTowards(player.vx, target, a);
+    } else {
+      // friction douce : conserve l'élan, mais s'arrête proprement
+      player.vx = moveTowards(player.vx, 0, decel);
+      if(player.grounded){
+        player.vx *= ROLL_FRICTION_GROUND;
+        if(Math.abs(player.vx) < 0.02) player.vx = 0;
+      }
+    }
   } else {
-    player.vx = moveTowards(player.vx, 0, decel);
+    // dash: vitesse imposée (style "burst")
+    player.vx = player.dashDir * DASH_SPEED;
   }
+
 
   const oldX = player.x;
   const oldY = player.y;
   const oldVy = player.vy;
 
   player.x += player.vx;
-  player.vy += GRAVITY * dtMultiplier;
+  // gravité "pro" : chute plus franche + option fast-fall (↓), montée un peu plus douce
+  let g = GRAVITY * dtMultiplier * (isDashing ? 0.18 : 1);
+  if(player.vy > 0) {
+    // falling
+    g *= (keys.down ? 1.55 : 1.22);
+  } else {
+    // rising
+    g *= (keys.jumpHeld ? 1.00 : 1.18);
+  }
+  player.vy += g;
   player.y += player.vy;
 
   player.angle += player.vx / player.r;
 
   // retour progressif aux proportions (plus rapide au sol)
-  const relax = player.grounded ? 0.28 : 0.18;
+  const relax = player.grounded ? 0.38 : 0.24;
   player.scaleX += (1 - player.scaleX) * relax;
   player.scaleY += (1 - player.scaleY) * relax;
 
   // micro-squash au sol très léger (évite l'effet "galette")
   if (player.grounded) {
     const t = clamp01(Math.abs(player.vx) / MAX_SPEED);
-    const targetX = 1 + 0.10 * t;
-    const targetY = 1 - 0.06 * t;
+    const targetX = 1 + 0.04 * t;
+    const targetY = 1 - 0.02 * t;
     player.scaleX = moveTowards(player.scaleX, targetX, 0.06);
     player.scaleY = moveTowards(player.scaleY, targetY, 0.06);
   }
@@ -2264,6 +3011,17 @@ function updatePhysics() {
   if(player.grounded && Math.abs(player.vx) < 0.05 && Math.abs(player.vy) < 0.05){
     player.scaleX = 1;
     player.scaleY = 1;
+  }
+
+  // rebond d'atterrissage (render-only) : petit "spring" vertical, sans influencer les collisions
+  const k = LAND_RENDER_SPRING_K * dtMultiplier;
+  const damp = Math.pow(LAND_RENDER_SPRING_DAMP, dtMultiplier);
+  player.renderYVel += (-player.renderYOffset) * k;
+  player.renderYVel *= damp;
+  player.renderYOffset += player.renderYVel;
+  if(Math.abs(player.renderYOffset) < 0.01 && Math.abs(player.renderYVel) < 0.01){
+    player.renderYOffset = 0;
+    player.renderYVel = 0;
   }
 
   let targetCam = player.x - 200;
@@ -2275,46 +3033,83 @@ function updatePhysics() {
   if (player.jumpBuffer > 0) player.jumpBuffer--;
 
   player.grounded = false;
+  player.onPlatformId = null;
 
-  // magnet
-  if (player.activeBonus && player.activeBonus.id === 'MAGNET') {
-    const RANGE = 420;
-    const MAX_PULL = 14;
-    const VERTICAL_BOOST = 1.4;
 
-    items.forEach(it => {
-      if (it.collected || it.type !== 'coin') return;
+// magnet (bonus) — attire réellement les "billes" (pièces) avec une sensation visible + stable
+if (player.activeBonus && player.activeBonus.id === 'MAGNET') {
+  const RANGE = 720;
+  const MAX_SPEED = 22;
+  const VERTICAL_BOOST = 1.15;
 
-      let cx = it.x + it.w / 2;
-      let cy = it.y + it.h / 2;
+  // respecte le slow (ralenti => attraction ralentie aussi)
+  const stepM = dtMultiplier * ((player.activeBonus && player.activeBonus.id === 'SLOW') ? 0.7 : 1);
 
-      let dx = player.x - cx;
-      let dy = (player.y - cy) * VERTICAL_BOOST;
-      let dist = Math.hypot(dx, dy) || 1;
+  for (const it of items) {
+    if (it.collected || it.type !== 'coin') continue;
 
-      if (dist < RANGE) {
-        let strength = (1 - dist / RANGE);
-        let pull = strength * strength * MAX_PULL;
-        it.x += (dx / dist) * pull;
-        it.y += (dy / dist) * pull;
+    if (it.vx == null) it.vx = 0;
+    if (it.vy == null) it.vy = 0;
+
+    const cx = it.x + it.w * 0.5;
+    const cy = it.y + it.h * 0.5;
+
+    let dx = (player.x - cx);
+    let dy = (player.y - cy) * VERTICAL_BOOST;
+
+    let dist = Math.hypot(dx, dy);
+    if (!dist) dist = 1;
+
+    if (dist < RANGE) {
+      // force progressive (beaucoup plus "pro" qu'un simple déplacement linéaire)
+      const t = 1 - (dist / RANGE);
+      const t2 = t * t;
+
+      // accélération type "spring" + damping
+      const accel = (0.75 + 2.85 * t2) * stepM;
+      it.vx += (dx / dist) * accel * (0.85 + 1.35 * t);
+      it.vy += (dy / dist) * accel * (0.85 + 1.35 * t);
+
+      // damping (évite les oscillations)
+      it.vx *= 0.90;
+      it.vy *= 0.90;
+
+      // clamp vitesse
+      const sp = Math.hypot(it.vx, it.vy) || 1;
+      if (sp > MAX_SPEED) {
+        it.vx = (it.vx / sp) * MAX_SPEED;
+        it.vy = (it.vy / sp) * MAX_SPEED;
       }
-    });
+
+      it.x += it.vx * stepM;
+      it.y += it.vy * stepM;
+
+      // snap final (ça "claque" quand ça colle au joueur)
+      if (dist < 24) {
+        it.x = player.x - it.w * 0.5;
+        it.y = player.y - it.h * 0.5;
+      }
+    } else {
+      // decay hors range
+      it.vx *= 0.86;
+      it.vy *= 0.86;
+    }
   }
+}
 
   const halfW = 10;
   const halfH = 16;
 
-  const rectNow = () => ({ l: player.x-halfW, r: player.x+halfW, t: player.y-halfH, b: player.y+halfH });
-  const rectOld = () => ({ l: oldX-halfW, r: oldX+halfW, t: oldY-halfH, b: oldY+halfH });
+  const oldL = oldX - halfW, oldR = oldX + halfW, oldT = oldY - halfH, oldB = oldY + halfH;
+  const newL = player.x - halfW, newR = player.x + halfW, newT = player.y - halfH, newB = player.y + halfH;
 
-  const rNow = rectNow();
-  const rOld = rectOld();
-
+  // Triggers (checkpoint / fin) : on les détecte même si on traverse par dessous
   for(const p of platforms) {
-    const active = (p.type === 'neutral' || parseInt(p.type) === game.bit);
+    const active = (p.type === 'neutral' || parseInt(p.type) === game.bit) || p.isCheckpoint || p.isEnd;
     if (!active) continue;
+    if (p.falling) continue;
 
-    if (rNow.r > p.x && rNow.l < p.x + p.w && rNow.b > p.y && rNow.t < p.y + p.h) {
+    if (newR > p.x && newL < p.x + p.w && newB > p.y && newT < p.y + p.h) {
       if(p.isEnd) { completeLevel(); break; }
 
       if(p.isCheckpoint && p.cp) {
@@ -2327,68 +3122,106 @@ function updatePhysics() {
           addParticles(p.x + p.w/2, p.y - 10, C_CHECK, 18, 1.5);
         }
       }
+    }
+  }
 
-      const comingFromAbove = (rOld.b <= p.y) && (player.vy >= 0);
-      const comingFromBelow = (rOld.t >= p.y + p.h) && (player.vy < 0);
-      const comingFromLeft  = (rOld.r <= p.x) && (player.vx > 0);
-      const comingFromRight = (rOld.l >= p.x + p.w) && (player.vx < 0);
+  // ✅ Plateformes "one-way" (Mario-style)
+    // - aucune collision en montée : on traverse toujours (comme Mario)
+    // - "snap" + CCD pour éviter les plateformes qui laissent passer
+    let best = null;
+    let bestTop = Infinity;
 
-      if (comingFromAbove) {
-        player.y = p.y - halfH;
+    const TOP_EPS   = 0.5;   // tolérance de contact
+    const LAND_SNAP = 10;    // tolérance d'atterrissage (vite / flottant)
+    const STICK_EPS = 14;    // tenue au sol
 
-        const impact = Math.max(0, oldVy);
-        player.vy = 0;
+    const wantLanding = (player.dropTimer <= 0) && (player.vy >= 0 || oldVy >= 0);
 
-        // squash landing moins "galette"
-        player.scaleX = 1.35;
-        player.scaleY = 0.72;
+    if(wantLanding){
+      for(const p of platforms){
+        const active = (p.type === 'neutral' || parseInt(p.type) === game.bit) || p.isCheckpoint || p.isEnd;
+        if(!active) continue;
+        if(p.falling) continue;
 
-        if(impact > LAND_BOUNCE_MIN_IMPACT){
-          const bounce = Math.min(LAND_BOUNCE_MAX, impact * LAND_BOUNCE_FACTOR);
-          player.vy = -bounce;
-          player.grounded = false;
-          game.shake = Math.max(game.shake, 1.8);
-          spawnShockwave(player.x, p.y, game.bit===0 ? [96,165,250] : [248,113,113]);
-          addParticles(player.x, p.y - 2, '#ffffff', 4, 0.4);
-        } else {
-          player.grounded = true;
-          player.scaleX += (1 - player.scaleX) * 0.45;
-          player.scaleY += (1 - player.scaleY) * 0.45;
-          if(Math.abs(player.vx) < 0.03){
-            player.scaleX = 1;
-            player.scaleY = 1;
+        // Overlap horizontal
+        if(!(newR > p.x && newL < p.x + p.w)) continue;
+
+        const top = p.y;
+
+        // 1) crossing classique (CCD)
+        const crossed = (oldB <= top + LAND_SNAP) && (newB >= top - TOP_EPS);
+
+        // 2) tenue si on était déjà dessus (même si micro-penetration)
+        const sticking = (prevGrounded && prevPlatformId !== null && p.id === prevPlatformId && Math.abs(newB - top) <= STICK_EPS);
+
+        // 3) correction si on est légèrement "dans" la plateforme en retombant
+        const insideFromAbove =
+          (newB > top - TOP_EPS) &&
+          (newT < top + Math.min(p.h, 22)) &&
+          (player.y < top + halfH + 10);
+
+        if(crossed || sticking || insideFromAbove){
+          if(top < bestTop){
+            bestTop = top;
+            best = p;
           }
-        }
-
-        if (player.jumpBuffer > 0) doJump();
-      } else if (comingFromBelow) {
-        player.y = p.y + p.h + halfH;
-        player.vy = 0;
-      } else if (comingFromLeft) {
-        player.x = p.x - halfW;
-        player.vx = 0;
-      } else if (comingFromRight) {
-        player.x = p.x + p.w + halfW;
-        player.vx = 0;
-      } else {
-        const overlapX = Math.min(rNow.r - p.x, (p.x + p.w) - rNow.l);
-        const overlapY = Math.min(rNow.b - p.y, (p.y + p.h) - rNow.t);
-        if (overlapY < overlapX) {
-          if (player.vy >= 0) {
-            player.y = p.y - halfH;
-            player.vy = 0;
-            player.grounded = true;
-          } else {
-            player.y = p.y + p.h + halfH;
-            player.vy = 0;
-          }
-        } else {
-          if (player.vx >= 0) { player.x = p.x - halfW; player.vx = 0; }
-          else { player.x = p.x + p.w + halfW; player.vx = 0; }
         }
       }
     }
+
+    if(best){
+      player.y = best.y - halfH;
+
+      const impact = Math.max(0, oldVy);
+      player.vy = 0;
+
+      // squash landing (visuel) — reste proche d'un cercle
+      const squash = clamp01(impact / 16);
+      player.scaleX = 1 + 0.06 * squash;
+      player.scaleY = 1 - 0.04 * squash;
+
+      // petit rebond visuel (ne modifie pas la physique, garde le contrôle)
+      if(impact > LAND_RENDER_MIN_IMPACT){
+        const impulse = Math.min(LAND_RENDER_BOUNCE_MAX, (impact - LAND_RENDER_MIN_IMPACT) * LAND_RENDER_BOUNCE_FACTOR);
+        // on compresse légèrement puis on remonte
+        player.renderYOffset = Math.max(player.renderYOffset, impulse * 0.55);
+        player.renderYVel = Math.min(player.renderYVel, -impulse);
+      }
+
+      if(impact > LAND_BOUNCE_MIN_IMPACT){
+        game.shake = Math.max(game.shake, 1.6);
+        spawnShockwave(player.x, best.y, game.bit===0 ? [96,165,250] : [248,113,113]);
+        addParticles(player.x, best.y - 2, '#ffffff', 6, 0.6);
+      }
+
+      // Plateformes spéciales
+      if(best.kind === 'bounce'){
+        player.vy = best.bounceVy || -16;
+        player.grounded = false;
+        player.onPlatformId = null;
+
+        playSound('jump');
+        spawnShockwave(player.x, best.y, game.bit===0 ? [96,165,250] : [248,113,113]);
+        addParticles(player.x, best.y - 4, '#ffffff', 14, 1.2);
+      } else {
+        player.grounded = true;
+        player.onPlatformId = best.id;
+      }
+
+      if(best.kind === 'crumble' && best.crumble && !best.crumbleArmed){
+        best.crumbleArmed = true;
+        best.crumbleTimer = best.crumbleDelay || 30;
+        addParticles(best.x + best.w/2, best.y + 4, '#94a3b8', 8, 0.9);
+      }
+
+      if (player.grounded && player.jumpBuffer > 0) doJump();
+    }
+
+  // Recharge dash au sol (simple, lisible)
+  if(player.grounded){
+    player.dashCharges = DASH_CHARGES_MAX;
   }
+
 
   // items
   items.forEach(it => {
@@ -2534,6 +3367,61 @@ function draw() {
     let active = (p.type === 'neutral' || parseInt(p.type) === game.bit);
     const depth = depthForBlock(p);
     drawBlock3D(p.x, p.y, p.w, p.h, col, active || p.isCheckpoint || p.isEnd, depth);
+
+    // Accent visuel des mécaniques (dans le cadre de jeu uniquement)
+    const psx = p.x - game.cameraX;
+    if(psx + p.w > -20 && psx < canvas.width + 20){
+      if(p.kind === 'bounce'){
+        ctx.save();
+        ctx.globalCompositeOperation = 'screen';
+        ctx.globalAlpha = 0.85;
+        ctx.shadowBlur = 14;
+        ctx.shadowColor = col;
+        ctx.strokeStyle = col;
+        ctx.lineWidth = 2;
+        // "ressort" néon
+        const y0 = p.y + 4;
+        const step = Math.max(10, Math.floor(p.w / 8));
+        ctx.beginPath();
+        for(let xx = 0; xx <= p.w; xx += step){
+          const yy = y0 + Math.sin((game.frame*0.18) + (xx*0.08)) * 3;
+          if(xx === 0) ctx.moveTo(psx + xx, yy);
+          else ctx.lineTo(psx + xx, yy);
+        }
+        ctx.stroke();
+        ctx.restore();
+      } else if(p.kind === 'moving'){
+        ctx.save();
+        ctx.globalCompositeOperation = 'screen';
+        ctx.globalAlpha = 0.55;
+        ctx.fillStyle = col;
+        const cxm = psx + p.w/2;
+        const cym = p.y + p.h/2;
+        const t = (Math.sin(game.frame*0.08 + p.id*0.4)*0.5+0.5);
+        ctx.fillRect(cxm-18, cym-1, 36, 2);
+        ctx.fillRect(cxm-1, cym-18, 2, 36);
+        ctx.globalAlpha = 0.22 + 0.22*t;
+        ctx.fillRect(psx+2, p.y+2, p.w-4, 2);
+        ctx.restore();
+      } else if(p.kind === 'crumble'){
+        ctx.save();
+        ctx.globalCompositeOperation = 'screen';
+        const blink = p.crumbleArmed ? (0.25 + 0.25*(Math.sin(game.frame*0.45)*0.5+0.5)) : 0.12;
+        ctx.globalAlpha = blink;
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 1;
+        // fissures simples
+        ctx.beginPath();
+        ctx.moveTo(psx + p.w*0.20, p.y + p.h*0.35);
+        ctx.lineTo(psx + p.w*0.45, p.y + p.h*0.70);
+        ctx.lineTo(psx + p.w*0.62, p.y + p.h*0.40);
+        ctx.moveTo(psx + p.w*0.55, p.y + p.h*0.25);
+        ctx.lineTo(psx + p.w*0.78, p.y + p.h*0.60);
+        ctx.stroke();
+        ctx.restore();
+      }
+    }
+
   });
 
   items.forEach(it => {
@@ -2550,7 +3438,7 @@ function draw() {
   drawPlayerLight();
 
   let sx = player.x - game.cameraX;
-  let sy = player.y;
+  let sy = player.y + (player.renderYOffset || 0);
   let col = game.bit === 0 ? C_0 : C_1;
 
   drawPlayerMotionBlur(sx, sy, col);
@@ -2558,27 +3446,8 @@ function draw() {
   ctx.save();
   ctx.translate(sx, sy);
 
-  // ✅ Oblique seulement quand on "avance" (pas en saut)
-// - en saut / chute (vy fort) : déformation perpendiculaire au sol (angle 0)
-// - en déplacement horizontal : léger oblique dans le sens du mouvement
-const spx = Math.abs(player.vx);
-const t = clamp01((spx - 0.6) / (MAX_SPEED - 0.6)); // commence après une petite vitesse
-const strongVertical = Math.abs(player.vy) > 1.6;     // saut/chute => pas d'oblique
-
-let squashAng = 0;
-
-if (!strongVertical) {
-  const dir = Math.sign(player.vx); // -1 gauche, +1 droite
-  const groundedBoost = player.grounded ? 1.0 : 0.35; // très léger en l'air (si vy faible)
-  squashAng = dir * (0.30 * t) * groundedBoost;       // ~0 à ~0.30 rad
-  // si tu trouves que c'est "dans le mauvais sens", inverse :
-  // squashAng = -dir * (0.30 * t) * groundedBoost;
-}
-
-ctx.rotate(squashAng);
-ctx.scale(player.scaleX, player.scaleY);
-ctx.rotate(-squashAng);
-
+  // déformation (subtile) : conserve l'aspect sphérique
+  ctx.scale(player.scaleX, player.scaleY);
 
   // roulage après la déformation
   ctx.rotate(player.angle);
@@ -2665,8 +3534,24 @@ ctx.rotate(-squashAng);
     ctx.fillText(t.text, t.x - game.cameraX, t.y);
   });
 
+
+// meteo (tag léger, dans le cadre uniquement)
+if(currentWeather && game.state === 'playing'){
+  ctx.save();
+  ctx.globalAlpha = 0.55;
+  ctx.fillStyle = "rgba(0,0,0,0.35)";
+  ctx.fillRect(10, 10, 144, 20);
+
+  ctx.globalAlpha = 0.88;
+  ctx.fillStyle = (game.bit===0) ? "#93c5fd" : "#fca5a5";
+  ctx.font = "700 12px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace";
+  ctx.fillText(currentWeather.name, 16, 24);
+  ctx.restore();
+}
+
   // pluie avant + éclats
   drawRain(true);
+  drawSnow(true);
   drawRainSplashes();
 
   if(game.transitionAlpha > 0.01) {
@@ -2790,7 +3675,17 @@ function respawnToCheckpoint() {
   player.y = cp.y;
   player.vx = 0;
   player.vy = 0;
-  player.angle = 0;
+    player.angle = 0;
+
+  player.facing = 1;
+  player.onPlatformId = null;
+  player.dropTimer = 0;
+
+  player.dashCharges = DASH_CHARGES_MAX;
+  player.dashTimer = 0;
+  player.dashDir = 1;
+  player.dashCooldown = 0;
+
 
   player.scaleX = 1;
   player.scaleY = 1;
@@ -2965,6 +3860,7 @@ loadTopTimes();
 renderTopTimes();
 
 initBackground();
+applyWeatherForLevel(game.level);
 requestAnimationFrame(loop);
 </script>
 </body>
