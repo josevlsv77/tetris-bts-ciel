@@ -186,11 +186,11 @@
   }
   #proviseur-box.visible, #prof-box.visible { transform: translateY(0); }
   #proviseur-box { right: 3%; } #prof-box { left: 3%; }
-  .char-img { height: 45vh; max-height: 400px; width: auto; filter: drop-shadow(0 15px 30px rgba(0,0,0,0.3)); }
+  .char-img { height: 45vh; max-height: 400px; width: auto; filter: drop-shadow(0 15px 30px rgba(0,0,0,0.3));  position: relative; z-index: 100; }
   .bubble{
     background: #fff; color: #1e293b; padding: 16px 22px; border-radius: 18px;
-    font-size: 14px; font-weight: 700; max-width: 280px; margin-bottom: -15px;
-    position: relative; z-index: 101; border: 3px solid #1e293b;
+    font-size: 14px; font-weight: 700; max-width: 280px; margin-bottom: 14px;
+    position: relative; z-index: 220; border: 3px solid #1e293b;
     box-shadow: 0 10px 25px rgba(0,0,0,0.15); animation: popBubble 0.3s ease-out;
   }
   @keyframes popBubble { from { opacity:0; transform: scale(0.8) translateY(10px); } to { opacity:1; transform: scale(1) translateY(0); } }
@@ -311,6 +311,43 @@
 ========================= */
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d', { alpha: false });
+
+// Offscreen buffer for post-processing (bloom / glitch)
+const postCanvas = document.createElement('canvas');
+const postCtx = postCanvas.getContext('2d', { alpha: false });
+let glitch = 0;
+// Pixel-art inspired energy FX (rendered at low-res then scaled up)
+const beamFxCanvas = document.createElement('canvas');
+const beamFxCtx = beamFxCanvas.getContext('2d');
+let beamFxScale = 0.28; // lower = chunkier pixels
+let beamDitherPattern = null;
+
+function buildBeamDither(){
+  // 4x4 ordered dither (Bayer-ish) as an alpha mask
+  const d = document.createElement('canvas');
+  d.width = 4; d.height = 4;
+  const c = d.getContext('2d');
+  const m = [
+    [0,  8,  2, 10],
+    [12, 4, 14,  6],
+    [3, 11,  1,  9],
+    [15, 7, 13,  5],
+  ];
+  const img = c.createImageData(4,4);
+  for(let y=0;y<4;y++){
+    for(let x=0;x<4;x++){
+      const v = m[y][x] / 15; // 0..1
+      const a = Math.floor(v * 255);
+      const i=(y*4+x)*4;
+      img.data[i]   = 255;
+      img.data[i+1] = 255;
+      img.data[i+2] = 255;
+      img.data[i+3] = a;
+    }
+  }
+  c.putImageData(img,0,0);
+  beamDitherPattern = beamFxCtx.createPattern(d,'repeat');
+}
 
 const uiScore = document.getElementById('score-val');
 const uiLevel = document.getElementById('level-val');
@@ -641,6 +678,8 @@ let items = [];
 let particles = [];
 let bgBits = [];
 let floatTexts = [];
+let shockwaves = [];
+let beams = [];
 
 let lastTime = 0;
 const timeStep = 1000/60;
@@ -1006,6 +1045,53 @@ function drawRainSplashes(){
 /* =========================
    BACKGROUND INIT
 ========================= */
+function initBeams(){
+  // Two families:
+  // - ribbons: large, slow aurora-like shafts (harmonious, low contrast)
+  // - streaks: thin, faster “speedline” accents (pixel-art vibe)
+  beams = [];
+
+  const ribbonCount = 5;
+  for(let i=0;i<ribbonCount;i++){
+    const wN = 0.10 + Math.random()*0.20;
+    beams.push({
+      kind: "ribbon",
+      xN: Math.random(),
+      widthN: wN,
+      ampN: 0.06 + Math.random()*0.10,
+      freq: 2.5 + Math.random()*4.0,
+      drift: 0.6 + Math.random()*1.2,
+      speed: 0.18 + Math.random()*0.38,
+      alpha: 0.11 + Math.random()*0.10,
+      tilt: (Math.random()-0.5)*0.25,
+      par: 0.10 + Math.random()*0.16,
+      phase: Math.random()*Math.PI*2,
+      phase2: Math.random()*Math.PI*2,
+      z: 0.10 + Math.random()*0.22
+    });
+  }
+
+  const streakCount = 18;
+for(let i=0;i<streakCount;i++){
+  // keep a dominant direction for harmony (pixel-game “speed lines”)
+  const dir = (Math.random() < 0.72) ? -1 : 1;
+  const tilt = dir * (0.35 + Math.random()*0.45);
+
+  beams.push({
+    kind: "streak",
+    xN: Math.random(),
+    yN: Math.random(),
+    lenN: 0.10 + Math.random()*0.28,
+    speed: 0.35 + Math.random()*0.85,
+    alpha: 0.08 + Math.random()*0.13,
+    tilt: tilt,
+    par: 0.18 + Math.random()*0.30,
+    phase: Math.random()*Math.PI*2,
+    z: 0.12 + Math.random()*0.28
+  });
+}
+}
+
 function initBackground() {
   bgBits = [];
   for(let i=0; i<40; i++) {
@@ -1019,6 +1105,7 @@ function initBackground() {
   initFog();
   initGalaxy();
   initRain();
+  initBeams();
 }
 
 function drawFog(cameraX){
@@ -1105,6 +1192,8 @@ function drawBackground() {
 
   drawFog(game.cameraX);
   drawGalaxy(game.cameraX);
+  drawEnergyBeams();
+  drawTronGrid();
 
   // pluie arrière
   drawRain(false);
@@ -1124,6 +1213,340 @@ function drawBackground() {
   drawHazeAnimated();
 }
 
+
+// =========================
+// POST / STYLE (inside game frame only)
+// =========================
+function drawEnergyBeams(){
+  // Pixel-art inspired “energy shafts” rendered at low-res then scaled up.
+  // Goal: complex + harmonious, not random noisy “jets”.
+  if(!beamFxCanvas || beamFxCanvas.width < 2 || beamFxCanvas.height < 2) return;
+  if(!beams || beams.length === 0) return;
+
+  const w = beamFxCanvas.width;
+  const h = beamFxCanvas.height;
+
+  const base = (game.bit===0) ? [96,165,250] : [248,113,113];
+  const hot  = [255,255,255];
+  const deep = [10,18,34];
+
+  const mix = (a,b,t)=>[
+    Math.round(a[0] + (b[0]-a[0])*t),
+    Math.round(a[1] + (b[1]-a[1])*t),
+    Math.round(a[2] + (b[2]-a[2])*t),
+  ];
+
+  const cSoft = mix(base, hot, 0.33);
+  const cHot  = mix(base, hot, 0.62);
+  const cDeep = mix(base, deep, 0.55);
+
+  const t = game.frame * 0.016;
+  const cam = game.cameraX * beamFxScale;
+
+  beamFxCtx.save();
+  beamFxCtx.clearRect(0,0,w,h);
+  beamFxCtx.imageSmoothingEnabled = false;
+  beamFxCtx.globalCompositeOperation = "lighter";
+
+  // Subtle “energy bed” (thin drifting bands) — keeps everything cohesive
+  beamFxCtx.globalAlpha = 0.06;
+  beamFxCtx.fillStyle = `rgba(${cDeep[0]},${cDeep[1]},${cDeep[2]},1)`;
+  for(let y=0;y<h;y+=4){
+    const s = Math.sin(t*0.9 + y*0.12) * 3.0;
+    beamFxCtx.fillRect(s, y, w, 1);
+  }
+
+  // RIBBONS (aurora shafts)
+  const steps = 18;
+  for(const b of beams){
+    if(b.kind !== "ribbon") continue;
+
+    const par = (b.par || 0.14);
+    const baseX = (b.xN * w) - cam * par + (Math.sin(t*b.speed + b.phase) * 6);
+    const amp = (b.ampN || 0.10) * w;
+    const widthBase = (b.widthN || 0.18) * w;
+    const tilt = (b.tilt || 0) * w;
+
+    const xCenters = [];
+    const yVals = [];
+    for(let i=0;i<steps;i++){
+      const yn = i/(steps-1);
+      const y = yn*h;
+
+      // multi-sine flow = smoother than randomness (pixel-game friendly)
+      const flow =
+        Math.sin(yn*b.freq + t*(b.speed*1.15) + b.phase) * 0.70 +
+        Math.sin(yn*(b.freq*0.55) + t*(b.drift*0.75) + b.phase2) * 0.30;
+
+      const cx = baseX + flow*amp + yn*tilt;
+      xCenters.push(cx);
+      yVals.push(y);
+    }
+
+    // Build polygon (left boundary then right boundary reversed)
+    beamFxCtx.beginPath();
+    for(let i=0;i<steps;i++){
+      const yn = i/(steps-1);
+      const wPulse = widthBase * (0.80 + 0.22*Math.sin(t*0.9 + yn*3.2 + b.phase2));
+      const half = wPulse*0.5;
+      const x = xCenters[i] - half;
+      const y = yVals[i];
+      if(i===0) beamFxCtx.moveTo(x,y); else beamFxCtx.lineTo(x,y);
+    }
+    for(let i=steps-1;i>=0;i--){
+      const yn = i/(steps-1);
+      const wPulse = widthBase * (0.80 + 0.22*Math.sin(t*0.9 + yn*3.2 + b.phase2));
+      const half = wPulse*0.5;
+      const x = xCenters[i] + half;
+      const y = yVals[i];
+      beamFxCtx.lineTo(x,y);
+    }
+    beamFxCtx.closePath();
+
+    // Gradient across width (gives “shaft” volume even in pixel style)
+    const g = beamFxCtx.createLinearGradient(baseX - widthBase, 0, baseX + widthBase, 0);
+    g.addColorStop(0.00, `rgba(${cSoft[0]},${cSoft[1]},${cSoft[2]},0)`);
+    g.addColorStop(0.42, `rgba(${base[0]},${base[1]},${base[2]},${b.alpha*0.55})`);
+    g.addColorStop(0.50, `rgba(${cHot[0]},${cHot[1]},${cHot[2]},${b.alpha*0.95})`);
+    g.addColorStop(0.58, `rgba(${base[0]},${base[1]},${base[2]},${b.alpha*0.55})`);
+    g.addColorStop(1.00, `rgba(${cSoft[0]},${cSoft[1]},${cSoft[2]},0)`);
+
+    beamFxCtx.globalAlpha = 1;
+    beamFxCtx.fillStyle = g;
+    beamFxCtx.fill();
+
+    // Dither texture inside the ribbon => pixel-art “banding” without looking noisy
+    if(beamDitherPattern){
+      beamFxCtx.save();
+      beamFxCtx.clip();
+      beamFxCtx.globalCompositeOperation = "source-atop";
+      beamFxCtx.globalAlpha = 0.18;
+      beamFxCtx.fillStyle = beamDitherPattern;
+      beamFxCtx.fillRect(0,0,w,h);
+      beamFxCtx.restore();
+    }
+
+    // Subtle outline (adds definition without becoming noisy)
+    beamFxCtx.save();
+    beamFxCtx.globalCompositeOperation = "screen";
+    beamFxCtx.globalAlpha = 0.10;
+    beamFxCtx.strokeStyle = `rgba(${base[0]},${base[1]},${base[2]},1)`;
+    beamFxCtx.lineWidth = 1;
+    beamFxCtx.stroke();
+    beamFxCtx.restore();
+
+    // Moving shimmer band (reads “premium” but stays coherent)
+    beamFxCtx.save();
+    beamFxCtx.clip();
+    beamFxCtx.globalCompositeOperation = "screen";
+    const u = (t*0.08 + b.phase*0.17) % 1;
+    const bandY = u * h;
+    const bandH = Math.max(10, h*0.16);
+    const vg = beamFxCtx.createLinearGradient(0, bandY-bandH, 0, bandY+bandH);
+    vg.addColorStop(0.00, "rgba(255,255,255,0)");
+    vg.addColorStop(0.50, `rgba(${cHot[0]},${cHot[1]},${cHot[2]},0.32)`);
+    vg.addColorStop(1.00, "rgba(255,255,255,0)");
+    beamFxCtx.globalAlpha = 0.22;
+    beamFxCtx.fillStyle = vg;
+    beamFxCtx.fillRect(0, bandY-bandH, w, bandH*2);
+    beamFxCtx.restore();
+
+    // Core line + moving highlight segments
+    beamFxCtx.save();
+    beamFxCtx.globalCompositeOperation = "screen";
+    beamFxCtx.strokeStyle = `rgba(${cHot[0]},${cHot[1]},${cHot[2]},${Math.min(0.42, b.alpha*0.9)})`;
+    beamFxCtx.lineWidth = 1;
+    beamFxCtx.beginPath();
+    for(let i=0;i<steps;i++){
+      const cx = xCenters[i];
+      const y = yVals[i];
+      if(i===0) beamFxCtx.moveTo(cx,y); else beamFxCtx.lineTo(cx,y);
+    }
+    beamFxCtx.stroke();
+
+    // highlight “ticks” (animated but stable)
+    const tick = (t*6 + b.phase*11);
+    for(let i=2;i<steps-2;i++){
+      const yn = i/(steps-1);
+      const pulse = Math.sin(tick + yn*9.0);
+      if(pulse > 0.82){
+        const cx = xCenters[i];
+        const y = yVals[i];
+        beamFxCtx.globalAlpha = 0.35 * (pulse - 0.82) / 0.18;
+        beamFxCtx.fillStyle = `rgba(${hot[0]},${hot[1]},${hot[2]},1)`;
+        beamFxCtx.fillRect(Math.round(cx)-1, Math.round(y), 2, 1);
+      }
+    }
+    beamFxCtx.restore();
+  }
+
+  // STREAKS (thin diagonals, like pixel platformers / shmups)
+  beamFxCtx.save();
+  beamFxCtx.globalCompositeOperation = "screen";
+  beamFxCtx.lineWidth = 1;
+  beamFxCtx.strokeStyle = `rgba(${cSoft[0]},${cSoft[1]},${cSoft[2]},1)`;
+  for(const b of beams){
+    if(b.kind !== "streak") continue;
+
+    const par = (b.par || 0.22);
+    const len = (b.lenN || 0.20) * h;
+    const speed = (b.speed || 0.7);
+    const x = (b.xN * w) - cam * par + Math.sin(t*1.2 + b.phase) * 6;
+    const y = ((b.yN * h) + (t*speed*18)) % (h + len) - len;
+
+    const dx = (b.tilt || 0) * 10;
+    beamFxCtx.globalAlpha = b.alpha * 0.75;
+
+    beamFxCtx.beginPath();
+    beamFxCtx.moveTo(x, y);
+    beamFxCtx.lineTo(x + dx, y + len);
+    beamFxCtx.stroke();
+
+    // little “spark pixels” along the streak (kept subtle)
+    const s = Math.sin(t*3.3 + b.phase) * 0.5 + 0.5;
+    if(s > 0.80){
+      const px = Math.round(x + dx*0.55);
+      const py = Math.round(y + len*0.55);
+      beamFxCtx.globalAlpha = 0.25 * (s - 0.80) / 0.20;
+      beamFxCtx.fillStyle = `rgba(${hot[0]},${hot[1]},${hot[2]},1)`;
+      beamFxCtx.fillRect(px, py, 1, 1);
+    }
+  }
+  beamFxCtx.restore();
+
+  // Vertical fade so it stays “background” and doesn't fight the gameplay readability
+  const mask = beamFxCtx.createLinearGradient(0,0,0,h);
+  mask.addColorStop(0.00, "rgba(255,255,255,0.95)");
+  mask.addColorStop(0.55, "rgba(255,255,255,0.70)");
+  mask.addColorStop(1.00, "rgba(255,255,255,0.00)");
+  beamFxCtx.globalCompositeOperation = "destination-in";
+  beamFxCtx.globalAlpha = 1;
+  beamFxCtx.fillStyle = mask;
+  beamFxCtx.fillRect(0,0,w,h);
+
+  beamFxCtx.restore();
+
+  // Composite to the main canvas
+  ctx.save();
+  ctx.globalCompositeOperation = "screen";
+  ctx.globalAlpha = 0.70;
+  ctx.imageSmoothingEnabled = false;
+  ctx.drawImage(beamFxCanvas, 0, 0, canvas.width, canvas.height);
+  ctx.imageSmoothingEnabled = true;
+  ctx.restore();
+}
+
+function drawTronGrid(){
+  const col = (game.bit===0) ? 'rgba(147,197,253,1)' : 'rgba(252,165,165,1)';
+  const horizon = canvas.height * 0.58;
+  const t = (game.frame * 0.7 + game.cameraX * 0.25);
+
+  ctx.save();
+  ctx.globalCompositeOperation = 'screen';
+  ctx.strokeStyle = col;
+  ctx.lineWidth = 1;
+
+  // Horizontal perspective lines
+  for(let i=0;i<26;i++){
+    const k = i/25;
+    const y = horizon + (k*k) * (canvas.height - horizon);
+    ctx.globalAlpha = 0.18 * (1-k);
+    ctx.beginPath();
+    ctx.moveTo(0, y);
+    ctx.lineTo(canvas.width, y);
+    ctx.stroke();
+  }
+
+  // Vertical perspective lines
+  const spacing = 46;
+  const offset = (t % spacing);
+  for(let i=-18;i<=18;i++){
+    const x0 = canvas.width/2 + i*spacing + offset - spacing/2;
+    const x1 = canvas.width/2 + (x0 - canvas.width/2) * 7.5;
+    ctx.globalAlpha = 0.10;
+    ctx.beginPath();
+    ctx.moveTo(x0, horizon);
+    ctx.lineTo(x1, canvas.height);
+    ctx.stroke();
+  }
+
+  ctx.globalCompositeOperation = 'source-over';
+  ctx.restore();
+}
+
+function applyBloom(){
+  if(postCanvas.width !== canvas.width || postCanvas.height !== canvas.height){
+    postCanvas.width = canvas.width;
+    postCanvas.height = canvas.height;
+  }
+
+  // copy current frame
+  postCtx.setTransform(1,0,0,1,0,0);
+  postCtx.clearRect(0,0,postCanvas.width, postCanvas.height);
+  postCtx.drawImage(canvas, 0, 0);
+
+  ctx.save();
+  ctx.globalCompositeOperation = 'screen';
+
+  ctx.filter = 'blur(10px)';
+  ctx.globalAlpha = 0.22;
+  ctx.drawImage(postCanvas, 0, 0);
+
+  ctx.filter = 'blur(22px)';
+  ctx.globalAlpha = 0.10;
+  ctx.drawImage(postCanvas, 0, 0);
+
+  ctx.filter = 'none';
+  ctx.globalCompositeOperation = 'source-over';
+  ctx.restore();
+}
+
+function drawVignette(){
+  const cx = canvas.width/2, cy = canvas.height/2;
+  const r = Math.max(canvas.width, canvas.height) * 0.75;
+  const g = ctx.createRadialGradient(cx, cy, r*0.2, cx, cy, r);
+  g.addColorStop(0, 'rgba(0,0,0,0)');
+  g.addColorStop(1, 'rgba(0,0,0,0.45)');
+
+  ctx.save();
+  ctx.fillStyle = g;
+  ctx.fillRect(0,0,canvas.width,canvas.height);
+  ctx.restore();
+}
+
+function applyGlitchFX(){
+  if(glitch <= 0) return;
+
+  // Copy current frame
+  postCtx.setTransform(1,0,0,1,0,0);
+  postCtx.clearRect(0,0,postCanvas.width, postCanvas.height);
+  postCtx.drawImage(canvas, 0, 0);
+
+  ctx.save();
+
+  const strength = glitch / 10;
+  const bands = 14;
+
+  // band shift
+  for(let i=0;i<bands;i++){
+    const y = (canvas.height / bands) * i;
+    const h = (canvas.height / bands);
+    const dx = (Math.random() - 0.5) * 18 * strength;
+    ctx.drawImage(postCanvas, 0, y, canvas.width, h, dx, y, canvas.width, h);
+  }
+
+  // flash tint
+  ctx.globalCompositeOperation = 'screen';
+  ctx.globalAlpha = 0.12 * strength;
+  ctx.fillStyle = (game.bit===0) ? 'rgba(96,165,250,1)' : 'rgba(248,113,113,1)';
+  ctx.fillRect(0,0,canvas.width,canvas.height);
+
+  ctx.restore();
+
+  glitch--;
+}
+
+
 /* =========================
    PARTICULES / TEXTES
 ========================= */
@@ -1137,6 +1560,126 @@ function addParticles(x, y, color, count, speed=1) {
 }
 function spawnFloatText(text, x, y, color) {
   floatTexts.push({text, x, y, color, life: 90, dy: -0.8});
+}
+
+function hexToRgb(hex){
+  if(typeof hex !== "string") return null;
+  const m = hex.trim().match(/^#?([0-9a-f]{6})$/i);
+  if(!m) return null;
+  const n = parseInt(m[1], 16);
+  return [(n>>16)&255, (n>>8)&255, n&255];
+}
+
+function spawnShockwave(x, y, rgb){
+  const col = Array.isArray(rgb) ? rgb : ((game.bit===0) ? [96,165,250] : [248,113,113]);
+  shockwaves.push({
+    x, y,
+    r: 0,
+    speed: 18 + Math.random()*6,
+    life: 1,
+    col
+  });
+}
+
+function drawShockwaves(){
+  if(!shockwaves || shockwaves.length === 0) return;
+
+  ctx.save();
+  ctx.globalCompositeOperation = "screen";
+  ctx.filter = "blur(1.1px)";
+
+  for(const w of shockwaves){
+    const sx = w.x - game.cameraX;
+    const sy = w.y;
+    const a = Math.max(0, w.life);
+    const r = w.r;
+
+    ctx.globalAlpha = 0.55 * a;
+    ctx.lineWidth = 3;
+    ctx.strokeStyle = `rgba(${w.col[0]},${w.col[1]},${w.col[2]},${0.85*a})`;
+    ctx.beginPath();
+    ctx.arc(sx, sy, r, 0, Math.PI*2);
+    ctx.stroke();
+
+    ctx.globalAlpha = 0.20 * a;
+    ctx.lineWidth = 14;
+    ctx.strokeStyle = `rgba(${w.col[0]},${w.col[1]},${w.col[2]},${0.45*a})`;
+    ctx.beginPath();
+    ctx.arc(sx, sy, r, 0, Math.PI*2);
+    ctx.stroke();
+  }
+
+  ctx.filter = "none";
+  ctx.globalCompositeOperation = "source-over";
+  ctx.restore();
+}
+
+function drawPlayerLight(){
+  const sx = player.x - game.cameraX;
+  const sy = player.y;
+  const rgb = (game.bit===0) ? [96,165,250] : [248,113,113];
+  const speed = Math.hypot(player.vx, player.vy);
+  const r = 180 + Math.min(140, speed*18);
+
+  ctx.save();
+  ctx.globalCompositeOperation = "screen";
+  ctx.filter = "blur(0.6px)";
+
+  const g = ctx.createRadialGradient(sx, sy, 0, sx, sy, r);
+  g.addColorStop(0, `rgba(${rgb[0]},${rgb[1]},${rgb[2]},0.22)`);
+  g.addColorStop(0.35, `rgba(${rgb[0]},${rgb[1]},${rgb[2]},0.10)`);
+  g.addColorStop(1, "rgba(0,0,0,0)");
+
+  ctx.fillStyle = g;
+  ctx.fillRect(sx-r, sy-r, r*2, r*2);
+
+  ctx.filter = "none";
+  ctx.globalCompositeOperation = "source-over";
+  ctx.restore();
+}
+
+function drawCoinPro(it){
+  const sx = it.x - game.cameraX + it.w/2;
+  const sy = it.y + it.h/2 + Math.sin(game.frame*0.11 + it.x*0.02)*5;
+
+  const r = 7.5;
+  const spin = game.frame*0.10 + it.x*0.01;
+
+  ctx.save();
+  ctx.globalCompositeOperation = "lighter";
+  ctx.shadowBlur = 12;
+  ctx.shadowColor = "rgba(245,158,11,1)";
+
+  const g = ctx.createRadialGradient(sx-2, sy-3, 1, sx, sy, r*1.6);
+  g.addColorStop(0, "rgba(255,255,255,0.95)");
+  g.addColorStop(0.35, "rgba(253,230,138,0.92)");
+  g.addColorStop(1, "rgba(245,158,11,0.18)");
+
+  ctx.fillStyle = g;
+  ctx.beginPath();
+  ctx.arc(sx, sy, r, 0, Math.PI*2);
+  ctx.fill();
+
+  ctx.shadowBlur = 0;
+  ctx.globalCompositeOperation = "screen";
+  ctx.globalAlpha = 0.65;
+  ctx.lineWidth = 2;
+  ctx.strokeStyle = "rgba(255,255,255,0.65)";
+  ctx.beginPath();
+  ctx.arc(sx, sy, r+1.2, 0, Math.PI*2);
+  ctx.stroke();
+
+  ctx.save();
+  ctx.translate(sx, sy);
+  ctx.rotate(spin);
+  ctx.globalAlpha = 0.8;
+  ctx.fillStyle = "rgba(255,255,255,0.8)";
+  ctx.fillRect(-1.1, -r-1.0, 2.2, r*0.85);
+  ctx.restore();
+
+  ctx.globalAlpha = 1;
+  ctx.globalCompositeOperation = "source-over";
+  ctx.restore();
 }
 
 /* =========================
@@ -1201,6 +1744,22 @@ function drawBlock3D(x, y, w, h, color, active, depth) {
   ctx.shadowColor = color;
   ctx.fillStyle = color;
   ctx.fillRect(sx+2, y+2, w-4, h-4);
+  ctx.restore();
+
+  // Neon outline + sweep (premium look)
+  ctx.save();
+  ctx.globalCompositeOperation = 'screen';
+  ctx.shadowBlur = 18;
+  ctx.shadowColor = color;
+  ctx.globalAlpha = 0.55;
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 2;
+  ctx.strokeRect(sx-0.5, y-0.5, w+1, h+1);
+
+  const sweep = (Math.sin(game.frame*0.08 + (x*0.01)) * 0.5 + 0.5);
+  ctx.globalAlpha = 0.18 * sweep;
+  ctx.fillStyle = color;
+  ctx.fillRect(sx, y, w * (0.15 + 0.25*sweep), 2);
   ctx.restore();
 
   if(grainCanvas){
@@ -1413,6 +1972,7 @@ function activateBonus(bonus) {
     bonusBox.style.borderColor = bonus.bonusType.color;
   }
 
+  spawnShockwave(player.x, player.y, hexToRgb(bonus.bonusType.color));
   playSound('bonus');
   showDialogue('teacher', `Module ${bonus.bonusType.name} activé !`);
 }
@@ -1466,6 +2026,14 @@ function updateVisuals() {
     p.y += p.vy;
     p.life -= 0.05;
     if(p.life<=0) particles.splice(i,1);
+  }
+
+  for(let i=shockwaves.length-1; i>=0; i--){
+    const w = shockwaves[i];
+    w.r += w.speed;
+    w.life -= 0.045;
+    w.speed *= 0.985;
+    if(w.life <= 0) shockwaves.splice(i,1);
   }
 
   for(let i=floatTexts.length-1; i>=0; i--) {
@@ -1618,6 +2186,7 @@ function updatePhysics() {
           player.vy = -bounce;
           player.grounded = false;
           game.shake = Math.max(game.shake, 1.8);
+          spawnShockwave(player.x, p.y, game.bit===0 ? [96,165,250] : [248,113,113]);
           addParticles(player.x, p.y - 2, '#ffffff', 4, 0.4);
         } else {
           player.grounded = true;
@@ -1808,16 +2377,7 @@ function draw() {
   items.forEach(it => {
     if (it.collected) return;
     if (it.type === 'coin') {
-      let sx = it.x - game.cameraX;
-      let sy = it.y + Math.sin(game.frame*0.1)*5;
-      ctx.save();
-      ctx.shadowBlur = 10;
-      ctx.shadowColor = '#f1c40f';
-      ctx.fillStyle = '#f1c40f';
-      ctx.beginPath();
-      ctx.arc(sx+5, sy+5, 6, 0, Math.PI*2);
-      ctx.fill();
-      ctx.restore();
+      drawCoinPro(it);
     } else {
       drawBonusBlock(it);
     }
@@ -1825,6 +2385,7 @@ function draw() {
 
   // bokeh pluie (avant joueur pour profondeur)
   drawRainBokeh();
+  drawPlayerLight();
 
   let sx = player.x - game.cameraX;
   let sy = player.y;
@@ -1865,10 +2426,36 @@ ctx.rotate(-squashAng);
 
   if(game.respawnLock > 0 && (game.frame % 6) < 3) ctx.globalAlpha = 0.35;
 
-  ctx.fillStyle = '#fff';
+  ctx.save();
+  const rgbP = (game.bit===0) ? [96,165,250] : [248,113,113];
+
+  const body = ctx.createRadialGradient(-player.r*0.35, -player.r*0.45, 2, 0, 0, player.r*1.25);
+  body.addColorStop(0, "rgba(255,255,255,0.98)");
+  body.addColorStop(0.45, "rgba(255,255,255,0.70)");
+  body.addColorStop(1, "rgba(15,23,42,0.35)");
+
+  ctx.fillStyle = body;
   ctx.beginPath();
   ctx.arc(0, 0, player.r, 0, Math.PI*2);
   ctx.fill();
+
+  // rim tint (neon, subtle)
+  ctx.globalCompositeOperation = "screen";
+  const rim = ctx.createRadialGradient(0, 0, player.r*0.20, 0, 0, player.r*1.10);
+  rim.addColorStop(0, "rgba(0,0,0,0)");
+  rim.addColorStop(1, `rgba(${rgbP[0]},${rgbP[1]},${rgbP[2]},0.32)`);
+  ctx.fillStyle = rim;
+  ctx.beginPath();
+  ctx.arc(0, 0, player.r, 0, Math.PI*2);
+  ctx.fill();
+
+  // specular streak
+  ctx.globalAlpha *= 0.65;
+  ctx.rotate(-0.55);
+  ctx.fillStyle = "rgba(255,255,255,0.55)";
+  ctx.fillRect(-2, -player.r*0.85, 4, player.r*0.65);
+
+  ctx.restore();
 
   ctx.strokeStyle = col;
   ctx.lineWidth = 3;
@@ -1940,6 +2527,11 @@ ctx.rotate(-squashAng);
     ctx.restore();
   }
 
+  drawShockwaves();
+
+  applyBloom();
+  drawVignette();
+  applyGlitchFX();
   drawGrain();
   ctx.restore();
 
@@ -1989,6 +2581,8 @@ function switchBit() {
   game.shake = 3.5;
   addParticles(player.x, player.y, game.bit===0?C_0:C_1, 12, 2);
   addParticles(player.x + 40, player.y - 25, game.bit===0?C_0:C_1, 8, 1.6);
+  glitch = 10;
+  spawnShockwave(player.x, player.y, game.bit===0 ? [96,165,250] : [248,113,113]);
 }
 
 function completeLevel() {
@@ -2173,6 +2767,16 @@ function resize() {
   if(container) {
     canvas.width = container.clientWidth;
     canvas.height = container.clientHeight;
+    
+    postCanvas.width = canvas.width;
+    postCanvas.height = canvas.height;
+
+    // Energy FX low-res buffer (pixel-art vibe inside the game frame)
+    beamFxCanvas.width  = Math.max(2, Math.floor(canvas.width  * beamFxScale));
+    beamFxCanvas.height = Math.max(2, Math.floor(canvas.height * beamFxScale));
+    beamFxCtx.imageSmoothingEnabled = false;
+    if(!beamDitherPattern) buildBeamDither();
+
     initBackground();
   }
 }
