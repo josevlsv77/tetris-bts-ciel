@@ -824,6 +824,26 @@ if (profBox) profBox.addEventListener("click", hideChars);
     return MAP[y][x] === "#";
   };
 
+// "Neon motes" (poussière lumineuse) — donne de la profondeur sans casser le gameplay
+const motes = [];
+function initMotes(count=240){
+  motes.length = 0;
+  let guard = 0;
+  while (motes.length < count && guard < count * 60){
+    const x = 1 + Math.random() * (MW - 2);
+    const y = 1 + Math.random() * (MH - 2);
+    if (isWall(x|0, y|0)) { guard++; continue; }
+    const z = 0.12 + Math.random() * 0.78;
+    motes.push({
+      x, y, z,
+      phase: Math.random() * Math.PI * 2,
+      amp: 0.55 + Math.random() * 0.65
+    });
+    guard++;
+  }
+}
+initMotes();
+
   // Player
   const player = {
     x: (MW*0.5) + 0.5, y: (MH*0.5) + 0.5,
@@ -1141,6 +1161,50 @@ function genWallTex(){
     }
     wctx.restore();
 
+    // circuits diagonaux + hex hints (plus "premium")
+    wctx.save();
+    wctx.globalCompositeOperation = "lighter";
+    wctx.lineWidth = 1;
+
+    // diagonales fines
+    for (let k=0;k<10;k++){
+      const y0 = (Math.random()*TEX)|0;
+      const x0 = -20;
+      const x1 = TEX + 20;
+      const y1 = y0 + (Math.random()*60 - 30);
+      wctx.strokeStyle = (k%3===0) ? "rgba(244,175,45,0.18)" : "rgba(24,202,230,0.14)";
+      wctx.beginPath();
+      wctx.moveTo(x0, y0);
+      wctx.lineTo(x1, y1);
+      wctx.stroke();
+    }
+
+    // petits "nœuds" lumineux
+    for (let n=0;n<38;n++){
+      const x = (Math.random()*TEX)|0;
+      const y = (Math.random()*TEX)|0;
+      const r = 1 + Math.random()*2.2;
+      wctx.fillStyle = (n%7===0) ? "rgba(244,175,45,0.35)" : "rgba(24,202,230,0.28)";
+      wctx.beginPath();
+      wctx.arc(x, y, r, 0, Math.PI*2);
+      wctx.fill();
+    }
+
+    // hex-ish: segments
+    for (let n=0;n<16;n++){
+      const x = (Math.random()*TEX)|0;
+      const y = (Math.random()*TEX)|0;
+      const s = 10 + Math.random()*18;
+      wctx.strokeStyle = "rgba(255,255,255,0.06)";
+      wctx.beginPath();
+      wctx.moveTo(x, y);
+      wctx.lineTo(x + s*0.5, y - s*0.3);
+      wctx.lineTo(x + s, y);
+      wctx.stroke();
+    }
+
+    wctx.restore();
+
     // Grain subtil
     const img = wctx.getImageData(0,0,TEX,TEX);
     const d = img.data;
@@ -1418,6 +1482,7 @@ function ensureBg(){
   const marks   = [];
   const beams   = []; // tirs ennemis visuels
   const items   = []; // pickups (shield / heal)
+  const impactWaves = []; // anneaux d'impact (wow)
 
   let muzzleRing = 0;
   let shotCooldown = 0;
@@ -1653,6 +1718,17 @@ const faces = Array.from({length: FACE_COUNT}, (_,i) => {
     marks.push({ x: hit.x, y: hit.y, z: hit.z, type: hit.type, life: 2.6 });
   }
 
+function spawnImpactWave(hit, power=1){
+  // Rendu en anneaux néon dans le cadre de jeu, ancré au monde
+  impactWaves.push({
+    x: hit.x, y: hit.y, z: hit.z,
+    type: hit.type,
+    power,
+    life: 0.46,
+    t0: performance.now()*0.001
+  });
+}
+
   function intersectEnemiesRay(ox, oy, oz, dx, dy, dz){
     let bestT = Infinity;
     let best = null;
@@ -1769,6 +1845,12 @@ const faces = Array.from({length: FACE_COUNT}, (_,i) => {
 
     const hit = computeHit(dirX, dirY, dirZ, yaw, pitch, ox, oy, oz);
 
+    // flash beam (TRON) — très court, mais waouw (les coeurs restent les projectiles)
+
+
+    beams.push({ x:ox, y:oy, z:oz, tx:hit.x, ty:hit.y, tz:hit.z, life:0.07, from:"player" });
+
+
     bullets.push({ ox, oy, oz, dx: dirX, dy: dirY, dz: dirZ, t: 0, tEnd: hit.tHit, hit, age: 0 });
   }
 
@@ -1779,6 +1861,7 @@ const faces = Array.from({length: FACE_COUNT}, (_,i) => {
       e.hp -= 12;
       e.hurt = 0.16;
       spawnSparks(hit, "enemy");
+      spawnImpactWave(hit, 1.25);
       blip("hit");
 
       if (e.hp <= 0){
@@ -1851,8 +1934,12 @@ const faces = Array.from({length: FACE_COUNT}, (_,i) => {
         if (b.hit.type === "wall" || b.hit.type === "floor" || b.hit.type === "ceiling") {
           spawnSparks(b.hit);
           addMark(b.hit);
+          spawnImpactWave(b.hit, 0.95);
         } else if (b.hit.type === "enemy") {
           enemyTakeHit(b.hit.enemyId, b.hit);
+          spawnImpactWave(b.hit, 1.25);
+        } else {
+          spawnImpactWave(b.hit, 0.7);
         }
         bullets.splice(i,1);
       }
@@ -1874,6 +1961,13 @@ const faces = Array.from({length: FACE_COUNT}, (_,i) => {
       marks[i].life -= dt;
       if (marks[i].life <= 0) marks.splice(i,1);
     }
+
+
+// impact waves
+for (let i=impactWaves.length-1; i>=0; i--){
+  impactWaves[i].life -= dt;
+  if (impactWaves[i].life <= 0) impactWaves.splice(i,1);
+}
 
     // beams
     for (let i=beams.length-1; i>=0; i--){
@@ -2051,11 +2145,12 @@ const faces = Array.from({length: FACE_COUNT}, (_,i) => {
         g = (g + add > 255) ? 255 : (g + add);
         b = (b + add > 255) ? 255 : (b + add);
 
-        // pulse orange (rare, sur lignes majeures)
-        if (major && (((ix + iy + tI) & 31) === 0)){
-          r = (r + 120 > 255) ? 255 : (r + 120);
-          g = (g + 70 > 255) ? 255 : (g + 70);
-          b = (b + 10 > 255) ? 255 : (b + 10);
+        // impulsions animées, mais ancrées au monde (pas de "défilement" artificiel)
+        const wave = 0.5 + 0.5*Math.sin((tI*0.07) + (ix*0.38 + iy*0.27));
+        if (major && wave > 0.965){
+          r = (r + 95  > 255) ? 255 : (r + 95);
+          g = (g + 58  > 255) ? 255 : (g + 58);
+          b = (b + 14  > 255) ? 255 : (b + 14);
         }
       }
 
@@ -2147,6 +2242,37 @@ offCtx.restore();
       offCtx.restore();
     }
 
+
+// Neon motes (TRON dust) — ancrées au monde (effet "waouw" + profondeur)
+{
+  const tt = performance.now()*0.001;
+  for (let i=0;i<motes.length;i++){
+    const m = motes[i];
+    const wz = m.z + Math.sin(tt*1.6 + m.phase) * 0.030 * m.amp;
+    const pr = projectPoint(m.x, m.y, wz, horizon);
+    if (!pr) continue;
+
+    const xi = pr.sx|0;
+    if (xi < 0 || xi >= offW) continue;
+    if (pr.forward > zBuf[xi] + 0.20) continue;
+
+    let a = 0.55 - pr.forward/30;
+    if (a <= 0) continue;
+    a = clamp(a, 0, 0.30);
+
+    const s = clamp((focal / pr.forward) * 0.020, 0.7, 3.1);
+    const orange = ((i + (tt*3.0)|0) & 15) === 0;
+
+    offCtx.save();
+    offCtx.globalCompositeOperation = "lighter";
+    offCtx.fillStyle = orange ? `rgba(244,175,45,${a*0.85})` : `rgba(24,202,230,${a})`;
+    offCtx.beginPath();
+    offCtx.arc(pr.sx, pr.sy, s, 0, Math.PI*2);
+    offCtx.fill();
+    offCtx.restore();
+  }
+}
+
     // Items (pickups) — billboards simples
     for (let i=0;i<items.length;i++){
       const it = items[i];
@@ -2213,6 +2339,8 @@ if (img && img.complete && img.naturalWidth > 2){
   // image
   offCtx.globalCompositeOperation = "source-over";
   offCtx.save();
+  // évite l'effet "trop contrasté" sur les visages
+  offCtx.filter = "contrast(0.92) brightness(1.04) saturate(0.95)";
   offCtx.beginPath(); offCtx.arc(pr.sx, pr.sy, rFace, 0, Math.PI*2); offCtx.clip();
   offCtx.drawImage(img, pr.sx - rFace, pr.sy - rFace, rFace*2, rFace*2);
   offCtx.restore();
@@ -2274,6 +2402,44 @@ if (img && img.complete && img.naturalWidth > 2){
       offCtx.restore();
     }
 
+
+// impact waves (anneaux néon) — très visible mais court
+for (let i=0;i<impactWaves.length;i++){
+  const w = impactWaves[i];
+  const a = clamp(w.life / 0.46, 0, 1);
+  const pr = projectPoint(w.x, w.y, w.z, horizon);
+  if (!pr) continue;
+  const xi = pr.sx|0;
+  if (xi < 0 || xi >= offW) continue;
+  if (pr.forward > zBuf[xi] + 0.32) continue;
+
+  const t = 1 - a;
+  const base = clamp((focal / pr.forward) * 0.22, 10, 90) * (0.35 + 0.75*t) * w.power;
+  const lw = clamp(base * 0.06, 1.3, 5.0);
+
+  offCtx.save();
+  offCtx.globalCompositeOperation = "lighter";
+  offCtx.lineWidth = lw;
+
+  offCtx.strokeStyle = `rgba(24,202,230,${0.28*a})`;
+  offCtx.beginPath();
+  offCtx.arc(pr.sx, pr.sy, base, 0, Math.PI*2);
+  offCtx.stroke();
+
+  offCtx.strokeStyle = `rgba(244,175,45,${0.20*a})`;
+  offCtx.beginPath();
+  offCtx.arc(pr.sx, pr.sy, base*0.68, 0, Math.PI*2);
+  offCtx.stroke();
+
+  if (t < 0.25){
+    offCtx.fillStyle = `rgba(255,255,255,${0.10*a})`;
+    offCtx.beginPath();
+    offCtx.arc(pr.sx, pr.sy, base*0.18, 0, Math.PI*2);
+    offCtx.fill();
+  }
+  offCtx.restore();
+}
+
     // sparks
     for (let i=0;i<sparks.length;i++){
       const p = sparks[i];
@@ -2312,12 +2478,30 @@ if (img && img.complete && img.naturalWidth > 2){
 
       offCtx.save();
       offCtx.globalCompositeOperation = "lighter";
-      offCtx.strokeStyle = `rgba(96,165,250,${0.10*a})`;
-      offCtx.lineWidth = 3;
-      offCtx.beginPath(); offCtx.moveTo(p1.sx, p1.sy); offCtx.lineTo(p2.sx, p2.sy); offCtx.stroke();
-      offCtx.strokeStyle = `rgba(255,120,170,${0.14*a})`;
-      offCtx.lineWidth = 2;
-      offCtx.beginPath(); offCtx.moveTo(p1.sx, p1.sy); offCtx.lineTo(p2.sx, p2.sy); offCtx.stroke();
+
+      if (b.from === "player"){
+        // beam joueur : plus "TRON Legacy"
+        offCtx.strokeStyle = `rgba(24,202,230,${0.14*a})`;
+        offCtx.lineWidth = 5;
+        offCtx.beginPath(); offCtx.moveTo(p1.sx, p1.sy); offCtx.lineTo(p2.sx, p2.sy); offCtx.stroke();
+
+        offCtx.strokeStyle = `rgba(244,175,45,${0.18*a})`;
+        offCtx.lineWidth = 2;
+        offCtx.beginPath(); offCtx.moveTo(p1.sx, p1.sy); offCtx.lineTo(p2.sx, p2.sy); offCtx.stroke();
+
+        // flare au point d'impact
+        offCtx.fillStyle = `rgba(255,255,255,${0.10*a})`;
+        offCtx.beginPath(); offCtx.arc(p2.sx, p2.sy, 10 + 16*(1-a), 0, Math.PI*2); offCtx.fill();
+      } else {
+        // beam ennemis (inchangé)
+        offCtx.strokeStyle = `rgba(96,165,250,${0.10*a})`;
+        offCtx.lineWidth = 3;
+        offCtx.beginPath(); offCtx.moveTo(p1.sx, p1.sy); offCtx.lineTo(p2.sx, p2.sy); offCtx.stroke();
+        offCtx.strokeStyle = `rgba(255,120,170,${0.14*a})`;
+        offCtx.lineWidth = 2;
+        offCtx.beginPath(); offCtx.moveTo(p1.sx, p1.sy); offCtx.lineTo(p2.sx, p2.sy); offCtx.stroke();
+      }
+
       offCtx.restore();
     }
 
@@ -2351,6 +2535,21 @@ if (img && img.complete && img.naturalWidth > 2){
       offCtx.strokeStyle = "rgba(255, 120, 170, 0.16)";
       offCtx.lineWidth = 2;
       offCtx.beginPath(); offCtx.moveTo(cx, cy); offCtx.lineTo(pr.sx, pr.sy); offCtx.stroke();
+
+// streak local (plus "rapide" et mieux synchronisé au déplacement)
+const tt0 = Math.max(0, tt - 1.10);
+const wx0 = b.ox + b.dx * tt0;
+const wy0 = b.oy + b.dy * tt0;
+const wz0 = b.oz + b.dz * tt0;
+const pr0 = projectPoint(wx0, wy0, wz0, horizon);
+if (pr0){
+  offCtx.lineWidth = clamp(size*0.10, 1.1, 4.0);
+  offCtx.strokeStyle = "rgba(24,202,230,0.16)";
+  offCtx.beginPath(); offCtx.moveTo(pr0.sx, pr0.sy); offCtx.lineTo(pr.sx, pr.sy); offCtx.stroke();
+  offCtx.lineWidth = clamp(size*0.06, 1.0, 3.0);
+  offCtx.strokeStyle = "rgba(255,120,170,0.16)";
+  offCtx.beginPath(); offCtx.moveTo(pr0.sx, pr0.sy); offCtx.lineTo(pr.sx, pr.sy); offCtx.stroke();
+}
 
       // glow
       offCtx.fillStyle = "rgba(255, 90, 140, 0.18)";
@@ -2407,9 +2606,9 @@ if (img && img.complete && img.naturalWidth > 2){
 
     ctx.save();
     ctx.globalCompositeOperation = "screen";
-    ctx.globalAlpha = 0.75;
+    ctx.globalAlpha = 0.62;
     ctx.drawImage(glowA, 0, 0, W, H);
-    ctx.globalAlpha = 0.35;
+    ctx.globalAlpha = 0.26;
     ctx.drawImage(glowB, 0, 0, W, H);
 
     // micro "chroma" (très léger)
@@ -2417,6 +2616,25 @@ if (img && img.complete && img.naturalWidth > 2){
     ctx.globalAlpha = 0.06;
     ctx.drawImage(off, 1.0, 0.2, W, H);
     ctx.drawImage(off, -0.8, -0.2, W, H);
+
+// sweep "light band" (TRON) — effet waouw très léger
+{
+  const tt = performance.now()*0.001;
+  ctx.save();
+  ctx.globalCompositeOperation = "screen";
+  ctx.globalAlpha = 0.08;
+  ctx.translate((Math.sin(tt*0.55)*0.5 + 0.5) * W*0.60 - W*0.30, 0);
+  ctx.rotate(-0.28);
+  const g = ctx.createLinearGradient(-W, 0, W, 0);
+  g.addColorStop(0.0, "rgba(0,0,0,0)");
+  g.addColorStop(0.5, "rgba(24,202,230,0.22)");
+  g.addColorStop(0.7, "rgba(244,175,45,0.10)");
+  g.addColorStop(1.0, "rgba(0,0,0,0)");
+  ctx.fillStyle = g;
+  ctx.fillRect(-W*2, -H*2, W*4, H*4);
+  ctx.restore();
+}
+
     ctx.restore();
 
     const grd = ctx.createRadialGradient(W*0.5,H*0.5,Math.min(W,H)*0.25, W*0.5,H*0.5, Math.min(W,H)*0.78);

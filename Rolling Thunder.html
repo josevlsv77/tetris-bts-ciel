@@ -319,8 +319,63 @@ let glitch = 0;
 // Pixel-art inspired energy FX (rendered at low-res then scaled up)
 const beamFxCanvas = document.createElement('canvas');
 const beamFxCtx = beamFxCanvas.getContext('2d');
-let beamFxScale = 0.28; // lower = chunkier pixels
+let beamFxScale = 0.30; // lower = chunkier pixels (slightly higher res for cleaner pixel-art)
 let beamDitherPattern = null;
+let beamStripePattern = null;
+let beamSparkPattern = null;
+
+function buildBeamStripePattern(){
+  // 16x16 diagonal stripe + dot pattern (classic pixel FX texture)
+  const p = document.createElement('canvas');
+  p.width = 16; p.height = 16;
+  const c = p.getContext('2d');
+  c.clearRect(0,0,16,16);
+
+  // primary diagonals
+  c.fillStyle = "rgba(255,255,255,0.40)";
+  for(let y=0;y<16;y++){
+    for(let x=0;x<16;x++){
+      if(((x + y) % 6) === 0) c.fillRect(x,y,1,1);
+    }
+  }
+  // counter diagonals
+  c.fillStyle = "rgba(255,255,255,0.22)";
+  for(let y=0;y<16;y++){
+    for(let x=0;x<16;x++){
+      if(((x - y + 16) % 7) === 0) c.fillRect(x,y,1,1);
+    }
+  }
+  // sparse “spec” dots
+  c.fillStyle = "rgba(255,255,255,0.35)";
+  for(let i=0;i<22;i++){
+    const x = (i*7 + 3) % 16;
+    const y = (i*11 + 5) % 16;
+    c.fillRect(x,y,1,1);
+  }
+
+  beamStripePattern = beamFxCtx.createPattern(p, 'repeat');
+}
+
+function buildBeamSparkPattern(){
+  // 8x8 micro-sparkle clusters
+  const p = document.createElement('canvas');
+  p.width = 8; p.height = 8;
+  const c = p.getContext('2d');
+  c.clearRect(0,0,8,8);
+  c.fillStyle = "rgba(255,255,255,0.9)";
+  c.fillRect(3,3,1,1);
+  c.fillStyle = "rgba(255,255,255,0.55)";
+  c.fillRect(2,3,1,1);
+  c.fillRect(4,3,1,1);
+  c.fillRect(3,2,1,1);
+  c.fillRect(3,4,1,1);
+  c.fillStyle = "rgba(255,255,255,0.35)";
+  c.fillRect(1,1,1,1);
+  c.fillRect(6,2,1,1);
+  c.fillRect(2,6,1,1);
+  beamSparkPattern = beamFxCtx.createPattern(p, 'repeat');
+}
+
 
 function buildBeamDither(){
   // 4x4 ordered dither (Bayer-ish) as an alpha mask
@@ -1046,50 +1101,72 @@ function drawRainSplashes(){
    BACKGROUND INIT
 ========================= */
 function initBeams(){
+  // Pixel-art energy background: composed (not random), with stable “structure”.
   // Two families:
-  // - ribbons: large, slow aurora-like shafts (harmonious, low contrast)
-  // - streaks: thin, faster “speedline” accents (pixel-art vibe)
+  // - ribbons: big aurora shafts with texture + sparkles
+  // - streaks: diagonal speed lines (platformer / shmup style)
   beams = [];
 
-  const ribbonCount = 5;
+  const anchors = [0.16, 0.34, 0.52, 0.70, 0.86];
+  const ribbonCount = anchors.length;
+
   for(let i=0;i<ribbonCount;i++){
-    const wN = 0.10 + Math.random()*0.20;
+    const center = anchors[i] + (Math.random()-0.5)*0.05;
+    const wide = (i===2) ? 0.26 : (i===1 || i===3) ? 0.22 : 0.18;
+    const wN = wide + Math.random()*0.06;
+
+    const sparks = [];
+    const sparkCount = 18 + Math.floor(Math.random()*18);
+    for(let s=0;s<sparkCount;s++){
+      sparks.push({
+        yN: Math.random(),
+        lane: (Math.random()-0.5) * 1.6,   // lateral offset in “beam widths”
+        spd: 0.35 + Math.random()*1.55,
+        a: 0.20 + Math.random()*0.80,
+        size: (Math.random() < 0.12) ? 2 : 1,
+        phase: Math.random()*Math.PI*2
+      });
+    }
+
     beams.push({
       kind: "ribbon",
-      xN: Math.random(),
+      xN: Math.max(0.02, Math.min(0.98, center)),
       widthN: wN,
       ampN: 0.06 + Math.random()*0.10,
-      freq: 2.5 + Math.random()*4.0,
+      freq: 2.3 + Math.random()*3.2,
       drift: 0.6 + Math.random()*1.2,
-      speed: 0.18 + Math.random()*0.38,
-      alpha: 0.11 + Math.random()*0.10,
-      tilt: (Math.random()-0.5)*0.25,
+      speed: 0.16 + Math.random()*0.34,
+      alpha: 0.10 + Math.random()*0.10,
+      tilt: (Math.random()-0.5)*0.22,
       par: 0.10 + Math.random()*0.16,
       phase: Math.random()*Math.PI*2,
       phase2: Math.random()*Math.PI*2,
-      z: 0.10 + Math.random()*0.22
+      z: 0.10 + Math.random()*0.22,
+      sparks
     });
   }
 
-  const streakCount = 18;
-for(let i=0;i<streakCount;i++){
-  // keep a dominant direction for harmony (pixel-game “speed lines”)
-  const dir = (Math.random() < 0.72) ? -1 : 1;
-  const tilt = dir * (0.35 + Math.random()*0.45);
+  // Streaks: keep a dominant direction (harmony) + a few counter streaks for richness
+  const streakCount = 26;
+  for(let i=0;i<streakCount;i++){
+    const major = (Math.random() < 0.80);
+    const dir = major ? -1 : 1;
+    const tilt = dir * (0.40 + Math.random()*0.55);
 
-  beams.push({
-    kind: "streak",
-    xN: Math.random(),
-    yN: Math.random(),
-    lenN: 0.10 + Math.random()*0.28,
-    speed: 0.35 + Math.random()*0.85,
-    alpha: 0.08 + Math.random()*0.13,
-    tilt: tilt,
-    par: 0.18 + Math.random()*0.30,
-    phase: Math.random()*Math.PI*2,
-    z: 0.12 + Math.random()*0.28
-  });
-}
+    beams.push({
+      kind: "streak",
+      xN: Math.random(),
+      yN: Math.random(),
+      lenN: (major ? 0.10 : 0.16) + Math.random()*(major ? 0.26 : 0.34),
+      speed: (major ? 0.40 : 0.28) + Math.random()*(major ? 0.95 : 0.70),
+      alpha: (major ? 0.07 : 0.05) + Math.random()*(major ? 0.12 : 0.10),
+      tilt: tilt,
+      par: 0.18 + Math.random()*0.30,
+      phase: Math.random()*Math.PI*2,
+      z: 0.12 + Math.random()*0.28,
+      thick: (Math.random() < 0.18) ? 2 : 1
+    });
+  }
 }
 
 function initBackground() {
@@ -1218,8 +1295,7 @@ function drawBackground() {
 // POST / STYLE (inside game frame only)
 // =========================
 function drawEnergyBeams(){
-  // Pixel-art inspired “energy shafts” rendered at low-res then scaled up.
-  // Goal: complex + harmonious, not random noisy “jets”.
+  // Pixel-art inspired energy shafts (structured, textured, coherent).
   if(!beamFxCanvas || beamFxCanvas.width < 2 || beamFxCanvas.height < 2) return;
   if(!beams || beams.length === 0) return;
 
@@ -1236,19 +1312,20 @@ function drawEnergyBeams(){
     Math.round(a[2] + (b[2]-a[2])*t),
   ];
 
-  const cSoft = mix(base, hot, 0.33);
-  const cHot  = mix(base, hot, 0.62);
-  const cDeep = mix(base, deep, 0.55);
+  const cSoft = mix(base, hot, 0.28);
+  const cHot  = mix(base, hot, 0.66);
+  const cDeep = mix(base, deep, 0.58);
 
   const t = game.frame * 0.016;
   const cam = game.cameraX * beamFxScale;
 
   beamFxCtx.save();
+  beamFxCtx.setTransform(1,0,0,1,0,0);
   beamFxCtx.clearRect(0,0,w,h);
   beamFxCtx.imageSmoothingEnabled = false;
   beamFxCtx.globalCompositeOperation = "lighter";
 
-  // Subtle “energy bed” (thin drifting bands) — keeps everything cohesive
+  // Energy “bed”: drifting thin bands (adds cohesion)
   beamFxCtx.globalAlpha = 0.06;
   beamFxCtx.fillStyle = `rgba(${cDeep[0]},${cDeep[1]},${cDeep[2]},1)`;
   for(let y=0;y<h;y+=4){
@@ -1256,34 +1333,33 @@ function drawEnergyBeams(){
     beamFxCtx.fillRect(s, y, w, 1);
   }
 
-  // RIBBONS (aurora shafts)
-  const steps = 18;
+  // RIBBONS
+  const steps = 20;
   for(const b of beams){
     if(b.kind !== "ribbon") continue;
 
     const par = (b.par || 0.14);
     const baseX = (b.xN * w) - cam * par + (Math.sin(t*b.speed + b.phase) * 6);
     const amp = (b.ampN || 0.10) * w;
-    const widthBase = (b.widthN || 0.18) * w;
+    const widthBase = (b.widthN || 0.22) * w;
     const tilt = (b.tilt || 0) * w;
 
-    const xCenters = [];
-    const yVals = [];
+    // Precompute centerline
+    const xCenters = new Array(steps);
+    const yVals = new Array(steps);
     for(let i=0;i<steps;i++){
       const yn = i/(steps-1);
       const y = yn*h;
 
-      // multi-sine flow = smoother than randomness (pixel-game friendly)
       const flow =
-        Math.sin(yn*b.freq + t*(b.speed*1.15) + b.phase) * 0.70 +
-        Math.sin(yn*(b.freq*0.55) + t*(b.drift*0.75) + b.phase2) * 0.30;
+        Math.sin(yn*b.freq + t*(b.speed*1.18) + b.phase) * 0.70 +
+        Math.sin(yn*(b.freq*0.55) + t*(b.drift*0.78) + b.phase2) * 0.30;
 
-      const cx = baseX + flow*amp + yn*tilt;
-      xCenters.push(cx);
-      yVals.push(y);
+      xCenters[i] = baseX + flow*amp + yn*tilt;
+      yVals[i] = y;
     }
 
-    // Build polygon (left boundary then right boundary reversed)
+    // Polygon fill
     beamFxCtx.beginPath();
     for(let i=0;i<steps;i++){
       const yn = i/(steps-1);
@@ -1303,58 +1379,65 @@ function drawEnergyBeams(){
     }
     beamFxCtx.closePath();
 
-    // Gradient across width (gives “shaft” volume even in pixel style)
+    // Outer volume gradient (reads “shaft”)
     const g = beamFxCtx.createLinearGradient(baseX - widthBase, 0, baseX + widthBase, 0);
     g.addColorStop(0.00, `rgba(${cSoft[0]},${cSoft[1]},${cSoft[2]},0)`);
-    g.addColorStop(0.42, `rgba(${base[0]},${base[1]},${base[2]},${b.alpha*0.55})`);
-    g.addColorStop(0.50, `rgba(${cHot[0]},${cHot[1]},${cHot[2]},${b.alpha*0.95})`);
-    g.addColorStop(0.58, `rgba(${base[0]},${base[1]},${base[2]},${b.alpha*0.55})`);
+    g.addColorStop(0.40, `rgba(${base[0]},${base[1]},${base[2]},${b.alpha*0.55})`);
+    g.addColorStop(0.50, `rgba(${cHot[0]},${cHot[1]},${cHot[2]},${b.alpha*0.96})`);
+    g.addColorStop(0.60, `rgba(${base[0]},${base[1]},${base[2]},${b.alpha*0.55})`);
     g.addColorStop(1.00, `rgba(${cSoft[0]},${cSoft[1]},${cSoft[2]},0)`);
-
     beamFxCtx.globalAlpha = 1;
     beamFxCtx.fillStyle = g;
     beamFxCtx.fill();
 
-    // Dither texture inside the ribbon => pixel-art “banding” without looking noisy
+    // Texture layer: diagonal stripes moving along the shaft (very “pixel game”)
+    if(beamStripePattern){
+      beamFxCtx.save();
+      beamFxCtx.clip();
+      beamFxCtx.globalCompositeOperation = "screen";
+      beamFxCtx.globalAlpha = 0.18;
+      // move pattern in time (stable + harmonious)
+      const ox = ((t*24 + baseX) % 16);
+      const oy = ((t*14) % 16);
+      beamFxCtx.translate(ox, oy);
+      beamFxCtx.fillStyle = beamStripePattern;
+      beamFxCtx.fillRect(-32,-32,w+64,h+64);
+      beamFxCtx.restore();
+    }
+
+    // Ordered dither banding (keeps “pixel” feeling without noise)
     if(beamDitherPattern){
       beamFxCtx.save();
       beamFxCtx.clip();
       beamFxCtx.globalCompositeOperation = "source-atop";
-      beamFxCtx.globalAlpha = 0.18;
+      beamFxCtx.globalAlpha = 0.16;
       beamFxCtx.fillStyle = beamDitherPattern;
       beamFxCtx.fillRect(0,0,w,h);
       beamFxCtx.restore();
     }
 
-    // Subtle outline (adds definition without becoming noisy)
-    beamFxCtx.save();
-    beamFxCtx.globalCompositeOperation = "screen";
-    beamFxCtx.globalAlpha = 0.10;
-    beamFxCtx.strokeStyle = `rgba(${base[0]},${base[1]},${base[2]},1)`;
-    beamFxCtx.lineWidth = 1;
-    beamFxCtx.stroke();
-    beamFxCtx.restore();
-
-    // Moving shimmer band (reads “premium” but stays coherent)
+    // Shimmer band (premium polish) — dual bands for richness
     beamFxCtx.save();
     beamFxCtx.clip();
     beamFxCtx.globalCompositeOperation = "screen";
-    const u = (t*0.08 + b.phase*0.17) % 1;
-    const bandY = u * h;
-    const bandH = Math.max(10, h*0.16);
-    const vg = beamFxCtx.createLinearGradient(0, bandY-bandH, 0, bandY+bandH);
-    vg.addColorStop(0.00, "rgba(255,255,255,0)");
-    vg.addColorStop(0.50, `rgba(${cHot[0]},${cHot[1]},${cHot[2]},0.32)`);
-    vg.addColorStop(1.00, "rgba(255,255,255,0)");
-    beamFxCtx.globalAlpha = 0.22;
-    beamFxCtx.fillStyle = vg;
-    beamFxCtx.fillRect(0, bandY-bandH, w, bandH*2);
+    for(let k=0;k<2;k++){
+      const u = (t*(0.085 + k*0.03) + b.phase*(0.17 + k*0.11)) % 1;
+      const bandY = u * h;
+      const bandH = Math.max(10, h*(0.14 - k*0.03));
+      const vg = beamFxCtx.createLinearGradient(0, bandY-bandH, 0, bandY+bandH);
+      vg.addColorStop(0.00, "rgba(255,255,255,0)");
+      vg.addColorStop(0.50, `rgba(${cHot[0]},${cHot[1]},${cHot[2]},${0.30 - k*0.10})`);
+      vg.addColorStop(1.00, "rgba(255,255,255,0)");
+      beamFxCtx.globalAlpha = 0.18 - k*0.06;
+      beamFxCtx.fillStyle = vg;
+      beamFxCtx.fillRect(0, bandY-bandH, w, bandH*2);
+    }
     beamFxCtx.restore();
 
-    // Core line + moving highlight segments
+    // Core line (crisp, reads well in pixel art)
     beamFxCtx.save();
     beamFxCtx.globalCompositeOperation = "screen";
-    beamFxCtx.strokeStyle = `rgba(${cHot[0]},${cHot[1]},${cHot[2]},${Math.min(0.42, b.alpha*0.9)})`;
+    beamFxCtx.strokeStyle = `rgba(${cHot[0]},${cHot[1]},${cHot[2]},${Math.min(0.44, b.alpha*0.95)})`;
     beamFxCtx.lineWidth = 1;
     beamFxCtx.beginPath();
     for(let i=0;i<steps;i++){
@@ -1364,27 +1447,85 @@ function drawEnergyBeams(){
     }
     beamFxCtx.stroke();
 
-    // highlight “ticks” (animated but stable)
-    const tick = (t*6 + b.phase*11);
-    for(let i=2;i<steps-2;i++){
-      const yn = i/(steps-1);
-      const pulse = Math.sin(tick + yn*9.0);
-      if(pulse > 0.82){
-        const cx = xCenters[i];
+    // Filaments (thin companions) => complexity without chaos
+    beamFxCtx.strokeStyle = `rgba(${base[0]},${base[1]},${base[2]},0.35)`;
+    beamFxCtx.globalAlpha = 0.22;
+    for(let f=0;f<2;f++){
+      const off = (f===0? -1: 1) * (0.8 + 0.6*Math.sin(b.phase2 + f));
+      beamFxCtx.beginPath();
+      for(let i=0;i<steps;i++){
+        const yn = i/(steps-1);
+        const cx = xCenters[i] + off * (1.2 + 1.0*Math.sin(t*0.8 + yn*5 + b.phase));
         const y = yVals[i];
-        beamFxCtx.globalAlpha = 0.35 * (pulse - 0.82) / 0.18;
-        beamFxCtx.fillStyle = `rgba(${hot[0]},${hot[1]},${hot[2]},1)`;
-        beamFxCtx.fillRect(Math.round(cx)-1, Math.round(y), 2, 1);
+        if(i===0) beamFxCtx.moveTo(cx,y); else beamFxCtx.lineTo(cx,y);
       }
+      beamFxCtx.stroke();
     }
+    beamFxCtx.restore();
+
+    // Spark pixels flowing inside the ribbon (very pixel-game, looks “alive”)
+    const sparks = b.sparks || [];
+    if(sparks.length){
+      beamFxCtx.save();
+      beamFxCtx.globalCompositeOperation = "screen";
+      for(const s of sparks){
+        const yn = (s.yN + (t*s.spd*0.06)) % 1;
+        const y = yn * h;
+
+        const flow =
+          Math.sin(yn*b.freq + t*(b.speed*1.18) + b.phase) * 0.70 +
+          Math.sin(yn*(b.freq*0.55) + t*(b.drift*0.78) + b.phase2) * 0.30;
+
+        const cx = baseX + flow*amp + yn*tilt;
+        const wPulse = widthBase * (0.80 + 0.22*Math.sin(t*0.9 + yn*3.2 + b.phase2));
+
+        const pulse = Math.sin(t*5.4 + s.phase + yn*10.0) * 0.5 + 0.5;
+        if(pulse < 0.62) continue;
+
+        const x = cx + s.lane * wPulse * 0.22;
+        const a = (pulse - 0.62) / 0.38;
+
+        beamFxCtx.globalAlpha = (0.12 + 0.34*a) * s.a * 0.85;
+        beamFxCtx.fillStyle = `rgba(${cHot[0]},${cHot[1]},${cHot[2]},1)`;
+        const px = Math.round(x);
+        const py = Math.round(y);
+        beamFxCtx.fillRect(px, py, s.size, 1);
+
+        // tiny trailing pixel (gives motion)
+        if(a > 0.65){
+          beamFxCtx.globalAlpha = 0.10 * s.a;
+          beamFxCtx.fillStyle = `rgba(${base[0]},${base[1]},${base[2]},1)`;
+          beamFxCtx.fillRect(px-1, py+1, 1, 1);
+        }
+      }
+
+      // occasional sparkle clusters (patterned, not noisy)
+      if(beamSparkPattern && Math.sin(t*0.8 + b.phase) > 0.72){
+        beamFxCtx.globalAlpha = 0.08;
+        beamFxCtx.fillStyle = `rgba(${cHot[0]},${cHot[1]},${cHot[2]},1)`;
+        const ox = Math.floor((baseX + t*9) % 8);
+        beamFxCtx.translate(ox, 0);
+        beamFxCtx.fillStyle = beamSparkPattern;
+        beamFxCtx.fillRect(0,0,w,h);
+        beamFxCtx.setTransform(1,0,0,1,0,0);
+      }
+
+      beamFxCtx.restore();
+    }
+
+    // Subtle outline for definition
+    beamFxCtx.save();
+    beamFxCtx.globalCompositeOperation = "screen";
+    beamFxCtx.globalAlpha = 0.08;
+    beamFxCtx.strokeStyle = `rgba(${base[0]},${base[1]},${base[2]},1)`;
+    beamFxCtx.lineWidth = 1;
+    beamFxCtx.stroke();
     beamFxCtx.restore();
   }
 
-  // STREAKS (thin diagonals, like pixel platformers / shmups)
+  // STREAKS (diagonal speed lines)
   beamFxCtx.save();
   beamFxCtx.globalCompositeOperation = "screen";
-  beamFxCtx.lineWidth = 1;
-  beamFxCtx.strokeStyle = `rgba(${cSoft[0]},${cSoft[1]},${cSoft[2]},1)`;
   for(const b of beams){
     if(b.kind !== "streak") continue;
 
@@ -1392,29 +1533,43 @@ function drawEnergyBeams(){
     const len = (b.lenN || 0.20) * h;
     const speed = (b.speed || 0.7);
     const x = (b.xN * w) - cam * par + Math.sin(t*1.2 + b.phase) * 6;
-    const y = ((b.yN * h) + (t*speed*18)) % (h + len) - len;
+    const y = ((b.yN * h) + (t*speed*20)) % (h + len) - len;
 
     const dx = (b.tilt || 0) * 10;
-    beamFxCtx.globalAlpha = b.alpha * 0.75;
+    const thick = b.thick || 1;
 
+    // soft pass
+    beamFxCtx.globalAlpha = b.alpha * 0.70;
+    beamFxCtx.lineWidth = 1;
+    beamFxCtx.strokeStyle = `rgba(${cSoft[0]},${cSoft[1]},${cSoft[2]},1)`;
     beamFxCtx.beginPath();
     beamFxCtx.moveTo(x, y);
     beamFxCtx.lineTo(x + dx, y + len);
     beamFxCtx.stroke();
 
-    // little “spark pixels” along the streak (kept subtle)
-    const s = Math.sin(t*3.3 + b.phase) * 0.5 + 0.5;
-    if(s > 0.80){
-      const px = Math.round(x + dx*0.55);
-      const py = Math.round(y + len*0.55);
-      beamFxCtx.globalAlpha = 0.25 * (s - 0.80) / 0.20;
+    // crisp pass (sometimes thicker)
+    if(thick > 1){
+      beamFxCtx.globalAlpha = b.alpha * 0.55;
+      beamFxCtx.strokeStyle = `rgba(${base[0]},${base[1]},${base[2]},1)`;
+      beamFxCtx.beginPath();
+      beamFxCtx.moveTo(x+1, y);
+      beamFxCtx.lineTo(x + dx + 1, y + len);
+      beamFxCtx.stroke();
+    }
+
+    // comet head pixel
+    const s = Math.sin(t*3.2 + b.phase) * 0.5 + 0.5;
+    if(s > 0.78){
+      const px = Math.round(x + dx*(0.60 + 0.10*Math.sin(t*1.3 + b.phase)));
+      const py = Math.round(y + len*(0.60 + 0.10*Math.cos(t*1.1 + b.phase)));
+      beamFxCtx.globalAlpha = 0.22 * (s - 0.78) / 0.22;
       beamFxCtx.fillStyle = `rgba(${hot[0]},${hot[1]},${hot[2]},1)`;
       beamFxCtx.fillRect(px, py, 1, 1);
     }
   }
   beamFxCtx.restore();
 
-  // Vertical fade so it stays “background” and doesn't fight the gameplay readability
+  // Vertical fade so beams remain “background”
   const mask = beamFxCtx.createLinearGradient(0,0,0,h);
   mask.addColorStop(0.00, "rgba(255,255,255,0.95)");
   mask.addColorStop(0.55, "rgba(255,255,255,0.70)");
@@ -1429,9 +1584,16 @@ function drawEnergyBeams(){
   // Composite to the main canvas
   ctx.save();
   ctx.globalCompositeOperation = "screen";
-  ctx.globalAlpha = 0.70;
+  ctx.globalAlpha = 0.78;
   ctx.imageSmoothingEnabled = false;
   ctx.drawImage(beamFxCanvas, 0, 0, canvas.width, canvas.height);
+
+  // subtle extra glow (high-budget polish)
+  ctx.filter = "blur(12px)";
+  ctx.globalAlpha = 0.14;
+  ctx.drawImage(beamFxCanvas, 0, 0, canvas.width, canvas.height);
+  ctx.filter = "none";
+
   ctx.imageSmoothingEnabled = true;
   ctx.restore();
 }
@@ -2776,6 +2938,8 @@ function resize() {
     beamFxCanvas.height = Math.max(2, Math.floor(canvas.height * beamFxScale));
     beamFxCtx.imageSmoothingEnabled = false;
     if(!beamDitherPattern) buildBeamDither();
+    if(!beamStripePattern) buildBeamStripePattern();
+    if(!beamSparkPattern) buildBeamSparkPattern();
 
     initBackground();
   }
