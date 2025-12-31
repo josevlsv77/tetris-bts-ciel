@@ -194,7 +194,6 @@
 }
 
 /* ✅ muzzle FIXE au centre aussi */
- FIXE au centre aussi */
   #muzzle{
     position:absolute; left:50%; top:50%;
     width:18px; height:18px;
@@ -1076,6 +1075,31 @@ function ensureSpawn(){
   const glowB = document.createElement('canvas');
   const glowCtxA = glowA.getContext('2d', { alpha: false });
   const glowCtxB = glowB.getContext('2d', { alpha: false });
+
+  // Film grain (subtil) — "AAA feel" sans surcharger (pas de libs, budget-friendly)
+  const grainC = document.createElement('canvas');
+  grainC.width = 160; grainC.height = 160;
+  const grainCtx = grainC.getContext('2d', { alpha: true });
+  let grainStamp = 0;
+  let grainPattern = null;
+
+  function regenGrain(){
+    const w = grainC.width, h = grainC.height;
+    const img = grainCtx.createImageData(w,h);
+    const d32 = new Uint32Array(img.data.buffer);
+    for (let i=0; i<d32.length; i++){
+      const v = (Math.random()*255)|0;
+      // légère dominante bleu-cyan
+      const r = (v*0.90)|0;
+      const g = (v*0.98)|0;
+      const b = v;
+      const a = 24; // ~0.09
+      d32[i] = (a<<24) | (b<<16) | (g<<8) | (r);
+    }
+    grainCtx.putImageData(img,0,0);
+    grainPattern = null; // pattern recréé au prochain rendu
+  }
+  regenGrain();
 
 
   const FOV = Math.PI / 2.4; // ~75° (plus large, plus "ciné")
@@ -2059,9 +2083,9 @@ for (let i=impactWaves.length-1; i>=0; i--){
   const planeX = -dirY * tan;
   const planeY =  dirX * tan;
 
-  // fog colors
-  const fogFloorR=62, fogFloorG=66, fogFloorB=78;
-  const fogCeilR =74, fogCeilG =78, fogCeilB =92;
+  // fog colors (TRON) — profondeur noir/bleu, néons restent lisibles
+  const fogFloorR=10, fogFloorG=14, fogFloorB=24;
+  const fogCeilR =8,  fogCeilG =10, fogCeilB =18;
 
   // Ceiling (0 -> horizon)
   for (let y=0; y<hInt; y++){
@@ -2082,6 +2106,8 @@ for (let i=impactWaves.length-1; i>=0; i--){
     const stepX = rowDist*(2*planeX)/offW;
     const stepY = rowDist*(2*planeY)/offW;
 
+    const thC = clamp(0.020 + rowDist*0.0009, 0.020, 0.045);
+
     let idx = y*offW;
     for (let x=0; x<offW; x++){
       const tx = ((worldX*TEXW)|0) & TEXWM;
@@ -2091,6 +2117,17 @@ for (let i=impactWaves.length-1; i>=0; i--){
       let r = c0 & 255;
       let g = (c0>>8) & 255;
       let b = (c0>>16) & 255;
+
+      // grille plafond / dalles émissives (TRON) — discret mais lisible
+      const ix = worldX|0, iy = worldY|0;
+      const fx = worldX - ix, fy = worldY - iy;
+      const edgeC = (fx < thC) || (fx > 1-thC) || (fy < thC) || (fy > 1-thC);
+      if (edgeC){
+        const major = ((ix & 3) === 0) || ((iy & 3) === 0);
+        const add = major ? 54 : 26;
+        r = r + (add>>1); g = g + add; b = b + add;
+        if (r>255) r=255; if (g>255) g=255; if (b>255) b=255;
+      }
 
       r = (r*k + fogCeilR*(256-k))>>8;
       g = (g*k + fogCeilG*(256-k))>>8;
@@ -2120,6 +2157,9 @@ for (let i=impactWaves.length-1; i>=0; i--){
     const stepX = rowDist*(2*planeX)/offW;
     const stepY = rowDist*(2*planeY)/offW;
 
+    // épaisseur des traits: un peu plus large au loin pour rester lisible
+    const th = clamp(0.022 + rowDist*0.0010, 0.022, 0.052);
+
     let idx = y*offW;
     for (let x=0; x<offW; x++){
       const tx = ((worldX*TEXW)|0) & TEXWM;
@@ -2135,7 +2175,7 @@ for (let i=impactWaves.length-1; i>=0; i--){
       const iy = worldY|0;
       const fx = worldX - ix;
       const fy = worldY - iy;
-      const edge = (fx < 0.03) || (fx > 0.97) || (fy < 0.03) || (fy > 0.97);
+      const edge = (fx < th) || (fx > 1-th) || (fy < th) || (fy > 1-th);
       if (edge){
         const major = ((ix & 3) === 0) || ((iy & 3) === 0);
         const add = major ? 110 : 55;
@@ -2178,7 +2218,7 @@ drawFloorCeil(horizon, (performance.now()*0.006)|0);
 offCtx.save();
 offCtx.globalCompositeOperation = "lighter";
 const haze = offCtx.createRadialGradient(offW*0.5, horizon, 10, offW*0.5, horizon, offW*0.78);
-haze.addColorStop(0, "rgba(255,255,255,0.10)");
+haze.addColorStop(0, "rgba(24,202,230,0.10)");
 haze.addColorStop(1, "rgba(0,0,0,0)");
 offCtx.fillStyle = haze;
 offCtx.fillRect(0,0,offW,offH);
@@ -2186,10 +2226,23 @@ offCtx.restore();
 
 // glow au sol (claire, pas sombre) (claire, pas sombre)
     const floorGlow = offCtx.createRadialGradient(offW*0.5, offH*0.92, 10, offW*0.5, offH*0.92, offW*0.58);
-    floorGlow.addColorStop(0, "rgba(255,255,255,0.14)");
+    floorGlow.addColorStop(0, "rgba(24,202,230,0.11)");
     floorGlow.addColorStop(1, "rgba(0,0,0,0)");
     offCtx.fillStyle = floorGlow;
     offCtx.fillRect(0, horizon, offW, offH - horizon);
+
+    // bande de "gloss" (sol lisse/tech) — très léger, façon AAA
+    offCtx.save();
+    offCtx.globalCompositeOperation = "screen";
+    offCtx.globalAlpha = 0.55;
+    const glossBand = offCtx.createLinearGradient(0, horizon, 0, offH);
+    glossBand.addColorStop(0.00, "rgba(24,202,230,0)");
+    glossBand.addColorStop(0.42, "rgba(24,202,230,0.030)");
+    glossBand.addColorStop(1.00, "rgba(0,0,0,0)");
+    offCtx.fillStyle = glossBand;
+    offCtx.fillRect(0, horizon, offW, offH - horizon);
+    offCtx.restore();
+
 
     if (zBuf.length !== offW) zBuf = new Float32Array(offW);
 
@@ -2220,7 +2273,34 @@ offCtx.restore();
       offCtx.fillStyle = `rgba(0,0,0,${clamp(1-k, 0, 0.60)})`;
       offCtx.fillRect(x, y1, 1, h);
 
-      offCtx.fillStyle = `rgba(255,255,255,${0.12*shade})`;
+      // teinte volumétrique froide : profondeur sans "boue" (budget-friendly)
+      if (fogT > 0.01){
+        offCtx.fillStyle = `rgba(6,18,28,${0.20*fogT})`;
+        offCtx.fillRect(x, y1, 1, h);
+      }
+
+      // liserés émissifs (TRON) : arêtes + joints plafond/sol (lisibilité premium)
+      if (hit.wallX < 0.055 || hit.wallX > 0.945){
+        offCtx.save();
+        offCtx.globalCompositeOperation = "lighter";
+        const a = (0.18 + 0.30*(1-fogT)) * sideDark;
+        offCtx.fillStyle = `rgba(24,202,230,${a})`;
+        offCtx.fillRect(x, y1, 1, h);
+        offCtx.restore();
+      }
+      {
+        offCtx.save();
+        offCtx.globalCompositeOperation = "lighter";
+        const edgeA = 0.10 * (1-fogT) * sideDark;
+        offCtx.fillStyle = `rgba(24,202,230,${edgeA})`;
+        offCtx.fillRect(x, y2-1, 1, 2);
+        offCtx.fillStyle = `rgba(24,202,230,${edgeA*0.85})`;
+        offCtx.fillRect(x, y1, 1, 1);
+        offCtx.restore();
+      }
+
+      // petite ligne de highlight (subtile)
+      offCtx.fillStyle = `rgba(255,255,255,${0.10*shade})`;
       offCtx.fillRect(x, y1, 1, 1);
     }
 
@@ -2234,10 +2314,10 @@ offCtx.restore();
       const r = (1 - t) * 26 + 6;
       offCtx.save();
       offCtx.globalCompositeOperation = "lighter";
-      offCtx.strokeStyle = `rgba(255,120,170,${0.22*t})`;
+      offCtx.strokeStyle = `rgba(24,202,230,${0.26*t})`;
       offCtx.lineWidth = 2;
       offCtx.beginPath(); offCtx.arc(cx, cy, r, 0, Math.PI*2); offCtx.stroke();
-      offCtx.strokeStyle = `rgba(96,165,250,${0.16*t})`;
+      offCtx.strokeStyle = `rgba(255,255,255,${0.10*t})`;
       offCtx.beginPath(); offCtx.arc(cx, cy, r*0.72, 0, Math.PI*2); offCtx.stroke();
       offCtx.restore();
     }
@@ -2357,6 +2437,12 @@ if (img && img.complete && img.naturalWidth > 2){
   offCtx.strokeStyle = `rgba(255,255,255,${0.40 - 0.18*hurtA})`;
   offCtx.lineWidth = Math.max(1, size*0.02);
   offCtx.beginPath(); offCtx.arc(pr.sx, pr.sy, rFace, 0, Math.PI*2); offCtx.stroke();
+
+  // anneau néon (TRON) autour du visage — garde la tête reconnaissable, ajoute du "premium"
+  offCtx.globalCompositeOperation = "lighter";
+  offCtx.strokeStyle = `rgba(24,202,230,${0.22 + 0.10*Math.sin(e.bob*1.2)})`;
+  offCtx.lineWidth = Math.max(1, size*0.025);
+  offCtx.beginPath(); offCtx.arc(pr.sx, pr.sy, rFace*1.05, 0, Math.PI*2); offCtx.stroke();
 
   offCtx.globalCompositeOperation = "lighter";
   offCtx.fillStyle = `rgba(255,120,170,${0.08 + 0.10*Math.sin(e.bob*1.7)})`;
@@ -2551,12 +2637,17 @@ if (pr0){
   offCtx.beginPath(); offCtx.moveTo(pr0.sx, pr0.sy); offCtx.lineTo(pr.sx, pr.sy); offCtx.stroke();
 }
 
-      // glow
+      // glow (énergie TRON)
+      offCtx.globalCompositeOperation = "lighter";
+      offCtx.fillStyle = "rgba(24,202,230,0.10)";
+      offCtx.beginPath(); offCtx.arc(pr.sx, pr.sy, size*0.78, 0, Math.PI*2); offCtx.fill();
       offCtx.fillStyle = "rgba(255, 90, 140, 0.18)";
       offCtx.beginPath(); offCtx.arc(pr.sx, pr.sy, size*0.62, 0, Math.PI*2); offCtx.fill();
 
-      // coeur principal
+      // coeur principal (double couche : cyan fin + magenta)
       offCtx.font = `900 ${Math.floor(size)}px Inter, system-ui`;
+      offCtx.fillStyle = "rgba(24,202,230,0.32)";
+      offCtx.fillText("❤", pr.sx + 0.6, pr.sy + 1.2);
       offCtx.fillStyle = "rgba(255, 60, 120, 0.98)";
       offCtx.fillText("❤", pr.sx, pr.sy + 1);
 
@@ -2577,7 +2668,9 @@ if (pr0){
       ctx.save();
       const a = clamp(shieldT/4, 0, 1);
       ctx.globalAlpha = 1;
+      ctx.filter = "contrast(1.06) saturate(1.05) brightness(1.01)";
       ctx.drawImage(off, 0, 0, W, H);
+      ctx.filter = "none";
 
       ctx.globalCompositeOperation = "screen";
       const rg = ctx.createRadialGradient(W*0.5,H*0.5,Math.min(W,H)*0.15, W*0.5,H*0.5, Math.min(W,H)*0.75);
@@ -2587,7 +2680,9 @@ if (pr0){
       ctx.fillRect(0,0,W,H);
       ctx.restore();
     }else{
+      ctx.filter = "contrast(1.06) saturate(1.05) brightness(1.01)";
       ctx.drawImage(off, 0, 0, W, H);
+      ctx.filter = "none";
     }
 
 // Bloom / glow (TRON) — applique un halo sans casser la lisibilité
@@ -2596,19 +2691,19 @@ if (pr0){
     glowCtxA.clearRect(0,0,glowA.width, glowA.height);
     glowCtxB.clearRect(0,0,glowB.width, glowB.height);
 
-    glowCtxA.filter = "blur(10px)";
+    glowCtxA.filter = "brightness(1.18) contrast(1.55) saturate(1.25) blur(10px)";
     glowCtxA.globalCompositeOperation = "source-over";
     glowCtxA.drawImage(off, 0, 0, glowA.width, glowA.height);
 
-    glowCtxB.filter = "blur(18px)";
+    glowCtxB.filter = "brightness(1.22) contrast(1.70) saturate(1.20) blur(18px)";
     glowCtxB.globalCompositeOperation = "source-over";
     glowCtxB.drawImage(off, 0, 0, glowB.width, glowB.height);
 
     ctx.save();
     ctx.globalCompositeOperation = "screen";
-    ctx.globalAlpha = 0.62;
+    ctx.globalAlpha = 0.54;
     ctx.drawImage(glowA, 0, 0, W, H);
-    ctx.globalAlpha = 0.26;
+    ctx.globalAlpha = 0.20;
     ctx.drawImage(glowB, 0, 0, W, H);
 
     // micro "chroma" (très léger)
@@ -2635,6 +2730,22 @@ if (pr0){
   ctx.restore();
 }
 
+    ctx.restore();
+
+    // film grain (subtil) — donne un rendu "haut de gamme" sans nuire à la lecture
+    const now = performance.now();
+    if (now - grainStamp > 95){
+      regenGrain();
+      grainStamp = now;
+    }
+    if (!grainPattern) grainPattern = ctx.createPattern(grainC, "repeat");
+
+    ctx.save();
+    ctx.globalCompositeOperation = "overlay";
+    ctx.globalAlpha = 0.075;
+    ctx.translate(-((now*0.05)%grainC.width), -((now*0.03)%grainC.height));
+    ctx.fillStyle = grainPattern;
+    ctx.fillRect(0,0,W + grainC.width, H + grainC.height);
     ctx.restore();
 
     const grd = ctx.createRadialGradient(W*0.5,H*0.5,Math.min(W,H)*0.25, W*0.5,H*0.5, Math.min(W,H)*0.78);
