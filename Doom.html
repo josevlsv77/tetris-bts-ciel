@@ -578,9 +578,9 @@
   const uiFps   = document.getElementById('ui-fps');
   const uiQ     = document.getElementById('ui-q');
   const uiMode  = document.getElementById('ui-mode');
-  const uiBullets = document.getElementById('ui-bullets');
-  const uiSparks  = document.getElementById('ui-sparks');
-  const uiMarks   = document.getElementById('ui-marks');
+  const uiBullets = document.getElementById('ui-bullets') || { textContent: '' };
+  const uiSparks  = document.getElementById('ui-sparks')  || { textContent: '' };
+  const uiMarks   = document.getElementById('ui-marks')   || { textContent: '' };
 
   const uiHp    = document.getElementById('ui-hp');
   const uiScore = document.getElementById('ui-score');
@@ -1028,7 +1028,7 @@ function ensureSpawn(){
 
   // Quality / offscreen
   const QUALITY_LEVELS = [0.50, 0.60, 0.75, 1.00];
-  let qIdx = 1;
+  let qIdx = 2;
   let renderScale = QUALITY_LEVELS[qIdx];
   uiQ.textContent = Math.round(renderScale*100) + "%";
 
@@ -1125,224 +1125,231 @@ ceilTex.width = TEX; ceilTex.height = TEX;
 const cctx = ceilTex.getContext('2d', { alpha:false });
 
 function genWallTex(){
-    // TRON: Legacy — panneaux sombres + lignes émissives (fortes pour le bloom)
-    wctx.clearRect(0,0,TEX,TEX);
+  // TRON / premium : panneaux propres, arêtes émissives, motifs circuits discrets.
+  // Texture procédurale (générée une fois) -> perf OK.
+  wctx.setTransform(1,0,0,1,0,0);
+  wctx.clearRect(0,0,TEX,TEX);
 
-    const bg = wctx.createLinearGradient(0,0,0,TEX);
-    bg.addColorStop(0, "rgb(2,6,12)");
-    bg.addColorStop(0.6, "rgb(1,3,8)");
-    bg.addColorStop(1, "rgb(0,0,0)");
-    wctx.fillStyle = bg;
-    wctx.fillRect(0,0,TEX,TEX);
+  // Base sombre (bleu-noir)
+  const g = wctx.createLinearGradient(0,0,0,TEX);
+  g.addColorStop(0.0, "rgb(1,6,14)");
+  g.addColorStop(0.55,"rgb(0,3,9)");
+  g.addColorStop(1.0, "rgb(0,0,0)");
+  wctx.fillStyle = g;
+  wctx.fillRect(0,0,TEX,TEX);
 
-    // Grands panneaux
-    const P = 32;
-    for(let y=0; y<TEX; y+=P){
-      for(let x=0; x<TEX; x+=P){
-        const inset = 3;
-        wctx.fillStyle = ((x/P + y/P) & 1) ? "rgba(3,10,18,1)" : "rgba(2,8,16,1)";
-        wctx.fillRect(x,y,P,P);
+  // Panneaux 32×32 avec bevel léger (propre, pas "random")
+  const P = 32;
+  for (let y=0; y<TEX; y+=P){
+    for (let x=0; x<TEX; x+=P){
+      const alt = ((x/P + y/P) & 1);
+      wctx.fillStyle = alt ? "rgba(2,12,22,0.95)" : "rgba(1,10,18,0.95)";
+      wctx.fillRect(x,y,P,P);
 
-        // cadre interne
-        wctx.strokeStyle = "rgba(24,202,230,0.22)";
-        wctx.lineWidth = 1;
-        wctx.strokeRect(x+inset+0.5, y+inset+0.5, P-2*inset-1, P-2*inset-1);
+      // bevel : highlight haut/gauche + ombre bas/droite
+      wctx.fillStyle = "rgba(255,255,255,0.035)";
+      wctx.fillRect(x+1,y+1,P-2,1);
+      wctx.fillRect(x+1,y+1,1,P-2);
 
-        // petites découpes/vis
-        wctx.fillStyle = "rgba(24,202,230,0.10)";
-        wctx.fillRect(x+inset+2, y+inset+2, 3, 3);
-        wctx.fillRect(x+P-inset-5, y+P-inset-5, 3, 3);
-      }
+      wctx.fillStyle = "rgba(0,0,0,0.35)";
+      wctx.fillRect(x+1,y+P-2,P-2,1);
+      wctx.fillRect(x+P-2,y+1,1,P-2);
+
+      // inset (panneau interne)
+      wctx.strokeStyle = "rgba(255,255,255,0.045)";
+      wctx.lineWidth = 1;
+      wctx.strokeRect(x+6.5,y+6.5,P-13,P-13);
+
+      // micro "greeble" propre : 2 rectangles + 2 vis
+      wctx.fillStyle = "rgba(0,0,0,0.18)";
+      wctx.fillRect(x+10,y+10,10,6);
+      wctx.fillRect(x+10,y+20,14,6);
+      wctx.fillStyle = "rgba(24,202,230,0.16)";
+      wctx.fillRect(x+8,y+8,2,2);
+      wctx.fillRect(x+P-10,y+P-10,2,2);
     }
-
-    // Lignes émissives (cyan) — fortes, pour un rendu "budget AAA"
-    wctx.save();
-    wctx.globalCompositeOperation = "lighter";
-    wctx.strokeStyle = "rgba(24,202,230,0.80)";
-    wctx.lineWidth = 2;
-
-    for (let i=0; i<=TEX; i+=16){
-      wctx.beginPath();
-      wctx.moveTo(i+0.5, 0);
-      wctx.lineTo(i+0.5, TEX);
-      wctx.stroke();
-
-      wctx.beginPath();
-      wctx.moveTo(0, i+0.5);
-      wctx.lineTo(TEX, i+0.5);
-      wctx.stroke();
-    }
-
-    // Accents orange (rares)
-    wctx.strokeStyle = "rgba(244,175,45,0.55)";
-    wctx.lineWidth = 2;
-    for (let k=0; k<7; k++){
-      const y = ((k*19) % TEX) + 8;
-      wctx.beginPath();
-      wctx.moveTo(10, y+0.5);
-      wctx.lineTo(34, y+0.5);
-      wctx.stroke();
-    }
-    wctx.restore();
-
-    // circuits diagonaux + hex hints (plus "premium")
-    wctx.save();
-    wctx.globalCompositeOperation = "lighter";
-    wctx.lineWidth = 1;
-
-    // diagonales fines
-    for (let k=0;k<10;k++){
-      const y0 = (Math.random()*TEX)|0;
-      const x0 = -20;
-      const x1 = TEX + 20;
-      const y1 = y0 + (Math.random()*60 - 30);
-      wctx.strokeStyle = (k%3===0) ? "rgba(244,175,45,0.18)" : "rgba(24,202,230,0.14)";
-      wctx.beginPath();
-      wctx.moveTo(x0, y0);
-      wctx.lineTo(x1, y1);
-      wctx.stroke();
-    }
-
-    // petits "nœuds" lumineux
-    for (let n=0;n<38;n++){
-      const x = (Math.random()*TEX)|0;
-      const y = (Math.random()*TEX)|0;
-      const r = 1 + Math.random()*2.2;
-      wctx.fillStyle = (n%7===0) ? "rgba(244,175,45,0.35)" : "rgba(24,202,230,0.28)";
-      wctx.beginPath();
-      wctx.arc(x, y, r, 0, Math.PI*2);
-      wctx.fill();
-    }
-
-    // hex-ish: segments
-    for (let n=0;n<16;n++){
-      const x = (Math.random()*TEX)|0;
-      const y = (Math.random()*TEX)|0;
-      const s = 10 + Math.random()*18;
-      wctx.strokeStyle = "rgba(255,255,255,0.06)";
-      wctx.beginPath();
-      wctx.moveTo(x, y);
-      wctx.lineTo(x + s*0.5, y - s*0.3);
-      wctx.lineTo(x + s, y);
-      wctx.stroke();
-    }
-
-    wctx.restore();
-
-    // Grain subtil
-    const img = wctx.getImageData(0,0,TEX,TEX);
-    const d = img.data;
-    for(let i=0;i<d.length;i+=4){
-      const n = ((Math.random()*12)|0) - 6;
-      d[i]   = clamp(d[i]   + n, 0, 255);
-      d[i+1] = clamp(d[i+1] + n, 0, 255);
-      d[i+2] = clamp(d[i+2] + n, 0, 255);
-    }
-    wctx.putImageData(img,0,0);
   }
 
+  // Seams néon (cyan) + segments orange rares (structure TRON)
+  wctx.save();
+  wctx.globalCompositeOperation = "lighter";
+
+  // seams majeures (32)
+  wctx.strokeStyle = "rgba(24,202,230,0.90)";
+  wctx.lineWidth = 2;
+  for (let i=0;i<=TEX;i+=32){
+    wctx.beginPath(); wctx.moveTo(i+0.5,0); wctx.lineTo(i+0.5,TEX); wctx.stroke();
+    wctx.beginPath(); wctx.moveTo(0,i+0.5); wctx.lineTo(TEX,i+0.5); wctx.stroke();
+  }
+
+  // seams secondaires (16)
+  wctx.strokeStyle = "rgba(24,202,230,0.20)";
+  wctx.lineWidth = 1;
+  for (let i=0;i<=TEX;i+=16){
+    wctx.beginPath(); wctx.moveTo(i+0.5,0); wctx.lineTo(i+0.5,TEX); wctx.stroke();
+    wctx.beginPath(); wctx.moveTo(0,i+0.5); wctx.lineTo(TEX,i+0.5); wctx.stroke();
+  }
+
+  // Barres lumineuses verticales (lisibilité en raycaster)
+  wctx.fillStyle = "rgba(24,202,230,0.30)";
+  wctx.fillRect(14,0,3,TEX);
+  wctx.fillRect(TEX-17,0,3,TEX);
+
+  // Accents orange (très rares)
+  wctx.fillStyle = "rgba(244,175,45,0.20)";
+  wctx.fillRect(0, 24, TEX, 2);
+  wctx.fillRect(0, 96, TEX, 2);
+
+  // Motifs circuit (discrets et orthogonaux)
+  wctx.strokeStyle = "rgba(24,202,230,0.14)";
+  wctx.lineWidth = 1;
+  for (let k=0;k<10;k++){
+    const x0 = ((Math.random()*TEX)|0);
+    const y0 = ((Math.random()*TEX)|0);
+    const x1 = clamp(x0 + (((Math.random()*44)|0)-22), 0, TEX);
+    const y1 = clamp(y0 + (((Math.random()*44)|0)-22), 0, TEX);
+    wctx.beginPath();
+    wctx.moveTo(x0+0.5, y0+0.5);
+    wctx.lineTo(x1+0.5, y0+0.5);
+    wctx.lineTo(x1+0.5, y1+0.5);
+    wctx.stroke();
+  }
+
+  wctx.restore();
+
+  // Micro-grain (très léger) pour casser le "flat" sans salir
+  const img = wctx.getImageData(0,0,TEX,TEX);
+  const d = img.data;
+  for (let i=0; i<d.length; i+=4){
+    const n = ((Math.random()*10)|0) - 5;
+    d[i]   = clamp(d[i]   + n, 0, 255);
+    d[i+1] = clamp(d[i+1] + n, 0, 255);
+    d[i+2] = clamp(d[i+2] + n, 0, 255);
+  }
+  wctx.putImageData(img,0,0);
+}
 
 function genFloorTex(){
-    // TRON: grille noire + néons cyan, grosses lignes tous les 4 "dalles"
-    fctx.clearRect(0,0,128,128);
+  // Sol TRON : grille très lisible + noeuds (généré une fois).
+  fctx.setTransform(1,0,0,1,0,0);
+  fctx.clearRect(0,0,TEX,TEX);
+  fctx.fillStyle = "rgb(0,0,0)";
+  fctx.fillRect(0,0,TEX,TEX);
 
-    fctx.fillStyle = "rgb(0,0,0)";
-    fctx.fillRect(0,0,128,128);
+  // Teinte froide subtile
+  const cold = fctx.createRadialGradient(TEX*0.5,TEX*0.55,6, TEX*0.5,TEX*0.55,TEX*0.85);
+  cold.addColorStop(0, "rgba(24,202,230,0.10)");
+  cold.addColorStop(1, "rgba(0,0,0,0)");
+  fctx.fillStyle = cold;
+  fctx.fillRect(0,0,TEX,TEX);
 
-    // voile bleu très sombre
-    const bg = fctx.createRadialGradient(64,64,10, 64,64,92);
-    bg.addColorStop(0, "rgba(24,202,230,0.08)");
-    bg.addColorStop(1, "rgba(0,0,0,0)");
-    fctx.fillStyle = bg;
-    fctx.fillRect(0,0,128,128);
+  // Glow sur les lignes (shadowBlur OK car c'est pré-calculé)
+  fctx.save();
+  fctx.globalCompositeOperation = "lighter";
+  fctx.shadowColor = "rgba(24,202,230,0.55)";
+  fctx.shadowBlur = 6;
 
-    // grille fine
-    fctx.lineWidth = 1;
-    fctx.strokeStyle = "rgba(24,202,230,0.12)";
-    for(let i=0;i<=128;i+=8){
-      fctx.beginPath(); fctx.moveTo(i+0.5,0); fctx.lineTo(i+0.5,128); fctx.stroke();
-      fctx.beginPath(); fctx.moveTo(0,i+0.5); fctx.lineTo(128,i+0.5); fctx.stroke();
-    }
-
-    // grille majeure
-    fctx.strokeStyle = "rgba(24,202,230,0.30)";
-    for(let i=0;i<=128;i+=32){
-      fctx.beginPath(); fctx.moveTo(i+0.5,0); fctx.lineTo(i+0.5,128); fctx.stroke();
-      fctx.beginPath(); fctx.moveTo(0,i+0.5); fctx.lineTo(128,i+0.5); fctx.stroke();
-    }
-
-    // points/nœuds + accents orange
-    fctx.globalCompositeOperation = "lighter";
-    for(let y=0;y<=128;y+=32){
-      for(let x=0;x<=128;x+=32){
-        fctx.fillStyle = "rgba(24,202,230,0.55)";
-        fctx.beginPath(); fctx.arc(x, y, 1.7, 0, Math.PI*2); fctx.fill();
-      }
-    }
-    fctx.fillStyle = "rgba(244,175,45,0.32)";
-    fctx.fillRect(0, 63, 128, 2);
-    fctx.fillRect(63, 0, 2, 128);
-    fctx.globalCompositeOperation = "source-over";
-
-    // micro bruit
-    const img = fctx.getImageData(0,0,128,128);
-    const d = img.data;
-    for(let i=0;i<d.length;i+=4){
-      const n = ((Math.random()*10)|0) - 5;
-      d[i]   = clamp(d[i]   + n, 0, 255);
-      d[i+1] = clamp(d[i+1] + n, 0, 255);
-      d[i+2] = clamp(d[i+2] + n, 0, 255);
-    }
-    fctx.putImageData(img,0,0);
+  // grille fine (8)
+  fctx.strokeStyle = "rgba(24,202,230,0.26)";
+  fctx.lineWidth = 1;
+  for (let i=0;i<=TEX;i+=8){
+    fctx.beginPath(); fctx.moveTo(i+0.5,0); fctx.lineTo(i+0.5,TEX); fctx.stroke();
+    fctx.beginPath(); fctx.moveTo(0,i+0.5); fctx.lineTo(TEX,i+0.5); fctx.stroke();
   }
 
+  // grille majeure (32) plus punchy
+  fctx.shadowBlur = 10;
+  fctx.strokeStyle = "rgba(24,202,230,0.60)";
+  fctx.lineWidth = 2;
+  for (let i=0;i<=TEX;i+=32){
+    fctx.beginPath(); fctx.moveTo(i+0.5,0); fctx.lineTo(i+0.5,TEX); fctx.stroke();
+    fctx.beginPath(); fctx.moveTo(0,i+0.5); fctx.lineTo(TEX,i+0.5); fctx.stroke();
+  }
+
+  // noeuds
+  fctx.shadowBlur = 8;
+  for (let y=0;y<=TEX;y+=32){
+    for (let x=0;x<=TEX;x+=32){
+      fctx.fillStyle = "rgba(255,255,255,0.10)";
+      fctx.beginPath(); fctx.arc(x,y,2.3,0,Math.PI*2); fctx.fill();
+      fctx.fillStyle = "rgba(24,202,230,0.65)";
+      fctx.beginPath(); fctx.arc(x,y,1.2,0,Math.PI*2); fctx.fill();
+    }
+  }
+
+  // accents orange rares
+  fctx.shadowBlur = 7;
+  fctx.fillStyle = "rgba(244,175,45,0.18)";
+  fctx.fillRect(0, (TEX/2|0)-1, TEX, 2);
+
+  fctx.restore();
+
+  // micro bruit très léger
+  const img = fctx.getImageData(0,0,TEX,TEX);
+  const d = img.data;
+  for (let i=0;i<d.length;i+=4){
+    const n = ((Math.random()*8)|0) - 4;
+    d[i]   = clamp(d[i]   + n, 0, 255);
+    d[i+1] = clamp(d[i+1] + n, 0, 255);
+    d[i+2] = clamp(d[i+2] + n, 0, 255);
+  }
+  fctx.putImageData(img,0,0);
+}
 
 function genCeilTex(){
-    // Plafond sombre avec bandes lumineuses (style FUI)
-    cctx.clearRect(0,0,128,128);
+  // Plafond TRON : dalles sombres + barres lumineuses (comme refs).
+  cctx.setTransform(1,0,0,1,0,0);
+  cctx.clearRect(0,0,TEX,TEX);
+  cctx.fillStyle = "rgb(0,0,0)";
+  cctx.fillRect(0,0,TEX,TEX);
 
-    cctx.fillStyle = "rgb(0,0,0)";
-    cctx.fillRect(0,0,128,128);
-
-    const g = cctx.createLinearGradient(0,0,128,128);
-    g.addColorStop(0, "rgba(24,202,230,0.10)");
-    g.addColorStop(0.5, "rgba(0,0,0,0)");
-    g.addColorStop(1, "rgba(244,175,45,0.08)");
-    cctx.fillStyle = g;
-    cctx.fillRect(0,0,128,128);
-
-    // lignes fines "circuit"
-    cctx.globalCompositeOperation = "lighter";
-    cctx.strokeStyle = "rgba(24,202,230,0.16)";
-    cctx.lineWidth = 1;
-    for(let i=0;i<=128;i+=16){
-      cctx.beginPath(); cctx.moveTo(i+0.5,0); cctx.lineTo(i+0.5,128); cctx.stroke();
-      cctx.beginPath(); cctx.moveTo(0,i+0.5); cctx.lineTo(128,i+0.5); cctx.stroke();
+  // Dalles 32×32
+  for (let y=0; y<TEX; y+=32){
+    for (let x=0; x<TEX; x+=32){
+      cctx.fillStyle = ((x/32 + y/32) & 1) ? "rgba(1,7,14,1)" : "rgba(0,5,12,1)";
+      cctx.fillRect(x,y,32,32);
+      cctx.strokeStyle = "rgba(255,255,255,0.045)";
+      cctx.lineWidth = 1;
+      cctx.strokeRect(x+5.5,y+5.5,21,21);
     }
-
-    // barres lumineuses
-    cctx.fillStyle = "rgba(24,202,230,0.22)";
-    cctx.fillRect(0, 26, 128, 2);
-    cctx.fillRect(0, 98, 128, 2);
-    cctx.fillStyle = "rgba(244,175,45,0.14)";
-    cctx.fillRect(20, 62, 88, 2);
-
-    cctx.globalCompositeOperation = "source-over";
-
-    // micro bruit
-    const img = cctx.getImageData(0,0,128,128);
-    const d = img.data;
-    for(let i=0;i<d.length;i+=4){
-      const n = ((Math.random()*8)|0) - 4;
-      d[i]   = clamp(d[i]   + n, 0, 255);
-      d[i+1] = clamp(d[i+1] + n, 0, 255);
-      d[i+2] = clamp(d[i+2] + n, 0, 255);
-    }
-    cctx.putImageData(img,0,0);
   }
 
+  cctx.save();
+  cctx.globalCompositeOperation = "lighter";
 
-  genWallTex();genWallTex();
+  // seams cyan
+  cctx.strokeStyle = "rgba(24,202,230,0.22)";
+  cctx.lineWidth = 1;
+  for (let i=0;i<=TEX;i+=16){
+    cctx.beginPath(); cctx.moveTo(i+0.5,0); cctx.lineTo(i+0.5,TEX); cctx.stroke();
+    cctx.beginPath(); cctx.moveTo(0,i+0.5); cctx.lineTo(TEX,i+0.5); cctx.stroke();
+  }
+
+  // light bars
+  cctx.fillStyle = "rgba(24,202,230,0.34)";
+  cctx.fillRect(0, 22, TEX, 3);
+  cctx.fillRect(0, 58, TEX, 3);
+  cctx.fillRect(0, 94, TEX, 3);
+
+  // accent orange discret
+  cctx.fillStyle = "rgba(244,175,45,0.12)";
+  cctx.fillRect(18, 76, 92, 2);
+
+  cctx.restore();
+
+  // micro bruit
+  const img = cctx.getImageData(0,0,TEX,TEX);
+  const d = img.data;
+  for(let i=0;i<d.length;i+=4){
+    const n = ((Math.random()*8)|0) - 4;
+    d[i]   = clamp(d[i]   + n, 0, 255);
+    d[i+1] = clamp(d[i+1] + n, 0, 255);
+    d[i+2] = clamp(d[i+2] + n, 0, 255);
+  }
+  cctx.putImageData(img,0,0);
+}
+
+genWallTex();
   genFloorTex();
   genCeilTex();
 // Pixels (pour sol/plafond en perspective, plus réaliste et moins "fake")
@@ -2084,8 +2091,8 @@ for (let i=impactWaves.length-1; i>=0; i--){
   const planeY =  dirX * tan;
 
   // fog colors (TRON) — profondeur noir/bleu, néons restent lisibles
-  const fogFloorR=10, fogFloorG=14, fogFloorB=24;
-  const fogCeilR =8,  fogCeilG =10, fogCeilB =18;
+  const fogFloorR=6,  fogFloorG=9,  fogFloorB=16;
+  const fogCeilR =3,  fogCeilG =5,  fogCeilB =12;
 
   // Ceiling (0 -> horizon)
   for (let y=0; y<hInt; y++){
@@ -2098,7 +2105,7 @@ for (let i=impactWaves.length-1; i>=0; i--){
     let rowDist = ((1.0 - player.eyeZ) * focal) / p;
     if (rowDist > MAX_DIST) rowDist = MAX_DIST;
 
-    const shade = Math.max(0.18, 1 - rowDist/26);
+    const shade = Math.max(0.22, 1 - rowDist/30);
     const k = (shade*256)|0;
 
     let worldX = player.x + rowDist*(dirX - planeX);
@@ -2124,7 +2131,7 @@ for (let i=impactWaves.length-1; i>=0; i--){
       const edgeC = (fx < thC) || (fx > 1-thC) || (fy < thC) || (fy > 1-thC);
       if (edgeC){
         const major = ((ix & 3) === 0) || ((iy & 3) === 0);
-        const add = major ? 54 : 26;
+        const add = major ? 120 : 60;
         r = r + (add>>1); g = g + add; b = b + add;
         if (r>255) r=255; if (g>255) g=255; if (b>255) b=255;
       }
@@ -2149,7 +2156,7 @@ for (let i=impactWaves.length-1; i>=0; i--){
     let rowDist = (player.eyeZ * focal) / p;
     if (rowDist > MAX_DIST) rowDist = MAX_DIST;
 
-    const shade = Math.max(0.12, 1 - rowDist/22);
+    const shade = Math.max(0.16, 1 - rowDist/28);
     const k = (shade*256)|0;
 
     let worldX = player.x + rowDist*(dirX - planeX);
@@ -2178,7 +2185,7 @@ for (let i=impactWaves.length-1; i>=0; i--){
       const edge = (fx < th) || (fx > 1-th) || (fy < th) || (fy > 1-th);
       if (edge){
         const major = ((ix & 3) === 0) || ((iy & 3) === 0);
-        const add = major ? 110 : 55;
+        const add = major ? 240 : 130;
 
         // cyan
         r = (r + (add>>1) > 255) ? 255 : (r + (add>>1));
@@ -2187,7 +2194,7 @@ for (let i=impactWaves.length-1; i>=0; i--){
 
         // impulsions animées, mais ancrées au monde (pas de "défilement" artificiel)
         const wave = 0.5 + 0.5*Math.sin((tI*0.07) + (ix*0.38 + iy*0.27));
-        if (major && wave > 0.965){
+        if (major && wave > 0.960){
           r = (r + 95  > 255) ? 255 : (r + 95);
           g = (g + 58  > 255) ? 255 : (g + 58);
           b = (b + 14  > 255) ? 255 : (b + 14);
@@ -2283,7 +2290,7 @@ offCtx.restore();
       if (hit.wallX < 0.055 || hit.wallX > 0.945){
         offCtx.save();
         offCtx.globalCompositeOperation = "lighter";
-        const a = (0.18 + 0.30*(1-fogT)) * sideDark;
+        const a = (0.28 + 0.45*(1-fogT)) * sideDark;
         offCtx.fillStyle = `rgba(24,202,230,${a})`;
         offCtx.fillRect(x, y1, 1, h);
         offCtx.restore();
@@ -2291,7 +2298,7 @@ offCtx.restore();
       {
         offCtx.save();
         offCtx.globalCompositeOperation = "lighter";
-        const edgeA = 0.10 * (1-fogT) * sideDark;
+        const edgeA = 0.16 * (1-fogT) * sideDark;
         offCtx.fillStyle = `rgba(24,202,230,${edgeA})`;
         offCtx.fillRect(x, y2-1, 1, 2);
         offCtx.fillStyle = `rgba(24,202,230,${edgeA*0.85})`;
@@ -2668,7 +2675,7 @@ if (pr0){
       ctx.save();
       const a = clamp(shieldT/4, 0, 1);
       ctx.globalAlpha = 1;
-      ctx.filter = "contrast(1.06) saturate(1.05) brightness(1.01)";
+      ctx.filter = "contrast(1.12) saturate(1.12) brightness(1.03)";
       ctx.drawImage(off, 0, 0, W, H);
       ctx.filter = "none";
 
@@ -2680,10 +2687,38 @@ if (pr0){
       ctx.fillRect(0,0,W,H);
       ctx.restore();
     }else{
-      ctx.filter = "contrast(1.06) saturate(1.05) brightness(1.01)";
+      ctx.filter = "contrast(1.12) saturate(1.12) brightness(1.03)";
       ctx.drawImage(off, 0, 0, W, H);
       ctx.filter = "none";
     }
+
+
+    // Reflets suggérés (sol lisse/tech) — très subtil (budget-friendly)
+    {
+      const floorY = (H * 0.58) | 0;
+      // reflection (miroir vertical) dans la zone du sol uniquement
+      ctx.save();
+      ctx.beginPath(); ctx.rect(0, floorY, W, H - floorY); ctx.clip();
+      ctx.globalCompositeOperation = "screen";
+      ctx.globalAlpha = 0.055;
+      ctx.translate(0, floorY + (H - floorY));
+      ctx.scale(1, -1);
+      ctx.drawImage(off, 0, 0, W, H);
+      ctx.restore();
+
+      // fade / atténuation pour que ça reste "subtil"
+      ctx.save();
+      const fade = ctx.createLinearGradient(0, floorY, 0, H);
+      fade.addColorStop(0.0, "rgba(0,0,0,0)");
+      fade.addColorStop(0.35,"rgba(0,0,0,0.40)");
+      fade.addColorStop(1.0, "rgba(0,0,0,0.92)");
+      ctx.globalCompositeOperation = "source-over";
+      ctx.globalAlpha = 1;
+      ctx.fillStyle = fade;
+      ctx.fillRect(0, floorY, W, H - floorY);
+      ctx.restore();
+    }
+
 
 // Bloom / glow (TRON) — applique un halo sans casser la lisibilité
     glowCtxA.setTransform(1,0,0,1,0,0);
@@ -2691,19 +2726,20 @@ if (pr0){
     glowCtxA.clearRect(0,0,glowA.width, glowA.height);
     glowCtxB.clearRect(0,0,glowB.width, glowB.height);
 
-    glowCtxA.filter = "brightness(1.18) contrast(1.55) saturate(1.25) blur(10px)";
+    // Bloom (seuil "soft" via contraste élevé) : garde la lisibilité, halo propre
+    glowCtxA.filter = "brightness(1.85) contrast(3.10) saturate(1.85) blur(10px)";
     glowCtxA.globalCompositeOperation = "source-over";
     glowCtxA.drawImage(off, 0, 0, glowA.width, glowA.height);
 
-    glowCtxB.filter = "brightness(1.22) contrast(1.70) saturate(1.20) blur(18px)";
+    glowCtxB.filter = "brightness(2.15) contrast(3.40) saturate(1.70) blur(18px)";
     glowCtxB.globalCompositeOperation = "source-over";
     glowCtxB.drawImage(off, 0, 0, glowB.width, glowB.height);
 
     ctx.save();
     ctx.globalCompositeOperation = "screen";
-    ctx.globalAlpha = 0.54;
+    ctx.globalAlpha = 0.55;
     ctx.drawImage(glowA, 0, 0, W, H);
-    ctx.globalAlpha = 0.20;
+    ctx.globalAlpha = 0.22;
     ctx.drawImage(glowB, 0, 0, W, H);
 
     // micro "chroma" (très léger)
