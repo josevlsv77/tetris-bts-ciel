@@ -926,7 +926,7 @@ function ensureSpawn(){
     if (masterGain) masterGain.gain.value = volume;
     persistOptions();
   });
-  optMinimap.addEventListener('input', () => { persistOptions(); });
+  optMinimap.addEventListener('input', () => { persistOptions(); updateMinimapVisibility(true); });
 
   window.addEventListener('keydown', (e) => {
     if (["ArrowUp","ArrowDown","ArrowLeft","ArrowRight"," "].includes(e.key)) e.preventDefault();
@@ -1040,13 +1040,24 @@ function ensureSpawn(){
     showToast("Qualité : " + uiQ.textContent);
   }
 
-  let minimapOn = true;
-  function toggleMinimap(force){
-    if (typeof force === "boolean") minimapOn = force;
-    else minimapOn = !minimapOn;
-    minimap.style.display = (minimapOn && optMinimap.value==="1") ? "block" : "none";
-    showToast(minimapOn ? "Minicarte ON" : "Minicarte OFF");
+  function isMinimapEnabled(){
+    return optMinimap.value === "1";
   }
+  function updateMinimapVisibility(silent){
+    const on = isMinimapEnabled();
+    minimap.style.display = on ? "block" : "none";
+    if (!silent) showToast(on ? "Minicarte ON" : "Minicarte OFF");
+  }
+  function setMinimapEnabled(on, silent){
+    optMinimap.value = on ? "1" : "0";
+    persistOptions();
+    updateMinimapVisibility(!!silent);
+  }
+  function toggleMinimap(force){
+    if (typeof force === "boolean") setMinimapEnabled(force);
+    else setMinimapEnabled(!isMinimapEnabled());
+  }
+
   function toggleOptions(force){
   const shouldOpen = (typeof force === "boolean") ? force : !overlayOptions.classList.contains('visible');
   overlayOptions.classList.toggle('visible', shouldOpen);
@@ -2070,7 +2081,7 @@ for (let i=impactWaves.length-1; i>=0; i--){
     uiSparks.textContent  = String(sparks.length);
     uiMarks.textContent   = String(marks.length);
 
-    minimap.style.display = (minimapOn && optMinimap.value==="1") ? "block" : "none";
+    minimap.style.display = (optMinimap.value==="1") ? "block" : "none";
   }
 
   // Render
@@ -2797,86 +2808,226 @@ if (pr0){
       ctx.fillRect(0,0,W,H);
     }
   }
-
-  // Minimap base (draw once)
+  // Minimap (HiDPI, net, sans flou — M et option synchronisés)
   const miniBase = document.createElement('canvas');
-  const miniScale = 7;
-  miniBase.width = MW * miniScale;
-  miniBase.height= MH * miniScale;
   const mb = miniBase.getContext('2d', { alpha:true });
+  let miniCell = 0, miniBaseW = 0, miniBaseH = 0;
+
+  function ensureMiniBase(targetW, targetH){
+    // cell size en pixels CSS (rendu net, sans scaling)
+    const cell = clamp(Math.floor(Math.min(targetW / MW, targetH / MH)), 3, 14);
+    const bw = MW * cell;
+    const bh = MH * cell;
+    if (cell === miniCell && bw === miniBaseW && bh === miniBaseH) return;
+    miniCell = cell; miniBaseW = bw; miniBaseH = bh;
+    miniBase.width = bw;
+    miniBase.height = bh;
+    buildMiniBase();
+  }
+
   function buildMiniBase(){
     mb.clearRect(0,0,miniBase.width, miniBase.height);
+
+    // Fond
+    mb.fillStyle = "rgba(2,6,23,0.75)";
+    mb.fillRect(0,0,miniBase.width, miniBase.height);
+
+    // Sol / murs + léger relief
     for (let y=0;y<MH;y++){
       for (let x=0;x<MW;x++){
+        const ox = x*miniCell, oy = y*miniCell;
         if (isWall(x,y)){
-          mb.fillStyle = "rgba(15,23,42,0.80)";
-          mb.fillRect(x*miniScale, y*miniScale, miniScale, miniScale);
+          mb.fillStyle = "rgba(15,23,42,0.90)";
+          mb.fillRect(ox, oy, miniCell, miniCell);
+          mb.fillStyle = "rgba(255,255,255,0.07)";
+          mb.fillRect(ox, oy, miniCell, 1);       // top highlight
+          mb.fillRect(ox, oy, 1, miniCell);       // left highlight
+          mb.fillStyle = "rgba(0,0,0,0.35)";
+          mb.fillRect(ox, oy+miniCell-1, miniCell, 1);
+          mb.fillRect(ox+miniCell-1, oy, 1, miniCell);
         }else{
-          mb.fillStyle = "rgba(255,255,255,0.06)";
-          mb.fillRect(x*miniScale, y*miniScale, miniScale, miniScale);
+          mb.fillStyle = "rgba(255,255,255,0.045)";
+          mb.fillRect(ox, oy, miniCell, miniCell);
         }
       }
     }
+
+    // Grille douce
+    mb.strokeStyle = "rgba(255,255,255,0.055)";
+    mb.lineWidth = 1;
+    for (let x=0;x<=MW;x++){
+      const xx = x*miniCell + 0.5;
+      mb.beginPath(); mb.moveTo(xx, 0); mb.lineTo(xx, miniBase.height); mb.stroke();
+    }
+    for (let y=0;y<=MH;y++){
+      const yy = y*miniCell + 0.5;
+      mb.beginPath(); mb.moveTo(0, yy); mb.lineTo(miniBase.width, yy); mb.stroke();
+    }
+
+    // Bordure
     mb.strokeStyle = "rgba(255,255,255,0.10)";
     mb.strokeRect(0.5,0.5, miniBase.width-1, miniBase.height-1);
   }
-  buildMiniBase();
+
+  function rr(ctx,x,y,w,h,r){
+    r = Math.max(0, Math.min(r, Math.min(w,h)/2));
+    ctx.beginPath();
+    ctx.moveTo(x+r, y);
+    ctx.arcTo(x+w, y, x+w, y+h, r);
+    ctx.arcTo(x+w, y+h, x, y+h, r);
+    ctx.arcTo(x, y+h, x, y, r);
+    ctx.arcTo(x, y, x+w, y, r);
+    ctx.closePath();
+  }
+
+  function setupMinimapCanvas(){
+    const r = minimap.getBoundingClientRect();
+    const cssW = Math.max(2, Math.floor(r.width));
+    const cssH = Math.max(2, Math.floor(r.height));
+    const mdpr = Math.min(2, window.devicePixelRatio || 1);
+
+    const pw = Math.max(2, (cssW * mdpr)|0);
+    const ph = Math.max(2, (cssH * mdpr)|0);
+    if (minimap.width !== pw || minimap.height !== ph){
+      minimap.width = pw;
+      minimap.height = ph;
+    }
+
+    // clear en pixels device, puis repasser en unités CSS
+    mctx.setTransform(1,0,0,1,0,0);
+    mctx.clearRect(0,0,pw,ph);
+    mctx.setTransform(mdpr,0,0,mdpr,0,0);
+
+    mctx.imageSmoothingEnabled = false;
+    return { cssW, cssH, mdpr };
+  }
+
+
+  let mmCacheW = 0, mmCacheH = 0;
+  let mmGrad = null, mmVig = null;
+  function ensureMinimapPaint(w,h){
+    if (w===mmCacheW && h===mmCacheH && mmGrad && mmVig) return;
+    mmCacheW = w; mmCacheH = h;
+
+    mmGrad = mctx.createLinearGradient(0,0,0,h);
+    mmGrad.addColorStop(0, "rgba(2,6,23,0.45)");
+    mmGrad.addColorStop(1, "rgba(2,6,23,0.82)");
+
+    mmVig = mctx.createRadialGradient(w*0.5,h*0.5, Math.min(w,h)*0.15, w*0.5,h*0.5, Math.min(w,h)*0.72);
+    mmVig.addColorStop(0, "rgba(0,0,0,0)");
+    mmVig.addColorStop(1, "rgba(0,0,0,0.22)");
+  }
 
   function renderMinimap(){
-    if (!(minimapOn && optMinimap.value==="1")) return;
+    if (optMinimap.value!=="1") return;
 
-    mctx.clearRect(0,0,minimap.width, minimap.height);
+    const { cssW:w, cssH:h } = setupMinimapCanvas();
+    const pad = 10;
+    const innerW = Math.max(2, (w - pad*2)|0);
+    const innerH = Math.max(2, (h - pad*2)|0);
 
-    // fit whole map into minimap
-    const pad = 8;
-    const dw = minimap.width - pad*2;
-    const dh = minimap.height - pad*2;
+    ensureMiniBase(innerW, innerH);
 
-    mctx.globalAlpha = 0.95;
-    mctx.drawImage(miniBase, pad, pad, dw, dh);
+    // Centrage de la carte (sans scaling)
+    const x0 = (pad + ((innerW - miniBaseW) * 0.5))|0;
+    const y0 = (pad + ((innerH - miniBaseH) * 0.5))|0;
 
-    // player
-    const px = pad + (player.x / MW) * dw;
-    const py = pad + (player.y / MH) * dh;
+    // Clip arrondi
+    mctx.save();
+    rr(mctx, 0.5, 0.5, w-1, h-1, 16);
+    mctx.clip();
 
+    // Fond / vignette (cachés pour limiter les allocations)
+    ensureMinimapPaint(w,h);
+    mctx.fillStyle = mmGrad;
+    mctx.fillRect(0,0,w,h);
+
+    // Carte
+    mctx.globalAlpha = 0.98;
+    mctx.drawImage(miniBase, x0, y0);
+
+    // Vignette légère pour la lisibilité
+    mctx.fillStyle = mmVig;
+    mctx.fillRect(0,0,w,h);
+
+    // Projection monde -> minimap
+    const sx = miniBaseW / MW;
+    const sy = miniBaseH / MH;
+
+    const px = x0 + player.x * sx;
+    const py = y0 + player.y * sy;
+
+    // Cône FOV
+    const coneLen = Math.max(18, miniCell * 4);
+    const a0 = player.yaw - FOV * 0.5;
+    const a1 = player.yaw + FOV * 0.5;
     mctx.globalCompositeOperation = "lighter";
-    mctx.fillStyle = "rgba(255,255,255,0.92)";
-    mctx.beginPath(); mctx.arc(px, py, 3.1, 0, Math.PI*2); mctx.fill();
-
-    // facing line
-    mctx.strokeStyle = "rgba(96,165,250,0.85)";
-    mctx.lineWidth = 2;
+    mctx.fillStyle = "rgba(96,165,250,0.10)";
     mctx.beginPath();
     mctx.moveTo(px, py);
-    mctx.lineTo(px + Math.cos(player.yaw)*10, py + Math.sin(player.yaw)*10);
-    mctx.stroke();
+    mctx.arc(px, py, coneLen, a0, a1);
+    mctx.closePath();
+    mctx.fill();
+    mctx.globalCompositeOperation = "source-over";
 
-    // enemies
+    // Ennemis
+    mctx.strokeStyle = "rgba(0,0,0,0.45)";
+    mctx.lineWidth = 1.5;
     for (let i=0;i<enemies.length;i++){
       const e = enemies[i];
       if (e.hp <= 0) continue;
-      const ex = pad + (e.x / MW) * dw;
-      const ey = pad + (e.y / MH) * dh;
+      const ex = x0 + e.x * sx;
+      const ey = y0 + e.y * sy;
       mctx.fillStyle = "rgba(255,120,170,0.85)";
-      mctx.beginPath(); mctx.arc(ex, ey, 2.5, 0, Math.PI*2); mctx.fill();
+      mctx.beginPath(); mctx.arc(ex, ey, 3.0, 0, Math.PI*2); mctx.fill();
+      mctx.stroke();
     }
 
-    // items
+    // Items
     for (let i=0;i<items.length;i++){
       const it = items[i];
-      const ix = pad + (it.x / MW) * dw;
-      const iy = pad + (it.y / MH) * dh;
-      mctx.fillStyle = (it.type==="heal") ? "rgba(96,165,250,0.85)" : "rgba(255,255,255,0.75)";
-      mctx.beginPath(); mctx.arc(ix, iy, 2.0, 0, Math.PI*2); mctx.fill();
+      const ix = x0 + it.x * sx;
+      const iy = y0 + it.y * sy;
+      mctx.fillStyle = (it.type==="heal") ? "rgba(96,165,250,0.88)" : "rgba(255,255,255,0.78)";
+      mctx.beginPath(); mctx.arc(ix, iy, 2.4, 0, Math.PI*2); mctx.fill();
     }
 
+    // Joueur (anneau + flèche)
+    mctx.globalCompositeOperation = "lighter";
+    mctx.fillStyle = "rgba(255,255,255,0.92)";
+    mctx.beginPath(); mctx.arc(px, py, 3.4, 0, Math.PI*2); mctx.fill();
+    mctx.strokeStyle = "rgba(96,165,250,0.85)";
+    mctx.lineWidth = 2.0;
+    mctx.beginPath(); mctx.arc(px, py, 5.4, 0, Math.PI*2); mctx.stroke();
+
+    // flèche direction
+    const dx = Math.cos(player.yaw), dy = Math.sin(player.yaw);
+    const tipX = px + dx * 11;
+    const tipY = py + dy * 11;
+    mctx.fillStyle = "rgba(96,165,250,0.75)";
+    mctx.beginPath();
+    mctx.moveTo(tipX, tipY);
+    mctx.lineTo(px + Math.cos(player.yaw + 2.55) * 7, py + Math.sin(player.yaw + 2.55) * 7);
+    mctx.lineTo(px + Math.cos(player.yaw - 2.55) * 7, py + Math.sin(player.yaw - 2.55) * 7);
+    mctx.closePath();
+    mctx.fill();
+
     mctx.globalCompositeOperation = "source-over";
-    mctx.globalAlpha = 1;
+    mctx.restore();
+
+    // Bordure nette (hors clip)
+    mctx.save();
+    rr(mctx, 0.5, 0.5, w-1, h-1, 16);
+    mctx.strokeStyle = "rgba(255,255,255,0.18)";
+    mctx.lineWidth = 1;
+    mctx.stroke();
+    mctx.restore();
   }
 
   // Loop + FPS + auto quality (douce)
+
   resize();
-  toggleMinimap(true);
+  updateMinimapVisibility(true);
 
   let last = performance.now();
   let fpsAcc = 0, fpsN = 0, fpsT = 0;

@@ -426,8 +426,8 @@
   });
 
   /* --- GAME STATE --- */
-  let gameState = "waiting", score = 0, level = 1, lives = 3, ballSpeed = 3, comboCount = 0;
-  let defaultBallSpeed = 3, defaultPaddleW = CONSTANTS.PADDLE_W;
+  let gameState = "waiting", score = 0, level = 1, lives = 3, ballSpeed = 5, comboCount = 0;
+  let defaultBallSpeed = 5, defaultPaddleW = CONSTANTS.PADDLE_W;
   let gridOffset = 0, animationId = null, resumeTimeout = null, charTimeout = null;
   
   // VARIABLES BOMBASTICK
@@ -960,7 +960,7 @@
     if(charTimeout) { clearTimeout(charTimeout); charTimeout=null; }
     gameState = "waiting";
     score = 0; level = 1; lives = 3; bombCount = 1; beamActive = false;
-    defaultBallSpeed = 3; ballSpeed = defaultBallSpeed; defaultPaddleW = CONSTANTS.PADDLE_W;
+    defaultBallSpeed = 5; ballSpeed = defaultBallSpeed; defaultPaddleW = CONSTANTS.PADDLE_W;
     paddle.w = defaultPaddleW; paddle.sticky=false; paddle.laser=false; paddle.dx=0;
     initBricks();
     resetBall(false);
